@@ -1,0 +1,6 @@
+/ref
+bin
+obj
+.vs
+*.user
+PublishProfiles
