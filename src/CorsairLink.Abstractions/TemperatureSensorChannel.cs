@@ -6,8 +6,10 @@ public class TemperatureSensorChannel
     {
         ChannelId = channelId;
         Status = status;
+        Name = $"{channelId + 1}";
     }
 
+    public string Name { get; }
     public int ChannelId { get; }
     public TemperatureSensorStatus Status { get; }
 }

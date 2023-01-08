@@ -1,6 +1,6 @@
 ﻿namespace CorsairLink;
 
-public interface ICommanderPro : IDevice, IFanController, IFanReader, ITemperatureSensorReader
+public interface ICommanderPro : IDevice, IFanController, IFanReader, ITemperatureSensorReader, IVersionReader
 {
-    string GetFirmwareVersion();
+    
 }

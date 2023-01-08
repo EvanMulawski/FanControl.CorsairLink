@@ -15,7 +15,7 @@ public class CorsairLinkPlugin : IPlugin
         _logger = logger;
     }
 
-    public bool IsInitialized => _devices is not null;
+    public bool IsInitialized { get; private set; }
 
     private void Log(string message)
     {
@@ -38,6 +38,8 @@ public class CorsairLinkPlugin : IPlugin
         {
             device.Disconnect();
         }
+
+        IsInitialized = false;
     }
 
     void IPlugin.Initialize()
@@ -64,6 +66,7 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         _devices = initializedDevices;
+        IsInitialized = true;
     }
 
     void IPlugin.Load(IPluginSensorsContainer container)
@@ -80,7 +83,7 @@ public class CorsairLinkPlugin : IPlugin
         }
     }
 
-    private static void AddDeviceFanSensors(IPluginSensorsContainer container, IDevice device)
+    private void AddDeviceFanSensors(IPluginSensorsContainer container, IDevice device)
     {
         if (device is IFanReader fanReader)
         {
@@ -88,13 +91,13 @@ public class CorsairLinkPlugin : IPlugin
 
             foreach (var fanChannel in fanConfig.Channels)
             {
-                var fanSensor = new CorsairLinkFanSensor(device, fanChannel.ChannelId, fanReader);
+                var fanSensor = new CorsairLinkFanSensor(device, fanChannel, fanReader);
                 container.FanSensors.Add(fanSensor);
             }
         }
     }
 
-    private static void AddDeviceFanControllers(IPluginSensorsContainer container, IDevice device)
+    private void AddDeviceFanControllers(IPluginSensorsContainer container, IDevice device)
     {
         if (device is IFanController fanController)
         {
@@ -102,7 +105,7 @@ public class CorsairLinkPlugin : IPlugin
 
             foreach (var fanChannel in fanConfig.Channels)
             {
-                var fanControlSensor = new CorsairLinkFanController(device, fanChannel.ChannelId, fanController);
+                var fanControlSensor = new CorsairLinkFanController(device, fanChannel, fanController);
                 container.ControlSensors.Add(fanControlSensor);
             }
         }

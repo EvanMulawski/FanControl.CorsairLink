@@ -1,6 +1,6 @@
 ﻿namespace CorsairLink;
 
-public class TemperatureSensorConfiguration
+public sealed class TemperatureSensorConfiguration
 {
     public TemperatureSensorConfiguration(IEnumerable<TemperatureSensorChannel> channels)
     {

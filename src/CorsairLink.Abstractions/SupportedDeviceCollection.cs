@@ -2,7 +2,7 @@
 
 namespace CorsairLink;
 
-public class SupportedDeviceCollection : IEnumerable<IDevice>
+public sealed class SupportedDeviceCollection : IEnumerable<IDevice>
 {
     public List<ICommanderPro> CommanderProDevices { get; } = new List<ICommanderPro>(1);
 

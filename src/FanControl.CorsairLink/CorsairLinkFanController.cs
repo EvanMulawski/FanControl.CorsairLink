@@ -3,20 +3,20 @@ using FanControl.Plugins;
 
 namespace FanControl.CorsairLink
 {
-    public class CorsairLinkFanController : IPluginControlSensor
+    public sealed class CorsairLinkFanController : IPluginControlSensor
     {
         private readonly int _fanChannelId;
         private readonly IFanController _fanController;
 
         private float? _value;
 
-        public CorsairLinkFanController(IDeviceInfo deviceInfo, int fanChannelId, IFanController fanController)
+        public CorsairLinkFanController(IDeviceInfo deviceInfo, FanChannel fanChannel, IFanController fanController)
         {
-            _fanChannelId = fanChannelId;
+            _fanChannelId = fanChannel.ChannelId;
             _fanController = fanController;
 
-            Id = $"CorsairLink/{deviceInfo.DevicePath}/FanController/{fanChannelId}";
-            Name = $"{deviceInfo.Name} Fan #{fanChannelId + 1}";
+            Id = $"CorsairLink/{deviceInfo.DevicePath}/FanController/{_fanChannelId}";
+            Name = $"{deviceInfo.Name} Fan #{fanChannel.Name}";
         }
 
         public string Id { get; }

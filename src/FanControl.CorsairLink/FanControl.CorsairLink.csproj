@@ -31,7 +31,6 @@
       <InputAssemblies Include="CorsairLink.Abstractions.dll" />
     </ItemGroup>
     <ItemGroup>
-      <!-- Dot not internalize any types inside this assembly -->
       <InternalizeExcludeAssemblies Include="FanControl.Plugins.dll" />
       <InternalizeExcludeAssemblies Include="HidSharp.dll" />
     </ItemGroup>

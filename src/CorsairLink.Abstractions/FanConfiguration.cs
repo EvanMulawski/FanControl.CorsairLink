@@ -1,6 +1,6 @@
 ﻿namespace CorsairLink;
 
-public class FanConfiguration
+public sealed class FanConfiguration
 {
     public FanConfiguration(IEnumerable<FanChannel> channels)
     {
