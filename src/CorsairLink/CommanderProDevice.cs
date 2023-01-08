@@ -47,9 +47,17 @@ public sealed class CommanderProDevice : ICommanderPro
         _stream = null;
     }
 
+    private void ThrowIfNotConnected()
+    {
+        if (!IsConnected)
+        {
+            throw new InvalidOperationException("Not connected!");
+        }
+    }
+
     public string GetFirmwareVersion()
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadFirmwareVersion, _requestLength);
         _stream!.Write(request);
@@ -63,17 +71,9 @@ public sealed class CommanderProDevice : ICommanderPro
         return $"{v1}.{v2}.{v3}";
     }
 
-    private void AssertConnected()
-    {
-        if (!IsConnected)
-        {
-            throw new InvalidOperationException("Not connected!");
-        }
-    }
-
     public int GetFanRpm(int channelId)
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadFanSpeed, _requestLength);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
@@ -86,7 +86,7 @@ public sealed class CommanderProDevice : ICommanderPro
 
     public void SetFanRpm(int channelId, int rpm)
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.WriteFanSpeed, _requestLength);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
@@ -98,7 +98,7 @@ public sealed class CommanderProDevice : ICommanderPro
 
     public void SetFanPower(int channelId, int percent)
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.WriteFanPower, _requestLength);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
@@ -110,7 +110,7 @@ public sealed class CommanderProDevice : ICommanderPro
 
     public int GetTemperatureSensorValue(int channelId)
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadTemperatureValue, _requestLength);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 3));
@@ -123,7 +123,7 @@ public sealed class CommanderProDevice : ICommanderPro
 
     public FanConfiguration GetFanConfiguration()
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadFanMask, _requestLength);
         _stream!.Write(request);
@@ -150,7 +150,7 @@ public sealed class CommanderProDevice : ICommanderPro
 
     public TemperatureSensorConfiguration GetTemperatureSensorConfiguration()
     {
-        AssertConnected();
+        ThrowIfNotConnected();
 
         var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadTemperatureMask, _requestLength);
         _stream!.Write(request);
