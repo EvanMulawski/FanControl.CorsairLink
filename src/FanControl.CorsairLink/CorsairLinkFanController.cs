@@ -16,7 +16,7 @@ namespace FanControl.CorsairLink
             _fanController = fanController;
 
             Id = $"CorsairLink/{deviceInfo.DevicePath}/FanController/{fanChannelId}";
-            Name = $"{deviceInfo.Name} Fan #{fanChannelId}";
+            Name = $"{deviceInfo.Name} Fan #{fanChannelId + 1}";
         }
 
         public string Id { get; }
