@@ -1,10 +1,16 @@
-﻿namespace CorsairLink.Core;
+﻿namespace CorsairLink;
 
-public interface ICommanderPro
+public interface ICommanderPro : IDevice
 {
-    Task<string> GetFirmwareVersionAsync(CancellationToken cancellationToken);
+    string GetFirmwareVersion();
 
-    Task<int> GetFanRpmAsync(int channelId, CancellationToken cancellationToken);
+    int GetFanRpm(int channelId);
 
-    Task SetFanRpmAsync(int channelId, int speedPercent, CancellationToken cancellationToken);
+    void SetFanRpm(int channelId, int speedPercent);
+
+    int GetTemperatureSensorValue(int channelId);
+
+    FanConfiguration GetFanConfiguration();
+    TemperatureSensorConfiguration GetTemperatureSensorConfiguration();
+    void SetFanPower(int channelId, int percent);
 }
