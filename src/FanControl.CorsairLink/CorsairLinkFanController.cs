@@ -5,17 +5,17 @@ namespace FanControl.CorsairLink
 {
     public sealed class CorsairLinkFanController : IPluginControlSensor
     {
-        private readonly int _fanChannelId;
+        private readonly FanChannel _fanChannel;
         private readonly IFanController _fanController;
 
         private float? _value;
 
         public CorsairLinkFanController(IDeviceInfo deviceInfo, FanChannel fanChannel, IFanController fanController)
         {
-            _fanChannelId = fanChannel.ChannelId;
+            _fanChannel = fanChannel;
             _fanController = fanController;
 
-            Id = $"CorsairLink/{deviceInfo.DevicePath}/FanController/{_fanChannelId}";
+            Id = $"CorsairLink/{deviceInfo.DevicePath}/FanController/{fanChannel.ChannelId}";
             Name = $"{deviceInfo.Name} Fan #{fanChannel.Name}";
         }
 
@@ -28,13 +28,13 @@ namespace FanControl.CorsairLink
         public void Reset()
         {
             _value = null;
-            _fanController.SetFanPower(_fanChannelId, 50);
+            _fanController.SetFanPower(_fanChannel.ChannelId, 50);
         }
 
         public void Set(float val)
         {
             _value = val;
-            _fanController.SetFanPower(_fanChannelId, (int)val);
+            _fanController.SetFanPower(_fanChannel.ChannelId, (int)val);
         }
 
         public void Update()

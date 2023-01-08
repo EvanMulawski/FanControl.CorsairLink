@@ -5,15 +5,15 @@ namespace FanControl.CorsairLink
 {
     public sealed class CorsairLinkFanSensor : IPluginSensor
     {
-        private readonly int _fanChannelId;
+        private readonly FanChannel _fanChannel;
         private readonly IFanReader _fanReader;
 
         public CorsairLinkFanSensor(IDeviceInfo deviceInfo, FanChannel fanChannel, IFanReader fanReader)
         {
-            _fanChannelId = fanChannel.ChannelId;
+            _fanChannel = fanChannel;
             _fanReader = fanReader;
 
-            Id = $"CorsairLink/{deviceInfo.DevicePath}/FanSensor/{_fanChannelId}";
+            Id = $"CorsairLink/{deviceInfo.DevicePath}/FanSensor/{fanChannel.ChannelId}";
             Name = $"{deviceInfo.Name} Fan #{fanChannel.Name}";
         }
 
@@ -25,7 +25,9 @@ namespace FanControl.CorsairLink
 
         public void Update()
         {
-            Value = _fanReader.GetFanRpm(_fanChannelId);
+            Value = _fanChannel.Mode != FanMode.Unknown
+                ? _fanReader.GetFanRpm(_fanChannel.ChannelId)
+                : null;
         }
     }
 }

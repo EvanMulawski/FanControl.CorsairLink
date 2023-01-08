@@ -80,6 +80,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             AddDeviceFanSensors(container, device);
             AddDeviceFanControllers(container, device);
+            AddDeviceTemperatureSensors(container, device);
         }
     }
 
@@ -107,6 +108,20 @@ public class CorsairLinkPlugin : IPlugin
             {
                 var fanControlSensor = new CorsairLinkFanController(device, fanChannel, fanController);
                 container.ControlSensors.Add(fanControlSensor);
+            }
+        }
+    }
+
+    private void AddDeviceTemperatureSensors(IPluginSensorsContainer container, IDevice device)
+    {
+        if (device is ITemperatureSensorReader temperatureReader)
+        {
+            var temperatureSensorConfig = temperatureReader.GetTemperatureSensorConfiguration();
+
+            foreach (var temperatureSensorChannel in temperatureSensorConfig.Channels)
+            {
+                var tempSensor = new CorsairLinkTemperatureSensor(device, temperatureSensorChannel, temperatureReader);
+                container.TempSensors.Add(tempSensor);
             }
         }
     }
