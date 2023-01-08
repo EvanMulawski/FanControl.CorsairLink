@@ -1,9 +1,8 @@
 ﻿namespace CorsairLink;
 
-public interface IDevice
+public interface IDevice : IDeviceInfo
 {
     bool IsConnected { get; }
-    string DevicePath { get; }
 
     void Connect();
     void Disconnect();
