@@ -2,10 +2,13 @@
 
 using FanControl.Plugins;
 using global::CorsairLink;
+using System.Timers;
 
 public class CorsairLinkPlugin : IPlugin
 {
     private readonly IPluginLogger _logger;
+    private readonly Timer _timer;
+    private readonly object _timerLock = new();
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
 
     string IPlugin.Name => "CorsairLink";
@@ -13,9 +16,45 @@ public class CorsairLinkPlugin : IPlugin
     public CorsairLinkPlugin(IPluginLogger logger)
     {
         _logger = logger;
+        _timer = new Timer(1000)
+        {
+            Enabled = false,
+        };
+        _timer.Elapsed += new ElapsedEventHandler(OnTimerTick);
     }
 
     public bool IsInitialized { get; private set; }
+
+    private void OnTimerTick(object sender, ElapsedEventArgs e)
+    {
+        bool lockTaken = false;
+
+        try
+        {
+            Monitor.TryEnter(_timerLock, 100, ref lockTaken);
+            if (lockTaken)
+            {
+                foreach (var device in _devices)
+                {
+                    try
+                    {
+                        device.Refresh();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log(ex.ToString());
+                    }
+                }
+            }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                Monitor.Exit(_timerLock);
+            }
+        }
+    }
 
     private void Log(string message)
     {
@@ -34,6 +73,8 @@ public class CorsairLinkPlugin : IPlugin
             return;
         }
 
+        _timer.Enabled = false;
+
         foreach (var device in _devices)
         {
             device.Disconnect();
@@ -50,15 +91,13 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         var initializedDevices = new List<IDevice>();
-        var devices = DeviceManager.GetSupportedDevices();
+        var devices = DeviceManager.GetSupportedDevices(new CorsairLinkPluginLogger(_logger));
 
         foreach (var device in devices)
         {
-            device.Connect();
-
-            if (!device.IsConnected)
+            if (!device.Connect())
             {
-                Log($"Device '{device.DevicePath}' failed to connect! This device will not be available.");
+                Log($"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
                 continue;
             }
 
@@ -66,6 +105,7 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         _devices = initializedDevices;
+        _timer.Enabled = true;
         IsInitialized = true;
     }
 
@@ -78,51 +118,39 @@ public class CorsairLinkPlugin : IPlugin
 
         foreach (var device in _devices)
         {
-            AddDeviceFanSensors(container, device);
-            AddDeviceFanControllers(container, device);
+            AddDeviceSpeedSensors(container, device);
+            AddDeviceSpeedControllers(container, device);
             AddDeviceTemperatureSensors(container, device);
         }
     }
 
-    private void AddDeviceFanSensors(IPluginSensorsContainer container, IDevice device)
+    private void AddDeviceSpeedSensors(IPluginSensorsContainer container, IDevice device)
     {
-        if (device is IFanReader fanReader)
+        foreach (var sensor in device.SpeedSensors)
         {
-            var fanConfig = fanReader.GetFanConfiguration();
-
-            foreach (var fanChannel in fanConfig.Channels)
-            {
-                var fanSensor = new CorsairLinkFanSensor(device, fanChannel, fanReader);
-                container.FanSensors.Add(fanSensor);
-            }
+            var pluginSensor = new CorsairLinkSpeedSensor(device, sensor);
+            container.FanSensors.Add(pluginSensor);
+            Log($"Added {pluginSensor.Id}");
         }
     }
 
-    private void AddDeviceFanControllers(IPluginSensorsContainer container, IDevice device)
+    private void AddDeviceSpeedControllers(IPluginSensorsContainer container, IDevice device)
     {
-        if (device is IFanController fanController)
+        foreach (var sensor in device.SpeedSensors)
         {
-            var fanConfig = fanController.GetFanConfiguration();
-
-            foreach (var fanChannel in fanConfig.Channels)
-            {
-                var fanControlSensor = new CorsairLinkFanController(device, fanChannel, fanController);
-                container.ControlSensors.Add(fanControlSensor);
-            }
+            var pluginController = new CorsairLinkSpeedController(device, sensor);
+            container.ControlSensors.Add(pluginController);
+            Log($"Added {pluginController.Id}");
         }
     }
 
     private void AddDeviceTemperatureSensors(IPluginSensorsContainer container, IDevice device)
     {
-        if (device is ITemperatureSensorReader temperatureReader)
+        foreach (var sensor in device.TemperatureSensors)
         {
-            var temperatureSensorConfig = temperatureReader.GetTemperatureSensorConfiguration();
-
-            foreach (var temperatureSensorChannel in temperatureSensorConfig.Channels)
-            {
-                var tempSensor = new CorsairLinkTemperatureSensor(device, temperatureSensorChannel, temperatureReader);
-                container.TempSensors.Add(tempSensor);
-            }
+            var pluginSensor = new CorsairLinkTemperatureSensor(device, sensor);
+            container.TempSensors.Add(pluginSensor);
+            Log($"Added {pluginSensor.Id}");
         }
     }
 }

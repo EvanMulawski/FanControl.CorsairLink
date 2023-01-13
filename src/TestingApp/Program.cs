@@ -1,66 +1,61 @@
 ﻿using CorsairLink;
 
-var devices = DeviceManager.GetSupportedDevices().CommanderProDevices;
+var devices = DeviceManager.GetSupportedDevices(null);
+
+var connectedDevices = new List<IDevice>();
 
 foreach (var device in devices)
 {
-    device.Connect();
-
-    if (!device.IsConnected)
+    if (!device.Connect())
     {
-        Console.WriteLine($"Device '{device.DevicePath}' did not connect!");
+        Console.WriteLine($"Device '{device.UniqueId}' did not connect!");
+        continue;
     }
+
+    connectedDevices.Add(device);
+
+    Console.WriteLine(device.Name);
+    Console.WriteLine($"  Device ID: {device.UniqueId}");
+    Console.WriteLine($"  Firmware Version: {device.GetFirmwareVersion()}");
+
+    foreach (var temp in device.TemperatureSensors)
+    {
+        Console.WriteLine($"  {temp.Name} ({temp.Channel}): {(temp.TemperatureCelsius.HasValue ? temp.TemperatureCelsius + "°C" : "n/a")}");
+    }
+
+    foreach (var speed in device.SpeedSensors)
+    {
+        Console.WriteLine($"  {speed.Name} ({speed.Channel}): {(speed.Rpm.HasValue ? speed.Rpm + "rpm" : "n/a")}");
+    }
+
+    Console.WriteLine("------------------------------");
 }
 
-var iter = 0;
-
-while (true)
+for (var i = 0; i < 5; i++)
 {
-    //var fanConfig = devices[0].GetFanConfiguration();
-    //var tempConfig = devices[0].GetTemperatureSensorConfiguration();
-
-    foreach (var device in devices)
-    {
-        //var fwVersion = device.GetFirmwareVersion();
-        //Console.WriteLine($"Firmware Version: {fwVersion}");
-
-        for (var i = 0; i < 6; i++)
-        {
-            var rpm = device.GetFanRpm(i);
-            Console.WriteLine($"Fan #{i + 1} RPM: {rpm}");
-        }
-
-        Console.WriteLine("====================");
-        Console.WriteLine();
-    }
-
     await Task.Delay(1000);
 
-    ++iter;
-
-    if (iter == 5)
+    foreach (var device in connectedDevices)
     {
-        Console.WriteLine("Setting fan 6 speed to 0%...");
-        devices[0].SetFanPower(5, 0);
-        Console.WriteLine("====================");
-        Console.WriteLine();
-    }
+        device.Refresh();
 
-    if (iter == 15)
-    {
-        Console.WriteLine("Setting fan 6 speed to 100%...");
-        devices[0].SetFanPower(5, 100);
-        Console.WriteLine("====================");
-        Console.WriteLine();
-    }
+        Console.WriteLine(device.Name);
 
-    if (iter == 25)
-    {
-        Console.WriteLine("Setting fan 6 speed to 600rpm...");
-        devices[0].SetFanRpm(5, 600);
-        Console.WriteLine("====================");
-        Console.WriteLine();
+        foreach (var temp in device.TemperatureSensors)
+        {
+            Console.WriteLine($"  {temp.Name} ({temp.Channel}): {(temp.TemperatureCelsius.HasValue ? temp.TemperatureCelsius + "°C" : "n/a")}");
+        }
+
+        foreach (var speed in device.SpeedSensors)
+        {
+            Console.WriteLine($"  {speed.Name} ({speed.Channel}): {(speed.Rpm.HasValue ? speed.Rpm + "rpm" : "n/a")}");
+        }
+
+        Console.WriteLine("------------------------------");
     }
 }
 
-//Console.ReadLine();
+foreach (var device in connectedDevices)
+{
+    device.Disconnect();
+}

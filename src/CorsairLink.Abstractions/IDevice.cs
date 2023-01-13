@@ -1,9 +1,15 @@
 ﻿namespace CorsairLink;
 
-public interface IDevice : IDeviceInfo
+public interface IDevice
 {
-    bool IsConnected { get; }
+    string UniqueId { get; }
+    string Name { get; }
+    IReadOnlyCollection<SpeedSensor> SpeedSensors { get; }
+    IReadOnlyCollection<TemperatureSensor> TemperatureSensors { get; }
 
-    void Connect();
+    bool Connect();
     void Disconnect();
+    string GetFirmwareVersion();
+    void Refresh();
+    void SetChannelPower(int channel, int percent);
 }
