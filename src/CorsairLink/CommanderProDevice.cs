@@ -7,8 +7,8 @@ public sealed class CommanderProDevice : ICommanderPro
 {
     private readonly HidDevice _device;
     private HidStream? _stream;
-    private int _requestLength;
-    private int _responseLength;
+    private const int _requestLength = 64;
+    private const int _responseLength = 17;
 
     public CommanderProDevice(HidDevice device)
     {
@@ -29,11 +29,12 @@ public sealed class CommanderProDevice : ICommanderPro
             return;
         }
 
-        if (_device.TryOpen(out _stream))
-        {
-            _requestLength = _device.GetMaxOutputReportLength();
-            _responseLength = _device.GetMaxInputReportLength();
-        }
+        var openConfig = new OpenConfiguration();
+        openConfig.SetOption(OpenOption.Exclusive, true);
+        openConfig.SetOption(OpenOption.Transient, true);
+        openConfig.SetOption(OpenOption.Interruptible, true);
+
+        _device.TryOpen(openConfig, out _stream);
     }
 
     public void Disconnect()

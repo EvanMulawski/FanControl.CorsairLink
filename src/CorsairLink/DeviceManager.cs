@@ -8,13 +8,14 @@ public static class DeviceManager
     {
         var hidDevices = DeviceList.Local.GetHidDevices(vendorID: HardwareIds.CorsairVendorId);
         var supportedDevices = hidDevices
-            .Where(x => HardwareIds.SupportedProductIds.Contains(x.ProductID))
+            .Where(x => HardwareIds.SupportedProductIds.Contains(x.ProductID) && x.GetMaxOutputReportLength() > 0)
             .ToLookup(x => x.ProductID);
 
         var collection = new SupportedDeviceCollection();
 
         collection.CommanderProDevices.AddRange(supportedDevices[HardwareIds.CorsairCommanderProProductId].Select(x => new CommanderProDevice(x)));
         collection.CommanderProDevices.AddRange(supportedDevices[HardwareIds.CorsairObsidian1000DCommanderProProductId].Select(x => new CommanderProDevice(x)));
+        collection.CommanderCoreDevices.AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreXTProductId].Select(x => new CommanderCoreDevice(x)));
 
         return collection;
     }

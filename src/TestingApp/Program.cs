@@ -1,6 +1,6 @@
 ﻿using CorsairLink;
 
-var devices = DeviceManager.GetSupportedDevices().CommanderProDevices;
+var devices = DeviceManager.GetSupportedDevices();
 
 foreach (var device in devices)
 {
@@ -9,58 +9,26 @@ foreach (var device in devices)
     if (!device.IsConnected)
     {
         Console.WriteLine($"Device '{device.DevicePath}' did not connect!");
+        continue;
     }
-}
 
-var iter = 0;
+    Console.WriteLine(device.Name);
+    Console.WriteLine($"  Device path: {device.DevicePath}");
 
-while (true)
-{
-    //var fanConfig = devices[0].GetFanConfiguration();
-    //var tempConfig = devices[0].GetTemperatureSensorConfiguration();
-
-    foreach (var device in devices)
+    if (device is IReportFirmwareVersion fw)
     {
-        //var fwVersion = device.GetFirmwareVersion();
-        //Console.WriteLine($"Firmware Version: {fwVersion}");
+        Console.WriteLine($"  FW ver: {fw.GetFirmwareVersion()}");
+    }
 
-        for (var i = 0; i < 6; i++)
+    if (device is IReportTemperatureSensors temps)
+    {
+        var tempsReport = temps.GetTemperatures();
+
+        foreach (var temp in tempsReport.Temperatures)
         {
-            var rpm = device.GetFanRpm(i);
-            Console.WriteLine($"Fan #{i + 1} RPM: {rpm}");
+            Console.WriteLine($"  {temp.Name} ({temp.Channel}): {(temp.TemperatureCelsius.HasValue ? temp.TemperatureCelsius + "°C" : "n/a")}");
         }
-
-        Console.WriteLine("====================");
-        Console.WriteLine();
     }
 
-    await Task.Delay(1000);
-
-    ++iter;
-
-    if (iter == 5)
-    {
-        Console.WriteLine("Setting fan 6 speed to 0%...");
-        devices[0].SetFanPower(5, 0);
-        Console.WriteLine("====================");
-        Console.WriteLine();
-    }
-
-    if (iter == 15)
-    {
-        Console.WriteLine("Setting fan 6 speed to 100%...");
-        devices[0].SetFanPower(5, 100);
-        Console.WriteLine("====================");
-        Console.WriteLine();
-    }
-
-    if (iter == 25)
-    {
-        Console.WriteLine("Setting fan 6 speed to 600rpm...");
-        devices[0].SetFanRpm(5, 600);
-        Console.WriteLine("====================");
-        Console.WriteLine();
-    }
+    Console.WriteLine("------------------------------");
 }
-
-//Console.ReadLine();
