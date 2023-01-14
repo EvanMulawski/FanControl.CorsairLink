@@ -40,7 +40,7 @@ namespace CorsairLink
         private HidStream? _stream;
         private byte _speedChannelCount;
         private readonly bool _firstChannelExt;
-        private readonly Dictionary<int, (byte, byte)> _channelFixedPercentSpeeds = new();
+        private readonly Dictionary<int, byte> _channelFixedPercentSpeeds = new();
         private readonly System.Timers.Timer _timer;
         private readonly object _lock = new object();
 
@@ -128,7 +128,7 @@ namespace CorsairLink
 
             for (int i = 0, s = 1; i < _speedChannelCount; i++, s += 2)
             {
-                _channelFixedPercentSpeeds[i] = (responseData[s], responseData[s + 1]);
+                _channelFixedPercentSpeeds[i] = responseData[s];
             }
         }
 
@@ -230,9 +230,7 @@ namespace CorsairLink
 
         public void SetSpeed(int channel, int percent)
         {
-            var bytes = new byte[2];
-            BinaryPrimitives.WriteInt16LittleEndian(bytes, (short)Utils.Clamp(percent, 0, 100));
-            _channelFixedPercentSpeeds[channel] = (bytes[0], bytes[1]);
+            _channelFixedPercentSpeeds[channel] = (byte)Utils.Clamp(percent, 0, 100);
         }
 
         private void WriteAllSpeeds()
@@ -242,9 +240,7 @@ namespace CorsairLink
 
             foreach (var c in _channelFixedPercentSpeeds.Keys)
             {
-                var percentBytes = _channelFixedPercentSpeeds[c];
-                channelsSpan[c] = percentBytes.Item1;
-                channelsSpan[c + 1] = percentBytes.Item2;
+                channelsSpan[c * 2] = _channelFixedPercentSpeeds[c];
             }
 
             Prepare();
