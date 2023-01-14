@@ -1,8 +1,7 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface IDeviceInfo
 {
-    public interface IDeviceInfo
-    {
-        string DevicePath { get; }
-        string Name { get; }
-    }
+    string DevicePath { get; }
+    string Name { get; }
 }

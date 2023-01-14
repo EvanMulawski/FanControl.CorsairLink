@@ -1,7 +1,6 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface ISupportFixedPercentSpeedControl
 {
-    public interface ISupportFixedPercentSpeedControl
-    {
-        void SetSpeed(int channel, int percent);
-    }
+    void SetSpeed(int channel, int percent);
 }

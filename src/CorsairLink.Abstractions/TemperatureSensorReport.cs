@@ -1,12 +1,11 @@
-﻿namespace CorsairLink
-{
-    public class TemperatureSensorReport
-    {
-        public TemperatureSensorReport(IEnumerable<TemperatureSensorData> temperatures)
-        {
-            Temperatures = temperatures.ToList();
-        }
+﻿namespace CorsairLink;
 
-        public IReadOnlyCollection<TemperatureSensorData> Temperatures { get; }
+public class TemperatureSensorReport
+{
+    public TemperatureSensorReport(IEnumerable<TemperatureSensor> temperatures)
+    {
+        Temperatures = temperatures.ToList();
     }
+
+    public IReadOnlyCollection<TemperatureSensor> Temperatures { get; }
 }

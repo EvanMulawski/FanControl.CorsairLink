@@ -1,11 +1,10 @@
 ﻿using HidSharp;
 using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
-using System.Timers;
 
 namespace CorsairLink;
 
-public sealed class CommanderCoreDevice : ICommanderCore
+public sealed class CommanderCoreDevice2 : IDevice2
 {
     private static class Commands
     {
@@ -36,57 +35,34 @@ public sealed class CommanderCoreDevice : ICommanderCore
         public static ReadOnlySpan<byte> HardwareSpeedFixedPercent => new byte[] { 0x04, 0x00 };
     }
 
-    private readonly HidDevice _device;
-    private HidStream? _stream;
-    private byte _speedChannelCount;
-    private readonly bool _firstChannelExt;
-    private readonly Dictionary<int, byte> _channelFixedPercentSpeeds = new();
-    private readonly System.Timers.Timer _timer;
-    private readonly object _lock = new object();
-
     private const int REQUEST_LENGTH = 97;
     private const int RESPONSE_LENGTH = 96;
     private const int WRITE_COMMAND_DATA_START_IDX = 4;
 
-    public CommanderCoreDevice(HidDevice device)
+    private readonly HidDevice _device;
+    private HidStream? _stream;
+    private byte _speedChannelCount;
+    private readonly bool _firstChannelExt;
+    private readonly Dictionary<int, byte> _requestedChannelPower = new();
+    private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
+    private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
+
+    public CommanderCoreDevice2(HidDevice device)
     {
         _device = device;
         Name = $"{device.GetProductName()} ({device.GetSerialNumber()})";
 
         _firstChannelExt = device.ProductID == HardwareIds.CorsairCommanderCoreProductId
             || device.ProductID == HardwareIds.CorsairCommanderSTProductId;
-
-        _timer = new System.Timers.Timer(1000)
-        {
-            Enabled = false,
-        };
-        _timer.Elapsed += new ElapsedEventHandler(OnTimerTick);
     }
 
-    private void OnTimerTick(object sender, ElapsedEventArgs e)
-    {
-        bool lockTaken = false;
-
-        try
-        {
-            Monitor.TryEnter(_lock, ref lockTaken);
-            if (lockTaken)
-            {
-                WriteAllSpeeds();
-            }
-        }
-        finally
-        {
-            if (lockTaken)
-            {
-                Monitor.Exit(_lock);
-            }
-        }
-    }
-
-    public string DevicePath => _device.DevicePath;
+    public string UniqueId => _device.DevicePath;
 
     public string Name { get; }
+
+    public IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
+
+    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
     public bool Connect()
     {
@@ -99,8 +75,7 @@ public sealed class CommanderCoreDevice : ICommanderCore
 
         if (_device.TryOpen(openConfig, out _stream))
         {
-            SetUpSpeedChannels();
-            _timer.Enabled = true;
+            Initialize();
             return true;
         }
 
@@ -109,35 +84,8 @@ public sealed class CommanderCoreDevice : ICommanderCore
 
     public void Disconnect()
     {
-        _timer.Enabled = false;
-        _timer.Dispose();
         _stream?.Dispose();
         _stream = null;
-    }
-
-    private void SetUpSpeedChannels()
-    {
-        Prepare();
-        var response = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
-        Done();
-        response.ThrowIfInvalid();
-
-        var responseData = response.GetData();
-        _speedChannelCount = responseData[0];
-        _channelFixedPercentSpeeds.Clear();
-
-        for (int i = 0, s = 1; i < _speedChannelCount; i++, s += 2)
-        {
-            _channelFixedPercentSpeeds[i] = responseData[s];
-        }
-    }
-
-    private void ThrowIfNotConnected()
-    {
-        if (_stream is null)
-        {
-            throw new InvalidOperationException("Not connected!");
-        }
     }
 
     public string GetFirmwareVersion()
@@ -153,21 +101,108 @@ public sealed class CommanderCoreDevice : ICommanderCore
         return $"{v1}.{v2}.{v3}";
     }
 
-    public SpeedSensorReport GetSpeeds()
+    private void Initialize()
     {
-        ThrowIfNotConnected();
-
         Prepare();
+
+        var hardwareFixedSpeedPercentResponse = ReadFromEndpoint(_stream!, Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent);
         var connectedSpeedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
         var speedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetSpeeds, DataTypes.Speeds);
+        var temperaturesResponse = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
+
+        InitializeRequestedChannelPower(hardwareFixedSpeedPercentResponse);
+        RefreshSpeeds(connectedSpeedsResponse, speedsResponse);
+        RefreshTemperatures(temperaturesResponse);
+
         Done();
+    }
+
+    public void Refresh()
+    {
+        Prepare();
+
+        var connectedSpeedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
+        var speedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetSpeeds, DataTypes.Speeds);
+        var temperaturesResponse = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
+
+        WriteRequestedSpeeds();
+        RefreshSpeeds(connectedSpeedsResponse, speedsResponse);
+        RefreshTemperatures(temperaturesResponse);
+
+        Done();
+    }
+
+    public void SetChannelPower(int channel, int percent)
+    {
+        _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, 0, 100);
+    }
+
+    private void RefreshTemperatures(EndpointResponse temperaturesResponse)
+    {
+        var sensors = GetTemperatureSensors(temperaturesResponse);
+
+        foreach (var sensor in sensors)
+        {
+            if (!_temperatureSensors.TryGetValue(sensor.Channel, out var existingSensor))
+            {
+                _temperatureSensors[sensor.Channel] = sensor;
+                continue;
+            }
+
+            existingSensor.TemperatureCelsius = sensor.TemperatureCelsius;
+        }
+    }
+
+    private void RefreshSpeeds(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
+    {
+        var sensors = GetSpeedSensors(connectedSpeedsResponse, speedsResponse);
+
+        foreach (var sensor in sensors)
+        {
+            if (!_speedSensors.TryGetValue(sensor.Channel, out var existingSensor))
+            {
+                _speedSensors[sensor.Channel] = sensor;
+                continue;
+            }
+
+            existingSensor.Rpm = sensor.Rpm;
+        }
+    }
+
+    private void InitializeRequestedChannelPower(EndpointResponse hardwareFixedSpeedPercentResponse)
+    {
+        hardwareFixedSpeedPercentResponse.ThrowIfInvalid();
+
+        var responseData = hardwareFixedSpeedPercentResponse.GetData();
+        _speedChannelCount = responseData[0];
+        _requestedChannelPower.Clear();
+
+        for (int i = 0, s = 1; i < _speedChannelCount; i++, s += 2)
+        {
+            _requestedChannelPower[i] = responseData[s];
+        }
+    }
+
+    private void ThrowIfNotConnected()
+    {
+        if (_stream is null)
+        {
+            throw new InvalidOperationException("Not connected!");
+        }
+    }
+
+    private IReadOnlyCollection<SpeedSensor> GetSpeedSensors(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
+    {
+        //var connectedSpeedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
+        //var speedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetSpeeds, DataTypes.Speeds);
+
         connectedSpeedsResponse.ThrowIfInvalid();
         speedsResponse.ThrowIfInvalid();
 
         var connectedSpeedsResponseData = connectedSpeedsResponse.GetData();
         var speedsResponseData = speedsResponse.GetData().Slice(1);
         var sensorCount = connectedSpeedsResponseData[0];
-        var sensorData = new List<SpeedSensor>(sensorCount);
+        var sensors = new List<SpeedSensor>(sensorCount);
 
         for (int i = 0, c = 1, s = 0; i < sensorCount; i++, c++, s += 2)
         {
@@ -181,29 +216,26 @@ public sealed class CommanderCoreDevice : ICommanderCore
 
             if (!_firstChannelExt)
             {
-                sensorData.Add(new SpeedSensor($"Fan #{i + 1}", i, rpm)); 
+                sensors.Add(new SpeedSensor($"Fan #{i + 1}", i, rpm));
             }
             else
             {
-                sensorData.Add(new SpeedSensor(i == 0 ? "Pump" : $"Fan #{i}", i, rpm));
+                sensors.Add(new SpeedSensor(i == 0 ? "Pump" : $"Fan #{i}", i, rpm));
             }
         }
 
-        return new SpeedSensorReport(sensorData);
+        return sensors;
     }
 
-    public TemperatureSensorReport GetTemperatures()
+    private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors(EndpointResponse temperaturesResponse)
     {
-        ThrowIfNotConnected();
+        //var temperaturesResponse = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
 
-        Prepare();
-        var response = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
-        Done();
-        response.ThrowIfInvalid();
+        temperaturesResponse.ThrowIfInvalid();
 
-        var responseData = response.GetData();
+        var responseData = temperaturesResponse.GetData();
         var sensorCount = responseData[0];
-        var sensorData = new List<TemperatureSensor>(sensorCount);
+        var sensors = new List<TemperatureSensor>(sensorCount);
 
         for (int i = 0, c = 1; i < sensorCount; i++, c += 3)
         {
@@ -217,37 +249,30 @@ public sealed class CommanderCoreDevice : ICommanderCore
 
             if (!_firstChannelExt)
             {
-                sensorData.Add(new TemperatureSensor($"Temp #{i + 1}", i, temp));
+                sensors.Add(new TemperatureSensor($"Temp #{i + 1}", i, temp));
             }
             else
             {
-                sensorData.Add(new TemperatureSensor(i == 0 ? "Liquid Temp" : $"Temp #{i}", i, temp));
+                sensors.Add(new TemperatureSensor(i == 0 ? "Liquid Temp" : $"Temp #{i}", i, temp));
             }
         }
 
-        return new TemperatureSensorReport(sensorData);
+        return sensors;
     }
 
-    public void SetSpeed(int channel, int percent)
-    {
-        _channelFixedPercentSpeeds[channel] = (byte)Utils.Clamp(percent, 0, 100);
-    }
-
-    private void WriteAllSpeeds()
+    private void WriteRequestedSpeeds()
     {
         var speedFixedPercentBuf = new byte[_speedChannelCount * 2 + 1];
         var channelsSpan = speedFixedPercentBuf.AsSpan(1);
 
-        foreach (var c in _channelFixedPercentSpeeds.Keys)
+        foreach (var c in _requestedChannelPower.Keys)
         {
-            channelsSpan[c * 2] = _channelFixedPercentSpeeds[c];
+            channelsSpan[c * 2] = _requestedChannelPower[c];
         }
 
-        Prepare();
         // set all channels to fixed percent (mode = 0x00)
         WriteToEndpoint(_stream!, Endpoints.HardwareSpeedMode, DataTypes.HardwareSpeedMode, default);
         WriteToEndpoint(_stream!, Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent, speedFixedPercentBuf);
-        Done();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

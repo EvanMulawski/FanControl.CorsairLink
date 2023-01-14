@@ -13,9 +13,9 @@ public static class DeviceManager
 
         var collection = new SupportedDeviceCollection();
 
-        collection.CommanderProDevices.AddRange(supportedDevices[HardwareIds.CorsairCommanderProProductId].Select(x => new CommanderProDevice(x)));
-        collection.CommanderProDevices.AddRange(supportedDevices[HardwareIds.CorsairObsidian1000DCommanderProProductId].Select(x => new CommanderProDevice(x)));
-        collection.CommanderCoreDevices.AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreXTProductId].Select(x => new CommanderCoreDevice(x)));
+        //collection.CommanderProDevices.AddRange(supportedDevices[HardwareIds.CorsairCommanderProProductId].Select(x => new CommanderProDevice(x)));
+        //collection.CommanderProDevices.AddRange(supportedDevices[HardwareIds.CorsairObsidian1000DCommanderProProductId].Select(x => new CommanderProDevice(x)));
+        collection.CommanderCoreDevices.AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreXTProductId].Select(x => new CommanderCoreDevice2(x)));
 
         return collection;
     }

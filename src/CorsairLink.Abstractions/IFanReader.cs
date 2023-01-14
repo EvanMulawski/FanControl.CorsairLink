@@ -1,8 +1,7 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface IFanReader
 {
-    public interface IFanReader
-    {
-        FanConfiguration GetFanConfiguration();
-        int GetFanRpm(int channelId);
-    }
+    FanConfiguration GetFanConfiguration();
+    int GetFanRpm(int channelId);
 }

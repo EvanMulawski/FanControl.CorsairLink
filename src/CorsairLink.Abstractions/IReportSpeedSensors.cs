@@ -1,7 +1,6 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface IReportSpeedSensors
 {
-    public interface IReportSpeedSensors
-    {
-        SpeedSensorReport GetSpeeds();
-    }
+    SpeedSensorReport GetSpeeds();
 }

@@ -1,7 +1,6 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface IReportTemperatureSensors
 {
-    public interface IReportTemperatureSensors
-    {
-        TemperatureSensorReport GetTemperatures();
-    }
+    TemperatureSensorReport GetTemperatures();
 }

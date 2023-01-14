@@ -1,8 +1,7 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface ITemperatureSensorReader
 {
-    public interface ITemperatureSensorReader
-    {
-        TemperatureSensorConfiguration GetTemperatureSensorConfiguration();
-        int GetTemperatureSensorValue(int channelId);
-    }
+    TemperatureSensorConfiguration GetTemperatureSensorConfiguration();
+    int GetTemperatureSensorValue(int channelId);
 }

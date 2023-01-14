@@ -1,7 +1,6 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+public interface IReportFirmwareVersion
 {
-    public interface IReportFirmwareVersion
-    {
-        string GetFirmwareVersion();
-    }
+    string GetFirmwareVersion();
 }
