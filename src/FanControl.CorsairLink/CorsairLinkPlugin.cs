@@ -54,9 +54,7 @@ public class CorsairLinkPlugin : IPlugin
 
         foreach (var device in devices)
         {
-            device.Connect();
-
-            if (!device.IsConnected)
+            if (!device.Connect())
             {
                 Log($"Device '{device.DevicePath}' failed to connect! This device will not be available.");
                 continue;

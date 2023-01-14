@@ -20,37 +20,27 @@ public sealed class CommanderProDevice : ICommanderPro
 
     public string Name { get; }
 
-    public bool IsConnected => _stream is not null;
-
-    public void Connect()
+    public bool Connect()
     {
-        if (IsConnected)
-        {
-            return;
-        }
+        Disconnect();
 
         var openConfig = new OpenConfiguration();
         openConfig.SetOption(OpenOption.Exclusive, true);
         openConfig.SetOption(OpenOption.Transient, true);
         openConfig.SetOption(OpenOption.Interruptible, true);
 
-        _device.TryOpen(openConfig, out _stream);
+        return _device.TryOpen(openConfig, out _stream);
     }
 
     public void Disconnect()
     {
-        if (!IsConnected)
-        {
-            return;
-        }
-
         _stream?.Dispose();
         _stream = null;
     }
 
     private void ThrowIfNotConnected()
     {
-        if (!IsConnected)
+        if (_stream is null)
         {
             throw new InvalidOperationException("Not connected!");
         }

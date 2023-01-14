@@ -4,9 +4,7 @@ var devices = DeviceManager.GetSupportedDevices();
 
 foreach (var device in devices)
 {
-    device.Connect();
-
-    if (!device.IsConnected)
+    if (!device.Connect())
     {
         Console.WriteLine($"Device '{device.DevicePath}' did not connect!");
         continue;
@@ -27,6 +25,16 @@ foreach (var device in devices)
         foreach (var temp in tempsReport.Temperatures)
         {
             Console.WriteLine($"  {temp.Name} ({temp.Channel}): {(temp.TemperatureCelsius.HasValue ? temp.TemperatureCelsius + "°C" : "n/a")}");
+        }
+    }
+
+    if (device is IReportSpeedSensors speeds)
+    {
+        var speedsReport = speeds.GetSpeeds();
+
+        foreach (var speed in speedsReport.Speeds)
+        {
+            Console.WriteLine($"  {speed.Name} ({speed.Channel}): {(speed.Rpm.HasValue ? speed.Rpm + "rpm" : "n/a")}");
         }
     }
 
