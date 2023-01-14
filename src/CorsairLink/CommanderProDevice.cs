@@ -1,14 +1,33 @@
 ﻿using HidSharp;
 using System.Buffers.Binary;
+using System.Runtime.CompilerServices;
 
 namespace CorsairLink;
 
-public sealed class CommanderProDevice : ICommanderPro
+public sealed class CommanderProDevice : IDevice
 {
+    private static class Commands
+    {
+        public static readonly byte ReadFirmwareVersion = 0x02;
+        public static readonly byte ReadTemperatureMask = 0x10;
+        public static readonly byte ReadTemperatureValue = 0x11;
+        public static readonly byte ReadFanMask = 0x20;
+        public static readonly byte ReadFanSpeed = 0x21;
+        public static readonly byte ReadFanPower = 0x22;
+        public static readonly byte WriteFanPower = 0x23;
+        public static readonly byte WriteFanSpeed = 0x24;
+        public static readonly byte WriteFanCurve = 0x25;
+        public static readonly byte WriteFanExternalTemp = 0x26;
+        public static readonly byte WriteFanForceThreePinMode = 0x27;
+        public static readonly byte WriteFanDetectionType = 0x28;
+        public static readonly byte ReadFanDetectionType = 0x29;
+    }
+
+    private const int REQUEST_LENGTH = 64;
+    private const int RESPONSE_LENGTH = 17;
+
     private readonly HidDevice _device;
     private HidStream? _stream;
-    private const int _requestLength = 64;
-    private const int _responseLength = 17;
 
     public CommanderProDevice(HidDevice device)
     {
@@ -16,9 +35,13 @@ public sealed class CommanderProDevice : ICommanderPro
         Name = $"{device.GetProductName()} ({device.GetSerialNumber()})";
     }
 
-    public string DevicePath => _device.DevicePath;
+    public string UniqueId => _device.DevicePath;
 
     public string Name { get; }
+
+    public IReadOnlyCollection<SpeedSensor> SpeedSensors => throw new NotImplementedException();
+
+    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => throw new NotImplementedException();
 
     public bool Connect()
     {
@@ -50,9 +73,9 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadFirmwareVersion, _requestLength);
+        var request = CreateRequest(Commands.ReadFirmwareVersion, REQUEST_LENGTH);
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
         var v1 = (int)response[2];
@@ -66,10 +89,10 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadFanSpeed, _requestLength);
+        var request = CreateRequest(Commands.ReadFanSpeed, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
@@ -79,11 +102,11 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.WriteFanSpeed, _requestLength);
+        var request = CreateRequest(Commands.WriteFanSpeed, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
         BinaryPrimitives.WriteInt16BigEndian(request.AsSpan().Slice(3), Convert.ToInt16(Math.Max(0, rpm)));
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
     }
 
@@ -91,11 +114,11 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.WriteFanPower, _requestLength);
+        var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
         request[3] = Convert.ToByte(Utils.Clamp(percent, 0, 100));
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
     }
 
@@ -103,10 +126,10 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadTemperatureValue, _requestLength);
+        var request = CreateRequest(Commands.ReadTemperatureValue, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 3));
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100;
@@ -116,9 +139,9 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadFanMask, _requestLength);
+        var request = CreateRequest(Commands.ReadFanMask, REQUEST_LENGTH);
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
         var fan1Mode = (FanMode)response[2];
@@ -143,9 +166,9 @@ public sealed class CommanderProDevice : ICommanderPro
     {
         ThrowIfNotConnected();
 
-        var request = Utils.CreateRequest(HidDeviceCommands.CommanderPro.ReadTemperatureMask, _requestLength);
+        var request = CreateRequest(Commands.ReadTemperatureMask, REQUEST_LENGTH);
         _stream!.Write(request);
-        var response = Utils.CreateResponse(_responseLength);
+        var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
         var sensor1Status = (TemperatureSensorStatus)response[2];
@@ -160,5 +183,29 @@ public sealed class CommanderProDevice : ICommanderPro
                 new TemperatureSensorChannel(3, sensor4Status),
             }
         );
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte[] CreateRequest(byte command, int length)
+    {
+        var writeBuf = new byte[length];
+        writeBuf[1] = command;
+        return writeBuf;
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static byte[] CreateResponse(int length)
+    {
+        return new byte[length];
+    }
+
+    public void Refresh()
+    {
+        throw new NotImplementedException();
+    }
+
+    public void SetChannelPower(int channel, int percent)
+    {
+        throw new NotImplementedException();
     }
 }

@@ -2,17 +2,17 @@
 
 namespace CorsairLink;
 
-public sealed class SupportedDeviceCollection : IEnumerable<IDevice2>
+public sealed class SupportedDeviceCollection : IEnumerable<IDevice>
 {
-    public List<IDevice2> CommanderProDevices { get; } = new List<IDevice2>(1);
-    public List<IDevice2> CommanderCoreDevices { get; } = new List<IDevice2>(1);
+    public List<IDevice> CommanderProDevices { get; } = new List<IDevice>(1);
+    public List<IDevice> CommanderCoreDevices { get; } = new List<IDevice>(1);
 
-    private IEnumerator<IDevice2> GetEnumeratorImpl()
+    private IEnumerator<IDevice> GetEnumeratorImpl()
     {
         return CommanderProDevices.Union(CommanderCoreDevices).GetEnumerator();
     }
 
-    IEnumerator<IDevice2> IEnumerable<IDevice2>.GetEnumerator() => GetEnumeratorImpl();
+    IEnumerator<IDevice> IEnumerable<IDevice>.GetEnumerator() => GetEnumeratorImpl();
 
     IEnumerator IEnumerable.GetEnumerator() => GetEnumeratorImpl();
 }

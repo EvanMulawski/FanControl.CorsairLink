@@ -6,7 +6,7 @@ using global::CorsairLink;
 public class CorsairLinkPlugin : IPlugin
 {
     private readonly IPluginLogger _logger;
-    private IReadOnlyCollection<IDevice2> _devices = new List<IDevice2>(0);
+    private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
 
     string IPlugin.Name => "CorsairLink";
 
@@ -49,7 +49,7 @@ public class CorsairLinkPlugin : IPlugin
             CloseImpl();
         }
 
-        var initializedDevices = new List<IDevice2>();
+        var initializedDevices = new List<IDevice>();
         var devices = DeviceManager.GetSupportedDevices();
 
         foreach (var device in devices)
@@ -82,7 +82,7 @@ public class CorsairLinkPlugin : IPlugin
         }
     }
 
-    private void AddDeviceSpeedSensors(IPluginSensorsContainer container, IDevice2 device)
+    private void AddDeviceSpeedSensors(IPluginSensorsContainer container, IDevice device)
     {
         foreach (var sensor in device.SpeedSensors)
         {
@@ -91,7 +91,7 @@ public class CorsairLinkPlugin : IPlugin
         }
     }
 
-    private void AddDeviceSpeedControllers(IPluginSensorsContainer container, IDevice2 device)
+    private void AddDeviceSpeedControllers(IPluginSensorsContainer container, IDevice device)
     {
         foreach (var sensor in device.SpeedSensors)
         {
@@ -100,7 +100,7 @@ public class CorsairLinkPlugin : IPlugin
         }
     }
 
-    private void AddDeviceTemperatureSensors(IPluginSensorsContainer container, IDevice2 device)
+    private void AddDeviceTemperatureSensors(IPluginSensorsContainer container, IDevice device)
     {
         foreach (var sensor in device.TemperatureSensors)
         {

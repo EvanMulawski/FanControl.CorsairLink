@@ -7,7 +7,7 @@ public sealed class CorsairLinkSpeedSensor : IPluginSensor
 {
     private readonly SpeedSensor _sensor;
 
-    public CorsairLinkSpeedSensor(IDevice2 device, SpeedSensor sensor)
+    public CorsairLinkSpeedSensor(IDevice device, SpeedSensor sensor)
     {
         _sensor = sensor;
 

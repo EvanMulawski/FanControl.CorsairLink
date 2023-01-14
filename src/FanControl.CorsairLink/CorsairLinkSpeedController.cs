@@ -5,11 +5,11 @@ namespace FanControl.CorsairLink;
 
 public sealed class CorsairLinkSpeedController : IPluginControlSensor
 {
-    private readonly IDevice2 _device;
+    private readonly IDevice _device;
     private readonly SpeedSensor _sensor;
     private float? _value;
 
-    public CorsairLinkSpeedController(IDevice2 device, SpeedSensor sensor)
+    public CorsairLinkSpeedController(IDevice device, SpeedSensor sensor)
     {
         _device = device;
         _sensor = sensor;

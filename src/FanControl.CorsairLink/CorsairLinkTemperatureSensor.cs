@@ -7,7 +7,7 @@ public sealed class CorsairLinkTemperatureSensor : IPluginSensor
 {
     private readonly TemperatureSensor _sensor;
 
-    public CorsairLinkTemperatureSensor(IDevice2 device, TemperatureSensor sensor)
+    public CorsairLinkTemperatureSensor(IDevice device, TemperatureSensor sensor)
     {
         _sensor = sensor;
 
