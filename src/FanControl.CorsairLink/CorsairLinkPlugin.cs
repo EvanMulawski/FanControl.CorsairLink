@@ -2,10 +2,13 @@
 
 using FanControl.Plugins;
 using global::CorsairLink;
+using System.Timers;
 
 public class CorsairLinkPlugin : IPlugin
 {
     private readonly IPluginLogger _logger;
+    private readonly Timer _timer;
+    private readonly object _timerLock = new();
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
 
     string IPlugin.Name => "CorsairLink";
@@ -13,9 +16,38 @@ public class CorsairLinkPlugin : IPlugin
     public CorsairLinkPlugin(IPluginLogger logger)
     {
         _logger = logger;
+        _timer = new Timer(1000)
+        {
+            Enabled = false,
+        };
+        _timer.Elapsed += new ElapsedEventHandler(OnTimerTick);
     }
 
     public bool IsInitialized { get; private set; }
+
+    private void OnTimerTick(object sender, ElapsedEventArgs e)
+    {
+        bool lockTaken = false;
+
+        try
+        {
+            Monitor.TryEnter(_timerLock, ref lockTaken);
+            if (lockTaken)
+            {
+                foreach (var device in _devices)
+                {
+                    device.Refresh();
+                }
+            }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                Monitor.Exit(_timerLock);
+            }
+        }
+    }
 
     private void Log(string message)
     {
@@ -33,6 +65,8 @@ public class CorsairLinkPlugin : IPlugin
         {
             return;
         }
+
+        _timer.Enabled = false;
 
         foreach (var device in _devices)
         {
@@ -64,6 +98,7 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         _devices = initializedDevices;
+        _timer.Enabled = true;
         IsInitialized = true;
     }
 

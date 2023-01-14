@@ -25,9 +25,14 @@ public sealed class CommanderProDevice : IDevice
 
     private const int REQUEST_LENGTH = 64;
     private const int RESPONSE_LENGTH = 17;
+    private const int SPEED_CHANNEL_COUNT = 6;
+    private const int TEMP_CHANNEL_COUNT = 4;
 
     private readonly HidDevice _device;
     private HidStream? _stream;
+    private readonly Dictionary<int, byte> _requestedChannelPower = new();
+    private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
+    private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
     public CommanderProDevice(HidDevice device)
     {
@@ -39,9 +44,9 @@ public sealed class CommanderProDevice : IDevice
 
     public string Name { get; }
 
-    public IReadOnlyCollection<SpeedSensor> SpeedSensors => throw new NotImplementedException();
+    public IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
 
-    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => throw new NotImplementedException();
+    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
     public bool Connect()
     {
@@ -52,7 +57,13 @@ public sealed class CommanderProDevice : IDevice
         openConfig.SetOption(OpenOption.Transient, true);
         openConfig.SetOption(OpenOption.Interruptible, true);
 
-        return _device.TryOpen(openConfig, out _stream);
+        if (_device.TryOpen(openConfig, out _stream))
+        {
+            Initialize();
+            return true;
+        }
+
+        return false;
     }
 
     public void Disconnect()
@@ -85,12 +96,73 @@ public sealed class CommanderProDevice : IDevice
         return $"{v1}.{v2}.{v3}";
     }
 
-    public int GetFanRpm(int channelId)
+    private void Initialize()
+    {
+        InitializeRequestedChannelPower();
+        RefreshTemperatures();
+        RefreshSpeeds();
+    }
+
+    public void Refresh()
+    {
+        WriteRequestedSpeeds();
+        RefreshTemperatures();
+        RefreshSpeeds();
+    }
+
+    public void SetChannelPower(int channel, int percent)
+    {
+        _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, 0, 100);
+    }
+
+    private void InitializeRequestedChannelPower()
+    {
+        _requestedChannelPower.Clear();
+
+        for (int i = 0; i < SPEED_CHANNEL_COUNT; i++)
+        {
+            _requestedChannelPower[i] = GetFanPower(i);
+        }
+    }
+
+    private void RefreshTemperatures()
+    {
+        var sensors = GetTemperatureSensors();
+
+        foreach (var sensor in sensors)
+        {
+            if (!_temperatureSensors.TryGetValue(sensor.Channel, out var existingSensor))
+            {
+                _temperatureSensors[sensor.Channel] = sensor;
+                continue;
+            }
+
+            existingSensor.TemperatureCelsius = sensor.TemperatureCelsius;
+        }
+    }
+
+    private void RefreshSpeeds()
+    {
+        var sensors = GetSpeedSensors();
+
+        foreach (var sensor in sensors)
+        {
+            if (!_speedSensors.TryGetValue(sensor.Channel, out var existingSensor))
+            {
+                _speedSensors[sensor.Channel] = sensor;
+                continue;
+            }
+
+            existingSensor.Rpm = sensor.Rpm;
+        }
+    }
+
+    private int GetFanRpm(int channelId)
     {
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.ReadFanSpeed, REQUEST_LENGTH);
-        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
+        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         _stream!.Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
@@ -98,36 +170,45 @@ public sealed class CommanderProDevice : IDevice
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
     }
 
-    public void SetFanRpm(int channelId, int rpm)
+    private byte GetFanPower(int channelId)
     {
         ThrowIfNotConnected();
 
-        var request = CreateRequest(Commands.WriteFanSpeed, REQUEST_LENGTH);
-        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
-        BinaryPrimitives.WriteInt16BigEndian(request.AsSpan().Slice(3), Convert.ToInt16(Math.Max(0, rpm)));
+        var request = CreateRequest(Commands.ReadFanPower, REQUEST_LENGTH);
+        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         _stream!.Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
+
+        return response[2];
     }
 
-    public void SetFanPower(int channelId, int percent)
+    private void SetFanPower(int channelId, int percent)
     {
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
-        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 5));
+        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         request[3] = Convert.ToByte(Utils.Clamp(percent, 0, 100));
         _stream!.Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
     }
 
-    public int GetTemperatureSensorValue(int channelId)
+    private void WriteRequestedSpeeds()
+    {
+        foreach (var c in _requestedChannelPower.Keys)
+        {
+            SetFanPower(c, _requestedChannelPower[c]);
+        }
+    }
+
+    private int GetTemperatureSensorValue(int channelId)
     {
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.ReadTemperatureValue, REQUEST_LENGTH);
-        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, 3));
+        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, TEMP_CHANNEL_COUNT - 1));
         _stream!.Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
@@ -135,7 +216,7 @@ public sealed class CommanderProDevice : IDevice
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100;
     }
 
-    public FanConfiguration GetFanConfiguration()
+    private IReadOnlyCollection<SpeedSensor> GetSpeedSensors()
     {
         ThrowIfNotConnected();
 
@@ -144,25 +225,25 @@ public sealed class CommanderProDevice : IDevice
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
-        var fan1Mode = (FanMode)response[2];
-        var fan2Mode = (FanMode)response[3];
-        var fan3Mode = (FanMode)response[4];
-        var fan4Mode = (FanMode)response[5];
-        var fan5Mode = (FanMode)response[6];
-        var fan6Mode = (FanMode)response[7];
+        var sensors = new List<SpeedSensor>();
 
-        return new FanConfiguration(new[] {
-                new FanChannel(0, fan1Mode),
-                new FanChannel(1, fan2Mode),
-                new FanChannel(2, fan3Mode),
-                new FanChannel(3, fan4Mode),
-                new FanChannel(4, fan5Mode),
-                new FanChannel(5, fan6Mode),
+        for (int ch = 0, i = 2; ch < SPEED_CHANNEL_COUNT; ch++, i++)
+        {
+            int? rpm = default;
+            var connected = response[i] > 0x00;
+
+            if (connected)
+            {
+                rpm = GetFanRpm(ch);
             }
-        );
+
+            sensors.Add(new SpeedSensor($"Fan #{ch + 1}", ch, rpm));
+        }
+
+        return sensors;
     }
 
-    public TemperatureSensorConfiguration GetTemperatureSensorConfiguration()
+    private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors()
     {
         ThrowIfNotConnected();
 
@@ -171,18 +252,22 @@ public sealed class CommanderProDevice : IDevice
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
 
-        var sensor1Status = (TemperatureSensorStatus)response[2];
-        var sensor2Status = (TemperatureSensorStatus)response[3];
-        var sensor3Status = (TemperatureSensorStatus)response[4];
-        var sensor4Status = (TemperatureSensorStatus)response[5];
+        var sensors = new List<TemperatureSensor>();
 
-        return new TemperatureSensorConfiguration(new[] {
-                new TemperatureSensorChannel(0, sensor1Status),
-                new TemperatureSensorChannel(1, sensor2Status),
-                new TemperatureSensorChannel(2, sensor3Status),
-                new TemperatureSensorChannel(3, sensor4Status),
+        for (int ch = 0, i = 2; ch < TEMP_CHANNEL_COUNT; ch++, i++)
+        {
+            int? temp = default;
+            var connected = response[i] == 0x01;
+
+            if (connected)
+            {
+                temp = GetTemperatureSensorValue(ch);
             }
-        );
+
+            sensors.Add(new TemperatureSensor($"Temp #{ch + 1}", ch, temp));
+        }
+
+        return sensors;
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -197,15 +282,5 @@ public sealed class CommanderProDevice : IDevice
     private static byte[] CreateResponse(int length)
     {
         return new byte[length];
-    }
-
-    public void Refresh()
-    {
-        throw new NotImplementedException();
-    }
-
-    public void SetChannelPower(int channel, int percent)
-    {
-        throw new NotImplementedException();
     }
 }
