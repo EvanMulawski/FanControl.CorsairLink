@@ -28,7 +28,7 @@ public sealed class CommanderProDevice : IDevice
     private readonly HidDevice _device;
     private readonly ILogger? _logger;
     private HidStream? _stream;
-    private readonly Dictionary<int, byte> _requestedChannelPower = new();
+    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -183,10 +183,17 @@ public sealed class CommanderProDevice : IDevice
 
     private void WriteRequestedSpeeds()
     {
-        foreach (var c in _requestedChannelPower.Keys.ToList())
+        if (!_requestedChannelPower.Dirty)
+        {
+            return;
+        }
+
+        foreach (var c in _requestedChannelPower.Channels)
         {
             SetFanPower(c, _requestedChannelPower[c]);
         }
+
+        _requestedChannelPower.ResetDirty();
     }
 
     private int GetTemperatureSensorValue(int channelId)

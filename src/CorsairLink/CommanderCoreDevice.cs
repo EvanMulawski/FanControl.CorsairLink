@@ -45,7 +45,7 @@ public sealed class CommanderCoreDevice : IDevice
     private HidStream? _stream;
     private byte _speedChannelCount;
     private readonly bool _firstChannelExt;
-    private readonly Dictionary<int, byte> _requestedChannelPower = new();
+    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -285,6 +285,11 @@ public sealed class CommanderCoreDevice : IDevice
 
     private void WriteRequestedSpeeds()
     {
+        if (!_requestedChannelPower.Dirty)
+        {
+            return;
+        }
+
         // [0] number of channels
         // [1,] data
 
@@ -293,14 +298,14 @@ public sealed class CommanderCoreDevice : IDevice
 
         var channelsSpan = speedFixedPercentBuf.AsSpan(1);
 
-        var requestedChannelPowerKeys = _requestedChannelPower.Keys.ToList();
-
-        foreach (var c in requestedChannelPowerKeys)
+        foreach (var c in _requestedChannelPower.Channels)
         {
             channelsSpan[c * 2] = _requestedChannelPower[c];
         }
 
         WriteToEndpoint(_stream!, Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent, speedFixedPercentBuf);
+
+        _requestedChannelPower.ResetDirty();
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
