@@ -31,12 +31,19 @@ public class CorsairLinkPlugin : IPlugin
 
         try
         {
-            Monitor.TryEnter(_timerLock, ref lockTaken);
+            Monitor.TryEnter(_timerLock, 100, ref lockTaken);
             if (lockTaken)
             {
                 foreach (var device in _devices)
                 {
-                    device.Refresh();
+                    try
+                    {
+                        device.Refresh();
+                    }
+                    catch (Exception ex)
+                    {
+                        Log(ex.ToString());
+                    }
                 }
             }
         }
@@ -84,13 +91,13 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         var initializedDevices = new List<IDevice>();
-        var devices = DeviceManager.GetSupportedDevices();
+        var devices = DeviceManager.GetSupportedDevices(new CorsairLinkPluginLogger(_logger));
 
         foreach (var device in devices)
         {
             if (!device.Connect())
             {
-                Log($"Device '{device.UniqueId}' failed to connect! This device will not be available.");
+                Log($"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
                 continue;
             }
 
@@ -123,6 +130,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkSpeedSensor(device, sensor);
             container.FanSensors.Add(pluginSensor);
+            Log($"Added {pluginSensor.Id}");
         }
     }
 
@@ -132,6 +140,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginController = new CorsairLinkSpeedController(device, sensor);
             container.ControlSensors.Add(pluginController);
+            Log($"Added {pluginController.Id}");
         }
     }
 
@@ -141,6 +150,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkTemperatureSensor(device, sensor);
             container.TempSensors.Add(pluginSensor);
+            Log($"Added {pluginSensor.Id}");
         }
     }
 }

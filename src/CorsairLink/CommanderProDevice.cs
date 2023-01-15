@@ -15,28 +15,27 @@ public sealed class CommanderProDevice : IDevice
         public static readonly byte ReadFanSpeed = 0x21;
         public static readonly byte ReadFanPower = 0x22;
         public static readonly byte WriteFanPower = 0x23;
-        public static readonly byte WriteFanSpeed = 0x24;
-        public static readonly byte WriteFanCurve = 0x25;
-        public static readonly byte WriteFanExternalTemp = 0x26;
-        public static readonly byte WriteFanForceThreePinMode = 0x27;
-        public static readonly byte WriteFanDetectionType = 0x28;
-        public static readonly byte ReadFanDetectionType = 0x29;
     }
 
     private const int REQUEST_LENGTH = 64;
     private const int RESPONSE_LENGTH = 17;
     private const int SPEED_CHANNEL_COUNT = 6;
     private const int TEMP_CHANNEL_COUNT = 4;
+    private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
+    private const byte PERCENT_MIN = 0x00;
+    private const byte PERCENT_MAX = 0x64;
 
     private readonly HidDevice _device;
+    private readonly ILogger? _logger;
     private HidStream? _stream;
     private readonly Dictionary<int, byte> _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderProDevice(HidDevice device)
+    public CommanderProDevice(HidDevice device, ILogger? logger)
     {
         _device = device;
+        _logger = logger;
         Name = $"{device.GetProductName()} ({device.GetSerialNumber()})";
     }
 
@@ -48,16 +47,16 @@ public sealed class CommanderProDevice : IDevice
 
     public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
+    private void Log(string message)
+    {
+        _logger?.Log($"{Name}: {message}");
+    }
+
     public bool Connect()
     {
         Disconnect();
 
-        var openConfig = new OpenConfiguration();
-        openConfig.SetOption(OpenOption.Exclusive, true);
-        openConfig.SetOption(OpenOption.Transient, true);
-        openConfig.SetOption(OpenOption.Interruptible, true);
-
-        if (_device.TryOpen(openConfig, out _stream))
+        if (_device.TryOpen(out _stream))
         {
             Initialize();
             return true;
@@ -112,7 +111,7 @@ public sealed class CommanderProDevice : IDevice
 
     public void SetChannelPower(int channel, int percent)
     {
-        _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, 0, 100);
+        _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
     }
 
     private void InitializeRequestedChannelPower()
@@ -121,7 +120,7 @@ public sealed class CommanderProDevice : IDevice
 
         for (int i = 0; i < SPEED_CHANNEL_COUNT; i++)
         {
-            _requestedChannelPower[i] = GetFanPower(i);
+            _requestedChannelPower[i] = DEFAULT_SPEED_CHANNEL_POWER;
         }
     }
 
@@ -170,26 +169,13 @@ public sealed class CommanderProDevice : IDevice
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
     }
 
-    private byte GetFanPower(int channelId)
-    {
-        ThrowIfNotConnected();
-
-        var request = CreateRequest(Commands.ReadFanPower, REQUEST_LENGTH);
-        request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
-        _stream!.Write(request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
-
-        return response[2];
-    }
-
-    private void SetFanPower(int channelId, int percent)
+    private void SetFanPower(int channelId, byte percent)
     {
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
-        request[3] = Convert.ToByte(Utils.Clamp(percent, 0, 100));
+        request[3] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
         _stream!.Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
         _stream!.Read(response);
@@ -197,7 +183,7 @@ public sealed class CommanderProDevice : IDevice
 
     private void WriteRequestedSpeeds()
     {
-        foreach (var c in _requestedChannelPower.Keys)
+        foreach (var c in _requestedChannelPower.Keys.ToList())
         {
             SetFanPower(c, _requestedChannelPower[c]);
         }

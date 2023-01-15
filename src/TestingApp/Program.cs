@@ -1,6 +1,8 @@
 ﻿using CorsairLink;
 
-var devices = DeviceManager.GetSupportedDevices();
+var devices = DeviceManager.GetSupportedDevices(null);
+
+var connectedDevices = new List<IDevice>();
 
 foreach (var device in devices)
 {
@@ -9,6 +11,8 @@ foreach (var device in devices)
         Console.WriteLine($"Device '{device.UniqueId}' did not connect!");
         continue;
     }
+
+    connectedDevices.Add(device);
 
     Console.WriteLine(device.Name);
     Console.WriteLine($"  Device ID: {device.UniqueId}");
@@ -25,6 +29,33 @@ foreach (var device in devices)
     }
 
     Console.WriteLine("------------------------------");
+}
 
+for (var i = 0; i < 5; i++)
+{
+    await Task.Delay(1000);
+
+    foreach (var device in connectedDevices)
+    {
+        device.Refresh();
+
+        Console.WriteLine(device.Name);
+
+        foreach (var temp in device.TemperatureSensors)
+        {
+            Console.WriteLine($"  {temp.Name} ({temp.Channel}): {(temp.TemperatureCelsius.HasValue ? temp.TemperatureCelsius + "°C" : "n/a")}");
+        }
+
+        foreach (var speed in device.SpeedSensors)
+        {
+            Console.WriteLine($"  {speed.Name} ({speed.Channel}): {(speed.Rpm.HasValue ? speed.Rpm + "rpm" : "n/a")}");
+        }
+
+        Console.WriteLine("------------------------------");
+    }
+}
+
+foreach (var device in connectedDevices)
+{
     device.Disconnect();
 }

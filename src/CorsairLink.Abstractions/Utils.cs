@@ -1,10 +1,7 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace CorsairLink;
+﻿namespace CorsairLink;
 
 public static class Utils
 {
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     public static int Clamp(int value, int min, int max)
     {
         if (value < min)
