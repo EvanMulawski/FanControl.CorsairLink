@@ -339,11 +339,11 @@ public sealed class CommanderCoreDevice : IDevice
             data.CopyTo(dataSpan);
         }
 
-        stream.Write(writeBuf, 0, writeBuf.Length);
+        Write(stream, writeBuf);
         var readBuf = new byte[RESPONSE_LENGTH];
         do
         {
-            stream.Read(readBuf, 0, readBuf.Length);
+            Read(stream, readBuf);
         }
         while (readBuf[0] != 0x0);
 
@@ -385,6 +385,30 @@ public sealed class CommanderCoreDevice : IDevice
         SendCommand(stream, Commands.OpenEndpoint, endpoint);
         SendCommand(stream, Commands.Write, writeBuf);
         SendCommand(stream, Commands.CloseEndpoint);
+    }
+
+    private static void Write(Stream? stream, byte[] buffer)
+    {
+        try
+        {
+            stream?.Write(buffer, 0, buffer.Length);
+        }
+        catch (ObjectDisposedException)
+        {
+            // disconnected, ignore
+        }
+    }
+
+    private static void Read(Stream? stream, byte[] buffer)
+    {
+        try
+        {
+            stream?.Read(buffer, 0, buffer.Length);
+        }
+        catch (ObjectDisposedException)
+        {
+            // disconnected, ignore
+        }
     }
 
     private class EndpointResponse

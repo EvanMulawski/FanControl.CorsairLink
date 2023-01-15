@@ -84,9 +84,9 @@ public sealed class CommanderProDevice : IDevice
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.ReadFirmwareVersion, REQUEST_LENGTH);
-        _stream!.Write(request);
+        Write(_stream, request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
+        Read(_stream, response);
 
         var v1 = (int)response[2];
         var v2 = (int)response[3];
@@ -162,9 +162,9 @@ public sealed class CommanderProDevice : IDevice
 
         var request = CreateRequest(Commands.ReadFanSpeed, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
-        _stream!.Write(request);
+        Write(_stream, request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
+        Read(_stream, response);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
     }
@@ -176,9 +176,9 @@ public sealed class CommanderProDevice : IDevice
         var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         request[3] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
-        _stream!.Write(request);
+        Write(_stream, request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
+        Read(_stream, response);
     }
 
     private void WriteRequestedSpeeds()
@@ -202,9 +202,9 @@ public sealed class CommanderProDevice : IDevice
 
         var request = CreateRequest(Commands.ReadTemperatureValue, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, TEMP_CHANNEL_COUNT - 1));
-        _stream!.Write(request);
+        Write(_stream, request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
+        Read(_stream, response);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100;
     }
@@ -214,9 +214,9 @@ public sealed class CommanderProDevice : IDevice
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.ReadFanMask, REQUEST_LENGTH);
-        _stream!.Write(request);
+        Write(_stream, request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
+        Read(_stream, response);
 
         var sensors = new List<SpeedSensor>();
 
@@ -241,9 +241,9 @@ public sealed class CommanderProDevice : IDevice
         ThrowIfNotConnected();
 
         var request = CreateRequest(Commands.ReadTemperatureMask, REQUEST_LENGTH);
-        _stream!.Write(request);
+        Write(_stream, request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        _stream!.Read(response);
+        Read(_stream, response);
 
         var sensors = new List<TemperatureSensor>();
 
@@ -261,6 +261,30 @@ public sealed class CommanderProDevice : IDevice
         }
 
         return sensors;
+    }
+
+    private static void Write(Stream? stream, byte[] buffer)
+    {
+        try
+        {
+            stream?.Write(buffer, 0, buffer.Length);
+        }
+        catch (ObjectDisposedException)
+        {
+            // disconnected, ignore
+        }
+    }
+
+    private static void Read(Stream? stream, byte[] buffer)
+    {
+        try
+        {
+            stream?.Read(buffer, 0, buffer.Length);
+        }
+        catch (ObjectDisposedException)
+        {
+            // disconnected, ignore
+        }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
