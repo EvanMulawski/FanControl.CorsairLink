@@ -47,7 +47,7 @@ public sealed class CommanderCoreDevice : IDevice
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderCoreDevice(IHidDeviceProxy device, ILogger? logger)
+    public CommanderCoreDevice(IHidDeviceProxy device, CommanderCoreDeviceOptions options, ILogger? logger)
     {
         _device = device;
         _logger = logger;
@@ -56,9 +56,7 @@ public sealed class CommanderCoreDevice : IDevice
         Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
         UniqueId = deviceInfo.DevicePath;
 
-        // todo: abstraction
-        _firstChannelExt = deviceInfo.ProductId == HardwareIds.CorsairCommanderCoreProductId
-            || deviceInfo.ProductId == HardwareIds.CorsairCommanderSTProductId;
+        _firstChannelExt = options.IsFirstChannelExt ?? CommanderCoreDeviceOptions.IsFirstChannelExtDefault;
     }
 
     public string UniqueId { get; }

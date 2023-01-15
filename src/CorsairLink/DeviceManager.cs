@@ -23,15 +23,15 @@ public static class DeviceManager
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreXTProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevices[HardwareIds.CorsairCommanderSTProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
         return collection;
     }
