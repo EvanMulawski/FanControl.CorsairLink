@@ -1,5 +1,4 @@
-﻿using HidSharp;
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 
 namespace CorsairLink;
@@ -25,21 +24,23 @@ public sealed class CommanderProDevice : IDevice
     private const byte PERCENT_MIN = 0x00;
     private const byte PERCENT_MAX = 0x64;
 
-    private readonly HidDevice _device;
+    private readonly IHidDeviceProxy _device;
     private readonly ILogger? _logger;
-    private HidStream? _stream;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderProDevice(HidDevice device, ILogger? logger)
+    public CommanderProDevice(IHidDeviceProxy device, ILogger? logger)
     {
         _device = device;
         _logger = logger;
-        Name = $"{device.GetProductName()} ({device.GetSerialNumber()})";
+
+        var deviceInfo = device.GetDeviceInfo();
+        Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
+        UniqueId = deviceInfo.DevicePath;
     }
 
-    public string UniqueId => _device.DevicePath;
+    public string UniqueId { get; }
 
     public string Name { get; }
 
@@ -56,10 +57,16 @@ public sealed class CommanderProDevice : IDevice
     {
         Disconnect();
 
-        if (_device.TryOpen(out _stream))
+        var (opened, exception) = _device.Open();
+        if (opened)
         {
             Initialize();
             return true;
+        }
+
+        if (exception is not null)
+        {
+            Log(exception.ToString());
         }
 
         return false;
@@ -67,26 +74,15 @@ public sealed class CommanderProDevice : IDevice
 
     public void Disconnect()
     {
-        _stream?.Dispose();
-        _stream = null;
-    }
-
-    private void ThrowIfNotConnected()
-    {
-        if (_stream is null)
-        {
-            throw new InvalidOperationException("Not connected!");
-        }
+        _device.Close();
     }
 
     public string GetFirmwareVersion()
     {
-        ThrowIfNotConnected();
-
         var request = CreateRequest(Commands.ReadFirmwareVersion, REQUEST_LENGTH);
-        Write(_stream, request);
+        Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        Read(_stream, response);
+        Read(response);
 
         var v1 = (int)response[2];
         var v2 = (int)response[3];
@@ -158,27 +154,23 @@ public sealed class CommanderProDevice : IDevice
 
     private int GetFanRpm(int channelId)
     {
-        ThrowIfNotConnected();
-
         var request = CreateRequest(Commands.ReadFanSpeed, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
-        Write(_stream, request);
+        Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        Read(_stream, response);
+        Read(response);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
     }
 
     private void SetFanPower(int channelId, byte percent)
     {
-        ThrowIfNotConnected();
-
         var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         request[3] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
-        Write(_stream, request);
+        Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        Read(_stream, response);
+        Read(response);
     }
 
     private void WriteRequestedSpeeds()
@@ -198,25 +190,21 @@ public sealed class CommanderProDevice : IDevice
 
     private int GetTemperatureSensorValue(int channelId)
     {
-        ThrowIfNotConnected();
-
         var request = CreateRequest(Commands.ReadTemperatureValue, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, TEMP_CHANNEL_COUNT - 1));
-        Write(_stream, request);
+        Write( request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        Read(_stream, response);
+        Read(response);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100;
     }
 
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors()
     {
-        ThrowIfNotConnected();
-
         var request = CreateRequest(Commands.ReadFanMask, REQUEST_LENGTH);
-        Write(_stream, request);
+        Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        Read(_stream, response);
+        Read(response);
 
         var sensors = new List<SpeedSensor>();
 
@@ -238,12 +226,10 @@ public sealed class CommanderProDevice : IDevice
 
     private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors()
     {
-        ThrowIfNotConnected();
-
         var request = CreateRequest(Commands.ReadTemperatureMask, REQUEST_LENGTH);
-        Write(_stream, request);
+        Write(request);
         var response = CreateResponse(RESPONSE_LENGTH);
-        Read(_stream, response);
+        Read(response);
 
         var sensors = new List<TemperatureSensor>();
 
@@ -263,28 +249,14 @@ public sealed class CommanderProDevice : IDevice
         return sensors;
     }
 
-    private static void Write(Stream? stream, byte[] buffer)
+    private void Write(byte[] buffer)
     {
-        try
-        {
-            stream?.Write(buffer, 0, buffer.Length);
-        }
-        catch (ObjectDisposedException)
-        {
-            // disconnected, ignore
-        }
+        _device.Write(buffer);
     }
 
-    private static void Read(Stream? stream, byte[] buffer)
+    private void Read(byte[] buffer)
     {
-        try
-        {
-            stream?.Read(buffer, 0, buffer.Length);
-        }
-        catch (ObjectDisposedException)
-        {
-            // disconnected, ignore
-        }
+        _device.Read(buffer);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -14,19 +14,24 @@ public static class DeviceManager
         var collection = new SupportedDeviceCollection();
 
         collection.CommanderProDevices
-            .AddRange(supportedDevices[HardwareIds.CorsairCommanderProProductId].Select(x => new CommanderProDevice(x, logger)));
+            .AddRange(supportedDevices[HardwareIds.CorsairCommanderProProductId]
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
 
         collection.CommanderProDevices
-            .AddRange(supportedDevices[HardwareIds.CorsairObsidian1000DCommanderProProductId].Select(x => new CommanderProDevice(x, logger)));
+            .AddRange(supportedDevices[HardwareIds.CorsairObsidian1000DCommanderProProductId]
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
 
         collection.CommanderCoreDevices
-            .AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreXTProductId].Select(x => new CommanderCoreDevice(x, logger)));
+            .AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreXTProductId]
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), logger)));
 
         collection.CommanderCoreDevices
-            .AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreProductId].Select(x => new CommanderCoreDevice(x, logger)));
+            .AddRange(supportedDevices[HardwareIds.CorsairCommanderCoreProductId]
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), logger)));
 
         collection.CommanderCoreDevices
-            .AddRange(supportedDevices[HardwareIds.CorsairCommanderSTProductId].Select(x => new CommanderCoreDevice(x, logger)));
+            .AddRange(supportedDevices[HardwareIds.CorsairCommanderSTProductId]
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), logger)));
 
         return collection;
     }

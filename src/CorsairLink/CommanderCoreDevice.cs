@@ -1,5 +1,4 @@
-﻿using HidSharp;
-using System.Buffers.Binary;
+﻿using System.Buffers.Binary;
 using System.Runtime.CompilerServices;
 
 namespace CorsairLink;
@@ -40,26 +39,29 @@ public sealed class CommanderCoreDevice : IDevice
     private const byte PERCENT_MIN = 0x00;
     private const byte PERCENT_MAX = 0x64;
 
-    private readonly HidDevice _device;
+    private readonly IHidDeviceProxy _device;
     private readonly ILogger? _logger;
-    private HidStream? _stream;
     private byte _speedChannelCount;
     private readonly bool _firstChannelExt;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderCoreDevice(HidDevice device, ILogger? logger)
+    public CommanderCoreDevice(IHidDeviceProxy device, ILogger? logger)
     {
         _device = device;
         _logger = logger;
-        Name = $"{device.GetProductName()} ({device.GetSerialNumber()})";
 
-        _firstChannelExt = device.ProductID == HardwareIds.CorsairCommanderCoreProductId
-            || device.ProductID == HardwareIds.CorsairCommanderSTProductId;
+        var deviceInfo = device.GetDeviceInfo();
+        Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
+        UniqueId = deviceInfo.DevicePath;
+
+        // todo: abstraction
+        _firstChannelExt = deviceInfo.ProductId == HardwareIds.CorsairCommanderCoreProductId
+            || deviceInfo.ProductId == HardwareIds.CorsairCommanderSTProductId;
     }
 
-    public string UniqueId => _device.DevicePath;
+    public string UniqueId { get; }
 
     public string Name { get; }
 
@@ -76,10 +78,16 @@ public sealed class CommanderCoreDevice : IDevice
     {
         Disconnect();
 
-        if (_device.TryOpen(out _stream))
+        var (opened, exception) = _device.Open();
+        if (opened)
         {
             Initialize();
             return true;
+        }
+
+        if (exception is not null)
+        {
+            Log(exception.ToString());
         }
 
         return false;
@@ -87,15 +95,12 @@ public sealed class CommanderCoreDevice : IDevice
 
     public void Disconnect()
     {
-        _stream?.Dispose();
-        _stream = null;
+        _device.Close();
     }
 
     public string GetFirmwareVersion()
     {
-        ThrowIfNotConnected();
-
-        var response = SendCommand(_stream!, Commands.ReadFirmwareVersion);
+        var response = SendCommand(Commands.ReadFirmwareVersion);
 
         var v1 = (int)response[3];
         var v2 = (int)response[4];
@@ -108,10 +113,10 @@ public sealed class CommanderCoreDevice : IDevice
     {
         Prepare();
 
-        var connectedSpeedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
-        var hardwareFixedSpeedPercentResponse = ReadFromEndpoint(_stream!, Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent);
-        var speedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetSpeeds, DataTypes.Speeds);
-        var temperaturesResponse = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
+        var connectedSpeedsResponse = ReadFromEndpoint(Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
+        var hardwareFixedSpeedPercentResponse = ReadFromEndpoint(Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent);
+        var speedsResponse = ReadFromEndpoint(Endpoints.GetSpeeds, DataTypes.Speeds);
+        var temperaturesResponse = ReadFromEndpoint(Endpoints.GetTemperatures, DataTypes.Temperatures);
 
         InitializeSpeedChannels(hardwareFixedSpeedPercentResponse);
         RefreshSpeeds(connectedSpeedsResponse, speedsResponse);
@@ -124,9 +129,9 @@ public sealed class CommanderCoreDevice : IDevice
     {
         Prepare();
 
-        var connectedSpeedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
-        var speedsResponse = ReadFromEndpoint(_stream!, Endpoints.GetSpeeds, DataTypes.Speeds);
-        var temperaturesResponse = ReadFromEndpoint(_stream!, Endpoints.GetTemperatures, DataTypes.Temperatures);
+        var connectedSpeedsResponse = ReadFromEndpoint(Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
+        var speedsResponse = ReadFromEndpoint(Endpoints.GetSpeeds, DataTypes.Speeds);
+        var temperaturesResponse = ReadFromEndpoint(Endpoints.GetTemperatures, DataTypes.Temperatures);
 
         WriteRequestedSpeeds();
         RefreshSpeeds(connectedSpeedsResponse, speedsResponse);
@@ -191,8 +196,8 @@ public sealed class CommanderCoreDevice : IDevice
         }
 
         // need to trigger a change in the value
-        WriteToEndpoint(_stream!, Endpoints.HardwareSpeedMode, DataTypes.HardwareSpeedMode, speedModeBuf1);
-        WriteToEndpoint(_stream!, Endpoints.HardwareSpeedMode, DataTypes.HardwareSpeedMode, speedModeBuf2);
+        WriteToEndpoint(Endpoints.HardwareSpeedMode, DataTypes.HardwareSpeedMode, speedModeBuf1);
+        WriteToEndpoint(Endpoints.HardwareSpeedMode, DataTypes.HardwareSpeedMode, speedModeBuf2);
     }
 
     private void InitializeSpeedChannels(EndpointResponse hardwareFixedSpeedPercentResponse)
@@ -209,14 +214,6 @@ public sealed class CommanderCoreDevice : IDevice
         }
 
         SetSpeedChannelsToFixedPercent();
-    }
-
-    private void ThrowIfNotConnected()
-    {
-        if (_stream is null)
-        {
-            throw new InvalidOperationException("Not connected!");
-        }
     }
 
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
@@ -303,7 +300,7 @@ public sealed class CommanderCoreDevice : IDevice
             channelsSpan[c * 2] = _requestedChannelPower[c];
         }
 
-        WriteToEndpoint(_stream!, Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent, speedFixedPercentBuf);
+        WriteToEndpoint(Endpoints.HardwareSpeedFixedPercent, DataTypes.HardwareSpeedFixedPercent, speedFixedPercentBuf);
 
         _requestedChannelPower.ResetDirty();
     }
@@ -311,16 +308,16 @@ public sealed class CommanderCoreDevice : IDevice
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Done()
     {
-        SendCommand(_stream!, Commands.Done);
+        SendCommand(Commands.Done);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void Prepare()
     {
-        SendCommand(_stream!, Commands.Prepare);
+        SendCommand(Commands.Prepare);
     }
 
-    private static byte[] SendCommand(Stream stream, ReadOnlySpan<byte> command, ReadOnlySpan<byte> data = default)
+    private byte[] SendCommand(ReadOnlySpan<byte> command, ReadOnlySpan<byte> data = default)
     {
         // [0] = 0x00
         // [1] = 0x08
@@ -339,22 +336,22 @@ public sealed class CommanderCoreDevice : IDevice
             data.CopyTo(dataSpan);
         }
 
-        Write(stream, writeBuf);
+        Write(writeBuf);
         var readBuf = new byte[RESPONSE_LENGTH];
         do
         {
-            Read(stream, readBuf);
+            Read(readBuf);
         }
         while (readBuf[0] != 0x0);
 
         return readBuf.AsSpan(1).ToArray();
     }
 
-    private static EndpointResponse ReadFromEndpoint(Stream stream, ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType)
+    private EndpointResponse ReadFromEndpoint(ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType)
     {
-        SendCommand(stream, Commands.OpenEndpoint, endpoint);
-        var res = SendCommand(stream, Commands.Read);
-        SendCommand(stream, Commands.CloseEndpoint);
+        SendCommand(Commands.OpenEndpoint, endpoint);
+        var res = SendCommand(Commands.Read);
+        SendCommand(Commands.CloseEndpoint);
 
         var resDataType = res.AsSpan(3, 2);
         if (!resDataType.SequenceEqual(dataType))
@@ -365,7 +362,7 @@ public sealed class CommanderCoreDevice : IDevice
         return new EndpointResponse(true, res);
     }
 
-    private void WriteToEndpoint(Stream stream, ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType, ReadOnlySpan<byte> data)
+    private void WriteToEndpoint(ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType, ReadOnlySpan<byte> data)
     {
         const int EXTRA = 4;
 
@@ -379,36 +376,22 @@ public sealed class CommanderCoreDevice : IDevice
         dataType.CopyTo(writeBuf.AsSpan(EXTRA, dataType.Length));
         data.CopyTo(writeBuf.AsSpan(EXTRA + dataType.Length, data.Length));
 
-        var testRead = ReadFromEndpoint(stream, endpoint, dataType);
+        var testRead = ReadFromEndpoint(endpoint, dataType);
         testRead.ThrowIfInvalid();
 
-        SendCommand(stream, Commands.OpenEndpoint, endpoint);
-        SendCommand(stream, Commands.Write, writeBuf);
-        SendCommand(stream, Commands.CloseEndpoint);
+        SendCommand(Commands.OpenEndpoint, endpoint);
+        SendCommand(Commands.Write, writeBuf);
+        SendCommand(Commands.CloseEndpoint);
     }
 
-    private static void Write(Stream? stream, byte[] buffer)
+    private void Write(byte[] buffer)
     {
-        try
-        {
-            stream?.Write(buffer, 0, buffer.Length);
-        }
-        catch (ObjectDisposedException)
-        {
-            // disconnected, ignore
-        }
+        _device.Write(buffer);
     }
 
-    private static void Read(Stream? stream, byte[] buffer)
+    private void Read(byte[] buffer)
     {
-        try
-        {
-            stream?.Read(buffer, 0, buffer.Length);
-        }
-        catch (ObjectDisposedException)
-        {
-            // disconnected, ignore
-        }
+        _device.Read(buffer);
     }
 
     private class EndpointResponse
