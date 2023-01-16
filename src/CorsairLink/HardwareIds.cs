@@ -14,5 +14,7 @@ public static class HardwareIds
         CorsairObsidian1000DCommanderProProductId,
         CorsairCommanderProProductId,
         CorsairCommanderCoreXTProductId,
+        CorsairCommanderCoreProductId,
+        CorsairCommanderSTProductId,
     };
 }
