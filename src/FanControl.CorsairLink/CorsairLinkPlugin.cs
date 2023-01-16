@@ -42,6 +42,7 @@ public class CorsairLinkPlugin : IPlugin
                     }
                     catch (Exception ex)
                     {
+                        Log($"An exception occurred refreshing device '{device.Name}' ({device.UniqueId}):");
                         Log(ex.ToString());
                     }
                 }
@@ -95,13 +96,21 @@ public class CorsairLinkPlugin : IPlugin
 
         foreach (var device in devices)
         {
-            if (!device.Connect())
+            try
             {
-                Log($"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
-                continue;
-            }
+                if (!device.Connect())
+                {
+                    Log($"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
+                    continue;
+                }
 
-            initializedDevices.Add(device);
+                initializedDevices.Add(device);
+            }
+            catch (Exception ex)
+            {
+                Log($"An exception occurred attempting to initialize device '{device.Name}' ({device.UniqueId}):");
+                Log(ex.ToString());
+            }
         }
 
         _devices = initializedDevices;
