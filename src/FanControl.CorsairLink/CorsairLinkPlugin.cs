@@ -6,7 +6,7 @@ using System.Timers;
 
 public class CorsairLinkPlugin : IPlugin
 {
-    private readonly IPluginLogger _logger;
+    private readonly ILogger _logger;
     private readonly Timer _timer;
     private readonly object _timerLock = new();
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
@@ -15,7 +15,7 @@ public class CorsairLinkPlugin : IPlugin
 
     public CorsairLinkPlugin(IPluginLogger logger)
     {
-        _logger = logger;
+        _logger = new CorsairLinkPluginLogger(logger);
         _timer = new Timer(1000)
         {
             Enabled = false,
@@ -59,7 +59,7 @@ public class CorsairLinkPlugin : IPlugin
 
     private void Log(string message)
     {
-        _logger.Log($"[CorsairLink] {message}");
+        _logger?.Log(message);
     }
 
     void IPlugin.Close()
@@ -92,7 +92,7 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         var initializedDevices = new List<IDevice>();
-        var devices = DeviceManager.GetSupportedDevices(new CorsairLinkPluginLogger(_logger));
+        var devices = DeviceManager.GetSupportedDevices(_logger);
 
         foreach (var device in devices)
         {

@@ -12,5 +12,5 @@ internal class CorsairLinkPluginLogger : ILogger
         _pluginLogger = pluginLogger;
     }
 
-    public void Log(string message) => _pluginLogger.Log(message);
+    public void Log(string message) => _pluginLogger.Log($"[CorsairLink] {message}");
 }
