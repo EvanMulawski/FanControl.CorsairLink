@@ -7,13 +7,15 @@ public sealed class CommanderCoreDevice : IDevice
 {
     private static class Commands
     {
+        private const byte HANDLE_ID = 0xfc;
+
         public static ReadOnlySpan<byte> Prepare => new byte[] { 0x01, 0x03, 0x00, 0x02 };
         public static ReadOnlySpan<byte> Done => new byte[] { 0x01, 0x03, 0x00, 0x01 };
         public static ReadOnlySpan<byte> ReadFirmwareVersion => new byte[] { 0x02, 0x13 };
-        public static ReadOnlySpan<byte> OpenEndpoint => new byte[] { 0x0d, 0x00 };
-        public static ReadOnlySpan<byte> CloseEndpoint => new byte[] { 0x05, 0x01, 0x00 };
-        public static ReadOnlySpan<byte> Read => new byte[] { 0x08, 0x00 };
-        public static ReadOnlySpan<byte> Write => new byte[] { 0x06, 0x00 };
+        public static ReadOnlySpan<byte> OpenEndpoint => new byte[] { 0x0d, HANDLE_ID };
+        public static ReadOnlySpan<byte> CloseEndpoint => new byte[] { 0x05, 0x01, HANDLE_ID };
+        public static ReadOnlySpan<byte> Read => new byte[] { 0x08, HANDLE_ID };
+        public static ReadOnlySpan<byte> Write => new byte[] { 0x06, HANDLE_ID };
     }
 
     private static class Endpoints
