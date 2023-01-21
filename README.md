@@ -1,20 +1,22 @@
-﻿# CorsairLink plugin for Fan Control
+# CorsairLink plugin for Fan Control
 
 The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/FanControl.Releases).
 
 ## Device Support
 
-| Device                         | Status                    | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
-| ------------------------------ | ------------------------- | ----------------- | ------------------ | ---------------- |
-| Commander PRO                  | Full Support              | ✔                 | ✔                  | ✔                |
-| Commander PRO (Obsidian 1000D) | Full Support              | ✔                 | ✔                  | ✔                |
-| Commander CORE XT              | Full Support <sup>1</sup> | ✔                 | ✔                  | ✔                |
-| Commander CORE (PID `0c1c`)    | Full Support <sup>2</sup> | ✔                 | ✔                  | ✔                |
-| Commander CORE (PID `0c32`)    | Planned                   |                   |                    |                  |
+| Device                         | Status                      | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
+| ------------------------------ | --------------------------- | ----------------- | ------------------ | ---------------- |
+| Commander PRO                  | Full Support <sup>1</sup>   | ✔                 | ✔                  | ✔                |
+| Commander PRO (Obsidian 1000D) | Full Support <sup>1</sup>   | ✔                 | ✔                  | ✔                |
+| Commander CORE XT              | Full Support <sup>1,2</sup> | ✔                 | ✔                  | ✔                |
+| Commander CORE (PID `0c1c`)    | Full Support <sup>1,3</sup> | ✔                 | ✔                  | ✔                |
+| Commander CORE (PID `0c32`)    | Full Support <sup>1,3</sup> | ✔                 | ✔                  | ✔                |
 
-1. The speed ramping in the Commander CORE XT is too slow for automatic sensor pairing and start/stop detection to function in Fan Control. Therefore, assisted setup will fail. Each control will need to be paired with its corresponding sensor manually and its start/stop values will need to be set manually.
+1. Software mode only.
 
-2. Support is currently experimental. Please provide your feedback in issues and discussions.
+2. The speed ramping in the Commander CORE XT is too slow for automatic sensor pairing and start/stop detection to function in Fan Control. Therefore, assisted setup will fail. Each control will need to be paired with its corresponding sensor manually and its start/stop values will need to be set manually.
+
+3. Support is currently experimental. Please provide your feedback in issues and discussions.
 
 ## Installation
 
@@ -24,4 +26,3 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 2. Exit Fan Control.
 3. Copy `FanControl.CorsairLink.dll` to the Fan Control `Plugins` directory.
 4. Start Fan Control.
-5. Run assisted setup or sensor detection.
