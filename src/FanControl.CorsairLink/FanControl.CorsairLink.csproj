@@ -1,13 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net48</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CorsairLink.Synchronization\CorsairLink.Synchronization.csproj" />
     <ProjectReference Include="..\CorsairLink\CorsairLink.csproj" />
   </ItemGroup>
 
@@ -29,6 +30,7 @@
     <ItemGroup>
       <InputAssemblies Include="CorsairLink.dll" />
       <InputAssemblies Include="CorsairLink.Abstractions.dll" />
+      <InputAssemblies Include="CorsairLink.Synchronization.dll" />
     </ItemGroup>
     <ItemGroup>
       <InternalizeExcludeAssemblies Include="FanControl.Plugins.dll" />

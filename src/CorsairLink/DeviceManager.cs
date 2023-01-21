@@ -5,7 +5,7 @@ namespace CorsairLink;
 
 public static class DeviceManager
 {
-    public static SupportedDeviceCollection GetSupportedDevices(ILogger? logger)
+    public static SupportedDeviceCollection GetSupportedDevices(IDeviceGuardManager deviceGuardManager, ILogger? logger)
     {
         var corsairDevices = DeviceList.Local
             .GetHidDevices(vendorID: HardwareIds.CorsairVendorId)
@@ -22,25 +22,25 @@ public static class DeviceManager
 
         var collection = new SupportedDeviceCollection();
 
-        //collection.CommanderProDevices
-        //    .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderProProductId]
-        //    .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
+        collection.CommanderProDevices
+            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderProProductId]
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
 
-        //collection.CommanderProDevices
-        //    .AddRange(supportedDevicesByProductId[HardwareIds.CorsairObsidian1000DCommanderProProductId]
-        //    .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
+        collection.CommanderProDevices
+            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairObsidian1000DCommanderProProductId]
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderCoreXTProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderCoreProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderSTProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
         return collection;
     }

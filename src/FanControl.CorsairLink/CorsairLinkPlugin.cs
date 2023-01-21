@@ -2,10 +2,12 @@
 
 using FanControl.Plugins;
 using global::CorsairLink;
+using global::CorsairLink.Synchronization;
 using System.Timers;
 
 public class CorsairLinkPlugin : IPlugin
 {
+    private readonly IDeviceGuardManager _deviceGuardManager;
     private readonly ILogger _logger;
     private readonly Timer _timer;
     private readonly object _timerLock = new();
@@ -16,6 +18,7 @@ public class CorsairLinkPlugin : IPlugin
     public CorsairLinkPlugin(IPluginLogger logger)
     {
         _logger = new CorsairLinkPluginLogger(logger);
+        _deviceGuardManager = new CorsairDevicesGuardManager();
         _timer = new Timer(1000)
         {
             Enabled = false,
@@ -92,7 +95,7 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         var initializedDevices = new List<IDevice>();
-        var devices = DeviceManager.GetSupportedDevices(_logger);
+        var devices = DeviceManager.GetSupportedDevices(_deviceGuardManager, _logger);
 
         foreach (var device in devices)
         {

@@ -1,6 +1,7 @@
 ﻿using CorsairLink;
+using CorsairLink.Synchronization;
 
-var devices = DeviceManager.GetSupportedDevices(null);
+var devices = DeviceManager.GetSupportedDevices(new CorsairDevicesGuardManager(), null);
 
 var connectedDevices = new List<IDevice>();
 

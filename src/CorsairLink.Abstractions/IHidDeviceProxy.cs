@@ -7,6 +7,7 @@ public interface IHidDeviceProxy
     void Close();
     void Write(byte[] buffer);
     void Read(byte[] buffer);
+    void ClearEnqueuedReports();
 }
 
 public sealed class HidDeviceInfo
