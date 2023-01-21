@@ -24,11 +24,11 @@ public static class DeviceManager
 
         collection.CommanderProDevices
             .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderProProductId]
-            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.CommanderProDevices
             .AddRange(supportedDevicesByProductId[HardwareIds.CorsairObsidian1000DCommanderProProductId]
-            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), logger)));
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.CommanderCoreDevices
             .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderCoreXTProductId]

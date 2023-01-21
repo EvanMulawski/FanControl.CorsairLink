@@ -1,5 +1,4 @@
 ﻿using System.Buffers.Binary;
-using System.Runtime.CompilerServices;
 
 namespace CorsairLink;
 
@@ -25,14 +24,16 @@ public sealed class CommanderProDevice : IDevice
     private const byte PERCENT_MAX = 0x64;
 
     private readonly IHidDeviceProxy _device;
+    private readonly IDeviceGuardManager _guardManager;
     private readonly ILogger? _logger;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderProDevice(IHidDeviceProxy device, ILogger? logger)
+    public CommanderProDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger? logger)
     {
         _device = device;
+        _guardManager = guardManager;
         _logger = logger;
 
         var deviceInfo = device.GetDeviceInfo();
@@ -80,9 +81,7 @@ public sealed class CommanderProDevice : IDevice
     public string GetFirmwareVersion()
     {
         var request = CreateRequest(Commands.ReadFirmwareVersion, REQUEST_LENGTH);
-        Write(request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        Read(response);
+        var response = WriteAndRead(request);
 
         var v1 = (int)response[2];
         var v2 = (int)response[3];
@@ -156,9 +155,13 @@ public sealed class CommanderProDevice : IDevice
     {
         var request = CreateRequest(Commands.ReadFanSpeed, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
-        Write(request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        Read(response);
+        var response = WriteAndRead(request);
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            Write(request);
+            Read(response);
+        }
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
     }
@@ -168,9 +171,13 @@ public sealed class CommanderProDevice : IDevice
         var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         request[3] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
-        Write(request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        Read(response);
+        var response = WriteAndRead(request);
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            Write(request);
+            Read(response);
+        }
     }
 
     private void WriteRequestedSpeeds()
@@ -192,9 +199,7 @@ public sealed class CommanderProDevice : IDevice
     {
         var request = CreateRequest(Commands.ReadTemperatureValue, REQUEST_LENGTH);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, TEMP_CHANNEL_COUNT - 1));
-        Write( request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        Read(response);
+        var response = WriteAndRead(request);
 
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100;
     }
@@ -202,9 +207,7 @@ public sealed class CommanderProDevice : IDevice
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors()
     {
         var request = CreateRequest(Commands.ReadFanMask, REQUEST_LENGTH);
-        Write(request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        Read(response);
+        var response = WriteAndRead(request);
 
         var sensors = new List<SpeedSensor>();
 
@@ -227,9 +230,7 @@ public sealed class CommanderProDevice : IDevice
     private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors()
     {
         var request = CreateRequest(Commands.ReadTemperatureMask, REQUEST_LENGTH);
-        Write(request);
-        var response = CreateResponse(RESPONSE_LENGTH);
-        Read(response);
+        var response = WriteAndRead(request);
 
         var sensors = new List<TemperatureSensor>();
 
@@ -249,6 +250,19 @@ public sealed class CommanderProDevice : IDevice
         return sensors;
     }
 
+    private byte[] WriteAndRead(byte[] buffer)
+    {
+        var response = CreateResponse(RESPONSE_LENGTH);
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            Write(buffer);
+            Read(response);
+        }
+
+        return response;
+    }
+
     private void Write(byte[] buffer)
     {
         _device.Write(buffer);
@@ -259,7 +273,6 @@ public sealed class CommanderProDevice : IDevice
         _device.Read(buffer);
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[] CreateRequest(byte command, int length)
     {
         var writeBuf = new byte[length];
@@ -267,7 +280,6 @@ public sealed class CommanderProDevice : IDevice
         return writeBuf;
     }
 
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static byte[] CreateResponse(int length)
     {
         return new byte[length];
