@@ -80,7 +80,7 @@ public sealed class CommanderProDevice : IDevice
 
     public string GetFirmwareVersion()
     {
-        var request = CreateRequest(Commands.ReadFirmwareVersion, REQUEST_LENGTH);
+        var request = CreateRequest(Commands.ReadFirmwareVersion);
         var response = WriteAndRead(request);
 
         var v1 = (int)response[2];
@@ -93,8 +93,7 @@ public sealed class CommanderProDevice : IDevice
     private void Initialize()
     {
         InitializeRequestedChannelPower();
-        RefreshTemperatures();
-        RefreshSpeeds();
+        Refresh();
     }
 
     public void Refresh()
@@ -153,7 +152,7 @@ public sealed class CommanderProDevice : IDevice
 
     private int GetFanRpm(int channelId)
     {
-        var request = CreateRequest(Commands.ReadFanSpeed, REQUEST_LENGTH);
+        var request = CreateRequest(Commands.ReadFanSpeed);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         var response = WriteAndRead(request);
 
@@ -168,7 +167,7 @@ public sealed class CommanderProDevice : IDevice
 
     private void SetFanPower(int channelId, byte percent)
     {
-        var request = CreateRequest(Commands.WriteFanPower, REQUEST_LENGTH);
+        var request = CreateRequest(Commands.WriteFanPower);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         request[3] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
         var response = WriteAndRead(request);
@@ -197,7 +196,7 @@ public sealed class CommanderProDevice : IDevice
 
     private int GetTemperatureSensorValue(int channelId)
     {
-        var request = CreateRequest(Commands.ReadTemperatureValue, REQUEST_LENGTH);
+        var request = CreateRequest(Commands.ReadTemperatureValue);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, TEMP_CHANNEL_COUNT - 1));
         var response = WriteAndRead(request);
 
@@ -206,7 +205,7 @@ public sealed class CommanderProDevice : IDevice
 
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors()
     {
-        var request = CreateRequest(Commands.ReadFanMask, REQUEST_LENGTH);
+        var request = CreateRequest(Commands.ReadFanMask);
         var response = WriteAndRead(request);
 
         var sensors = new List<SpeedSensor>();
@@ -229,7 +228,7 @@ public sealed class CommanderProDevice : IDevice
 
     private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors()
     {
-        var request = CreateRequest(Commands.ReadTemperatureMask, REQUEST_LENGTH);
+        var request = CreateRequest(Commands.ReadTemperatureMask);
         var response = WriteAndRead(request);
 
         var sensors = new List<TemperatureSensor>();
@@ -252,7 +251,7 @@ public sealed class CommanderProDevice : IDevice
 
     private byte[] WriteAndRead(byte[] buffer)
     {
-        var response = CreateResponse(RESPONSE_LENGTH);
+        var response = CreateResponse();
 
         using (_guardManager.AwaitExclusiveAccess())
         {
@@ -273,15 +272,15 @@ public sealed class CommanderProDevice : IDevice
         _device.Read(buffer);
     }
 
-    private static byte[] CreateRequest(byte command, int length)
+    private static byte[] CreateRequest(byte command)
     {
-        var writeBuf = new byte[length];
+        var writeBuf = new byte[REQUEST_LENGTH];
         writeBuf[1] = command;
         return writeBuf;
     }
 
-    private static byte[] CreateResponse(int length)
+    private static byte[] CreateResponse()
     {
-        return new byte[length];
+        return new byte[RESPONSE_LENGTH];
     }
 }
