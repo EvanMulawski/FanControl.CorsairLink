@@ -38,6 +38,7 @@ public sealed class CommanderCoreDevice : IDevice
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const byte PERCENT_MIN = 0x00;
     private const byte PERCENT_MAX = 0x64;
+    private const int SEND_COMMAND_WAIT_FOR_DATA_TYPE_READ_TIMEOUT_MS = 500;
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
@@ -81,6 +82,7 @@ public sealed class CommanderCoreDevice : IDevice
         var (opened, exception) = _device.Open();
         if (opened)
         {
+            SendCommand(Commands.EnterSoftwareMode);
             RefreshImpl(initialize: true);
             return true;
         }
@@ -124,9 +126,6 @@ public sealed class CommanderCoreDevice : IDevice
 
         using (_guardManager.AwaitExclusiveAccess())
         {
-            PrepareDevice();
-            SendCommand(Commands.EnterSoftwareMode);
-
             connectedSpeedsResponse = ReadFromEndpoint(Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
             speedsResponse = ReadFromEndpoint(Endpoints.GetSpeeds, DataTypes.Speeds);
             temperaturesResponse = ReadFromEndpoint(Endpoints.GetTemperatures, DataTypes.Temperatures);
@@ -182,8 +181,6 @@ public sealed class CommanderCoreDevice : IDevice
 
     private void InitializeSpeedChannels(EndpointResponse connectedSpeedsResponse)
     {
-        connectedSpeedsResponse.ThrowIfInvalid();
-
         var connectedSpeedsResponseData = connectedSpeedsResponse.GetData();
         _speedChannelCount = connectedSpeedsResponseData[0];
         _requestedChannelPower.Clear();
@@ -195,9 +192,6 @@ public sealed class CommanderCoreDevice : IDevice
     }
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
     {
-        connectedSpeedsResponse.ThrowIfInvalid();
-        speedsResponse.ThrowIfInvalid();
-
         var connectedSpeedsResponseData = connectedSpeedsResponse.GetData();
         var speedsResponseData = speedsResponse.GetData().Slice(1);
         var sensorCount = connectedSpeedsResponseData[0];
@@ -228,8 +222,6 @@ public sealed class CommanderCoreDevice : IDevice
 
     private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors(EndpointResponse temperaturesResponse)
     {
-        temperaturesResponse.ThrowIfInvalid();
-
         var responseData = temperaturesResponse.GetData();
         var sensorCount = responseData[0];
         var sensors = new List<TemperatureSensor>(sensorCount);
@@ -296,13 +288,14 @@ public sealed class CommanderCoreDevice : IDevice
         _requestedChannelPower.ResetDirty();
     }
 
-    private byte[] SendCommand(ReadOnlySpan<byte> command, ReadOnlySpan<byte> data = default)
+    private byte[] SendCommand(ReadOnlySpan<byte> command, ReadOnlySpan<byte> data = default, ReadOnlySpan<byte> waitForDataType = default)
     {
         // [0] = 0x00
         // [1] = 0x08
         // [2,a] = command
         // [a+1,] = data
 
+        var readBuf = new byte[RESPONSE_LENGTH];
         var writeBuf = new byte[REQUEST_LENGTH];
         writeBuf[1] = 0x08;
 
@@ -316,44 +309,55 @@ public sealed class CommanderCoreDevice : IDevice
         }
 
         Write(writeBuf);
-        var readBuf = new byte[RESPONSE_LENGTH];
-        do
+        Read(readBuf);
+
+        if (waitForDataType.Length == 2)
         {
-            Read(readBuf);
+            var cts = new CancellationTokenSource(SEND_COMMAND_WAIT_FOR_DATA_TYPE_READ_TIMEOUT_MS);
+
+            while (!cts.IsCancellationRequested && !DoesResponseDataTypeMatchExpected(readBuf, waitForDataType))
+            {
+                Read(readBuf);
+            }
+
+            if (cts.IsCancellationRequested)
+            {
+                throw new CorsairLinkDeviceException("Operation canceled. The expected data type was not read within the specified time."
+                    + $" (command={command.ToHexString()}, data={data.ToHexString()}, waitForDataType={waitForDataType.ToHexString()})");
+            }
         }
-        while (readBuf[0] != 0x0);
 
         return readBuf.AsSpan(1).ToArray();
+    }
+
+    private bool DoesResponseDataTypeMatchExpected(byte[] responseBuffer, ReadOnlySpan<byte> expectedDataType)
+    {
+        var resDataType = responseBuffer.AsSpan(4, 2);
+        return resDataType.SequenceEqual(expectedDataType);
     }
 
     private EndpointResponse ReadFromEndpoint(ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType)
     {
         SendCommand(Commands.OpenEndpoint, endpoint);
-        var res = SendCommand(Commands.Read);
+        var res = SendCommand(Commands.Read, waitForDataType: dataType);
         SendCommand(Commands.CloseEndpoint);
 
-        var resDataType = res.AsSpan(3, 2);
-        if (!resDataType.SequenceEqual(dataType))
-        {
-            return new EndpointResponse(false, default);
-        }
-
-        return new EndpointResponse(true, res);
+        return new EndpointResponse(res, dataType);
     }
 
     private void WriteToEndpoint(ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType, ReadOnlySpan<byte> data)
     {
-        const int EXTRA = 4;
+        const int HEADER_LENGTH = 4;
 
-        // [0,1] = payload length (EXTRA)
-        // [2,3] = 0x00 0x00 (EXTRA)
+        // [0,1] = payload length
+        // [2,3] = 0x00 0x00
         // [4,5] = data type
         // [6,]  = data
 
-        var writeBuf = new byte[dataType.Length + data.Length + EXTRA];
+        var writeBuf = new byte[dataType.Length + data.Length + HEADER_LENGTH];
         BinaryPrimitives.WriteInt16LittleEndian(writeBuf.AsSpan(0, 2), (short)(data.Length + 2));
-        dataType.CopyTo(writeBuf.AsSpan(EXTRA, dataType.Length));
-        data.CopyTo(writeBuf.AsSpan(EXTRA + dataType.Length, data.Length));
+        dataType.CopyTo(writeBuf.AsSpan(HEADER_LENGTH, dataType.Length));
+        data.CopyTo(writeBuf.AsSpan(HEADER_LENGTH + dataType.Length, data.Length));
 
         SendCommand(Commands.OpenEndpoint, endpoint);
         SendCommand(Commands.Write, writeBuf);
@@ -370,30 +374,17 @@ public sealed class CommanderCoreDevice : IDevice
         _device.Read(buffer);
     }
 
-    private void PrepareDevice()
-    {
-        _device.ClearEnqueuedReports();
-    }
-
     private class EndpointResponse
     {
-        public EndpointResponse(bool valid, byte[]? payload)
+        public EndpointResponse(ReadOnlySpan<byte> payload, ReadOnlySpan<byte> dataType)
         {
-            Valid = valid;
-            Payload = payload;
+            Payload = payload.ToArray();
+            DataType = dataType.ToArray();
         }
 
-        public bool Valid { get; }
-        public byte[]? Payload { get; }
+        public byte[] Payload { get; }
+        public byte[] DataType { get; }
 
-        public ReadOnlySpan<byte> GetData() => Payload is null ? default : Payload.AsSpan().Slice(5);
-
-        public void ThrowIfInvalid()
-        {
-            if (!Valid)
-            {
-                throw new FormatException("The response was not valid.");
-            }
-        }
+        public ReadOnlySpan<byte> GetData() => Payload.AsSpan().Slice(5);
     }
 }

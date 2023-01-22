@@ -54,6 +54,7 @@ internal class HidSharpDeviceProxy : IHidDeviceProxy
     {
         ThrowIfNotReady();
 
+        ClearEnqueuedReports();
         _stream?.Write(buffer, 0, buffer.Length);
     }
 
