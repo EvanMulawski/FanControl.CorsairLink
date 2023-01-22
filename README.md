@@ -22,7 +22,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 ⚠ This plugin will not function correctly if Corsair iCUE (specifically, the "Corsair Service" service) is running. This service should be stopped before running Fan Control. Running other programs that attempt to communicate with these devices while Fan Control is running is not currently a supported scenario.
 
-1. Unblock the downloaded ZIP file. (Right-click, Properties, check Unblock, OK)
-2. Exit Fan Control.
-3. Copy `FanControl.CorsairLink.dll` to the Fan Control `Plugins` directory.
-4. Start Fan Control.
+1. Download a [release](https://github.com/EvanMulawski/FanControl.CorsairLink/releases).
+2. Unblock the downloaded ZIP file. (Right-click, Properties, check Unblock, OK)
+3. Exit Fan Control.
+4. Copy `FanControl.CorsairLink.dll` to the Fan Control `Plugins` directory.
+5. Start Fan Control.
