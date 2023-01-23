@@ -7,7 +7,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Device                         | Status                      | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
 | ------------------------------ | --------------------------- | ----------------- | ------------------ | ---------------- |
 | Commander PRO                  | Full Support                | ✔                 | ✔                  | ✔                |
-| Commander PRO (Obsidian 1000D) | Full Support <sup>1</sup>   | ✔                 | ✔                  | ✔                |
+| Commander PRO (Obsidian 1000D) | Full Support                | ✔                 | ✔                  | ✔                |
 | Commander CORE XT              | Full Support <sup>1,2</sup> | ✔                 | ✔                  | ✔                |
 | Commander CORE (PID `0c1c`)    | Full Support <sup>1,3</sup> | ✔                 | ✔                  | ✔                |
 | Commander CORE (PID `0c32`)    | Full Support <sup>1,3</sup> | ✔                 | ✔                  | ✔                |
