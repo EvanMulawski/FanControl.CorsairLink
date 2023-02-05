@@ -16,6 +16,10 @@ public static class Utils
         return value;
     }
 
+    public static byte ToFractionalByte(int value) => (byte)((value * byte.MaxValue + 50) / 100);
+
+    public static int FromFractionalByte(byte value) => (100 * value + byte.MaxValue / 2) / byte.MaxValue;
+
     private static readonly char[] HEX_CHARS = "0123456789ABCDEF".ToCharArray();
 
     public static string ToHexString(this ReadOnlySpan<byte> bytes)
@@ -29,4 +33,6 @@ public static class Utils
         }
         return new string(hexChars);
     }
+
+    public static string ToHexString(this byte[] bytes) => ToHexString(bytes.AsSpan());
 }

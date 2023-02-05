@@ -208,7 +208,7 @@ public sealed class CommanderProDevice : IDevice
                 rpm = GetFanRpm(ch);
             }
 
-            sensors.Add(new SpeedSensor($"Fan #{ch + 1}", ch, rpm));
+            sensors.Add(new SpeedSensor($"Fan #{ch + 1}", ch, rpm, supportsControl: true));
         }
 
         return sensors;

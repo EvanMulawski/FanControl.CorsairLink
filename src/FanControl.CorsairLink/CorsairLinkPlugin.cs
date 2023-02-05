@@ -148,7 +148,7 @@ public class CorsairLinkPlugin : IPlugin
 
     private void AddDeviceSpeedControllers(IPluginSensorsContainer container, IDevice device)
     {
-        foreach (var sensor in device.SpeedSensors)
+        foreach (var sensor in device.SpeedSensors.Where(ss => ss.SupportsControl))
         {
             var pluginController = new CorsairLinkSpeedController(device, sensor);
             container.ControlSensors.Add(pluginController);

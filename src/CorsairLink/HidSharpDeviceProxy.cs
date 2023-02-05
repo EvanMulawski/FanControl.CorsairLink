@@ -1,4 +1,6 @@
 ﻿using HidSharp;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace CorsairLink;
 
@@ -25,7 +27,24 @@ internal class HidSharpDeviceProxy : IHidDeviceProxy
             _device.VendorID,
             _device.ProductID,
             _device.GetProductName(),
-            _device.GetSerialNumber());
+            GetSerialNumber());
+    }
+
+    private string GetSerialNumber()
+    {
+        try
+        {
+            return _device.GetSerialNumber();
+        }
+        catch
+        {
+            // some devices do not support serial numbers
+            // HidSharp.Exceptions.DeviceIOException: Failed to get info.
+            // hash the device path instead
+
+            var hash = MD5.Create().ComputeHash(Encoding.Default.GetBytes(_device.DevicePath));
+            return hash.ToHexString();
+        }
     }
 
     public (bool Opened, Exception? Exception) Open()

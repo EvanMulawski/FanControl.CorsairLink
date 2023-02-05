@@ -11,7 +11,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Abstractions", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestingApp", "TestingApp\TestingApp.csproj", "{4E276246-EBDD-4119-9EAA-2BC212999B57}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Synchronization", "CorsairLink.Synchronization\CorsairLink.Synchronization.csproj", "{14879B61-7857-43B0-9AC3-1389D638800B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Synchronization", "CorsairLink.Synchronization\CorsairLink.Synchronization.csproj", "{14879B61-7857-43B0-9AC3-1389D638800B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Tests", "..\test\CorsairLink.Tests\CorsairLink.Tests.csproj", "{AAE95C56-EC14-4D97-AD29-F6FE70434665}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,6 +41,10 @@ Global
 		{14879B61-7857-43B0-9AC3-1389D638800B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14879B61-7857-43B0-9AC3-1389D638800B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14879B61-7857-43B0-9AC3-1389D638800B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAE95C56-EC14-4D97-AD29-F6FE70434665}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAE95C56-EC14-4D97-AD29-F6FE70434665}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAE95C56-EC14-4D97-AD29-F6FE70434665}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAE95C56-EC14-4D97-AD29-F6FE70434665}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

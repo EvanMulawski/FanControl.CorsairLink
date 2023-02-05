@@ -11,7 +11,7 @@ public static class DeviceManager
             .GetHidDevices(vendorID: HardwareIds.CorsairVendorId)
             .ToList();
         logger?.LogDevices(corsairDevices, "Corsair device(s)");
-        
+
         var supportedDevices = corsairDevices
             .Where(x => HardwareIds.SupportedProductIds.Contains(x.ProductID) && x.GetMaxOutputReportLength() > 0)
             .ToList();
@@ -23,26 +23,31 @@ public static class DeviceManager
         var collection = new SupportedDeviceCollection();
 
         collection.CommanderProDevices
-            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderProProductId]
-            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
-
-        collection.CommanderProDevices
-            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairObsidian1000DCommanderProProductId]
-            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderPro)
+                .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.CommanderCoreDevices
-            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderCoreXTProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
+            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCore)
+                .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
 
         collection.CommanderCoreDevices
-            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderCoreProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
+            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCoreWithDesignatedPump)
+                .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
-        collection.CommanderCoreDevices
-            .AddRange(supportedDevicesByProductId[HardwareIds.CorsairCommanderSTProductId]
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
+        collection.HydroDevices
+            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro2Fan)
+                .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 2 }, logger)));
+
+        collection.HydroDevices
+            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro3Fan)
+                .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 3 }, logger)));
 
         return collection;
+    }
+
+    private static IEnumerable<HidDevice> InDeviceDriverGroup(this IEnumerable<HidDevice> devices, IEnumerable<int> deviceDriverGroup)
+    {
+        return devices.Join(deviceDriverGroup, d => d.ProductID, g => g, (d, _) => d);
     }
 
     private static void LogDevices(this ILogger? logger, IReadOnlyCollection<HidDevice> devices, string description)

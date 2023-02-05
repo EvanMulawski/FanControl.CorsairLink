@@ -190,6 +190,7 @@ public sealed class CommanderCoreDevice : IDevice
             _requestedChannelPower[i] = DEFAULT_SPEED_CHANNEL_POWER;
         }
     }
+
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
     {
         var connectedSpeedsResponseData = connectedSpeedsResponse.GetData();
@@ -209,11 +210,11 @@ public sealed class CommanderCoreDevice : IDevice
 
             if (!_firstChannelExt)
             {
-                sensors.Add(new SpeedSensor($"Fan #{i + 1}", i, rpm));
+                sensors.Add(new SpeedSensor($"Fan #{i + 1}", i, rpm, supportsControl: true));
             }
             else
             {
-                sensors.Add(new SpeedSensor(i == 0 ? "Pump" : $"Fan #{i}", i, rpm));
+                sensors.Add(new SpeedSensor(i == 0 ? "Pump" : $"Fan #{i}", i, rpm, supportsControl: true));
             }
         }
 

@@ -8,6 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Properties\**" />
+    <EmbeddedResource Remove="Properties\**" />
+    <None Remove="Properties\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\CorsairLink.Synchronization\CorsairLink.Synchronization.csproj" />
     <ProjectReference Include="..\CorsairLink\CorsairLink.csproj" />
   </ItemGroup>
@@ -17,10 +23,6 @@
       <HintPath>..\..\ref\FanControl.Plugins.dll</HintPath>
     </Reference>
     <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" PrivateAssets="All" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Properties\" />
   </ItemGroup>
 
   <Target Name="ILRepack" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
