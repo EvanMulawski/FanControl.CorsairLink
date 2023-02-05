@@ -156,12 +156,6 @@ public sealed class CommanderProDevice : IDevice
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         var response = WriteAndRead(request);
 
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            Write(request);
-            Read(response);
-        }
-
         return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2));
     }
 
@@ -170,13 +164,7 @@ public sealed class CommanderProDevice : IDevice
         var request = CreateRequest(Commands.WriteFanPower);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, SPEED_CHANNEL_COUNT - 1));
         request[3] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
-        var response = WriteAndRead(request);
-
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            Write(request);
-            Read(response);
-        }
+        _ = WriteAndRead(request);
     }
 
     private void WriteRequestedSpeeds()
