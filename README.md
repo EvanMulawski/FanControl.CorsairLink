@@ -9,7 +9,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Commander PRO                         | `0c10` | Full Support                | ✅                | ✅                 | ✅               |
 | Commander PRO (Obsidian 1000D)        | `1d00` | Full Support                | ✅                | ✅                 | ✅               |
 | Commander CORE XT                     | `0c2a` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
-| Commander CORE (H150i ELITE CAPELLIX) | `0c1c` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
+| Commander CORE (ELITE CAPELLIX)       | `0c1c` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
 | Commander CORE                        | `0c32` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
 | Hydro H60i Pro XT                     | `0c29` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H100i Platinum                  | `0c18` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
