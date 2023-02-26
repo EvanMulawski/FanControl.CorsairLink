@@ -46,6 +46,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 ⚠ This plugin will not function correctly if Corsair iCUE (specifically, the "Corsair Service" service) is running. This service should be stopped before running Fan Control. Running other programs that attempt to communicate with these devices while Fan Control is running is not currently a supported scenario.
 
+⚠ This plugin requires the .NET Framework build of Fan Control. Install Fan Control using the `FanControl_net_4_8.zip` release files.
+
 1. Download a [release](https://github.com/EvanMulawski/FanControl.CorsairLink/releases).
 2. Unblock the downloaded ZIP file. (Right-click, Properties, check Unblock, OK)
 3. Exit Fan Control.
