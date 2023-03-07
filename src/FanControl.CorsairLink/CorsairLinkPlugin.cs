@@ -130,6 +130,8 @@ public class CorsairLinkPlugin : IPlugin
 
         foreach (var device in _devices)
         {
+            Log($"Device '{device.Name}' ({device.UniqueId}, FW: {device.GetFirmwareVersion()}):");
+
             AddDeviceSpeedSensors(container, device);
             AddDeviceSpeedControllers(container, device);
             AddDeviceTemperatureSensors(container, device);
@@ -142,7 +144,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkSpeedSensor(device, sensor);
             container.FanSensors.Add(pluginSensor);
-            Log($"Added {pluginSensor.Id}");
+            Log($"  added {pluginSensor.Id}");
         }
     }
 
@@ -152,7 +154,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginController = new CorsairLinkSpeedController(device, sensor);
             container.ControlSensors.Add(pluginController);
-            Log($"Added {pluginController.Id}");
+            Log($"  added {pluginController.Id}");
         }
     }
 
@@ -162,7 +164,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkTemperatureSensor(device, sensor);
             container.TempSensors.Add(pluginSensor);
-            Log($"Added {pluginSensor.Id}");
+            Log($"  added {pluginSensor.Id}");
         }
     }
 }
