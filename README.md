@@ -2,6 +2,9 @@
 
 The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/FanControl.Releases).
 
+[![Support](https://img.shields.io/badge/Support-Venmo-blue?style=for-the-badge&logo=venmo&color=3D95CE)](https://www.venmo.com/u/EvanMulawski)
+[![Support](https://img.shields.io/badge/Support-Buy_Me_A_Coffee-yellow?style=for-the-badge&logo=buy%20me%20a%20coffee&color=FFDD00)](https://www.buymeacoffee.com/evanmulawski)
+
 ## Device Support
 
 | Device                                | PID    | Status                      | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
