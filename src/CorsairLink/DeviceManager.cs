@@ -61,7 +61,7 @@ public static class DeviceManager
         sb.AppendLine($"DeviceManager: Found {devices.Count} {description}");
         foreach (var device in devices)
         {
-            sb.AppendLine($"  name={device.GetProductName()}, devicePath={device.DevicePath}");
+            sb.AppendLine($"  name={device.GetProductNameOrDefault()}, devicePath={device.DevicePath}");
         }
         logger.Log(sb.ToString());
     }
