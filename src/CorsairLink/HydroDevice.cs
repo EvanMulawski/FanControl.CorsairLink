@@ -167,13 +167,14 @@ namespace CorsairLink
             var fwMajor = response[2] >> 4;
             var fwMinor = response[2] & 15;
             var fwRevision = (int)response[3];
+            var liquidTempRaw = (double)BinaryPrimitives.ReadInt16LittleEndian(response.Slice(7, 2));
 
             var state = new State
             {
                 FirmwareVersionMajor = fwMajor,
                 FirmwareVersionMinor = fwMinor,
                 FirmwareVersionRevision = fwRevision,
-                LiquidTempCelsius = (int)((BinaryPrimitives.ReadInt16LittleEndian(response.Slice(7, 2)) / 25.6 + 0.5) / 10.0),
+                LiquidTempCelsius = (int)(liquidTempRaw / 25.6 + 0.5) / 10f,
                 PumpMode = (PumpMode)response[24],
                 PumpRpm = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(29, 2)),
                 FanRpm = new int[_fanCount]
@@ -382,7 +383,7 @@ namespace CorsairLink
             public int[] FanRpm { get; set; }
             public PumpMode PumpMode { get; set; }
             public int PumpRpm { get; set; }
-            public int LiquidTempCelsius { get; set; }
+            public float LiquidTempCelsius { get; set; }
 
             public override string ToString()
             {

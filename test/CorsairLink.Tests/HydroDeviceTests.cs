@@ -44,7 +44,7 @@ public class HydroDeviceTests
         Assert.Equal(1, state.FirmwareVersionMajor);
         Assert.Equal(1, state.FirmwareVersionMinor);
         Assert.Equal(31, state.FirmwareVersionRevision);
-        Assert.Equal(31, state.LiquidTempCelsius);
+        Assert.Equal(31.3, state.LiquidTempCelsius, 0.00001);
         Assert.Equal(HydroDevice.PumpMode.Balanced, state.PumpMode);
         Assert.Equal(2336, state.PumpRpm);
         Assert.Equal(0, state.FanRpm[0]);
