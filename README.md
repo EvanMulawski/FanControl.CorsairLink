@@ -28,6 +28,16 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Hydro H115i Pro XT              | `0c2e` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H150i Pro XT              | `0c22` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H150i Pro XT              | `0c2f` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H80i GT                   | `0c02` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H80i GT V2                | `0c08` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H80i Pro                  | `0c16` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H100i GT V2               | `0c09` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H100i GTX                 | `0c03` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H100i Pro                 | `0c15` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H110i GT V2               | `0c0a` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H110i GTX                 | `0c07` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H115i Pro                 | `0c13` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
+| Hydro H150i Pro                 | `0c12` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
 
 1. Software mode only.
 
@@ -44,6 +54,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
    ```
 
 5. Reads the liquid temperature.
+
+6. The USB device class is not HID and support cannot be added.
 
 ## Installation
 
