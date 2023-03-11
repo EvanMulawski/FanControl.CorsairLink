@@ -2,7 +2,7 @@
 
 public class TemperatureSensor
 {
-    public TemperatureSensor(string name, int channel, int? tempCelsius)
+    public TemperatureSensor(string name, int channel, float? tempCelsius)
     {
         Name = name;
         Channel = channel;
@@ -11,5 +11,5 @@ public class TemperatureSensor
 
     public string Name { get; }
     public int Channel { get; }
-    public int? TemperatureCelsius { get; set; }
+    public float? TemperatureCelsius { get; set; }
 }
