@@ -12,8 +12,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Commander PRO                   | `0c10` | Full Support                | ✅                | ✅                 | ✅               |
 | Commander PRO (Obsidian 1000D)  | `1d00` | Full Support                | ✅                | ✅                 | ✅               |
 | Commander CORE XT               | `0c2a` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
-| Commander CORE (ELITE CAPELLIX) | `0c1c` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
-| Commander CORE                  | `0c32` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
+| Commander CORE (ELITE CAPELLIX) | `0c1c` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
+| Commander CORE                  | `0c32` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
 | Hydro H60i Elite                | `0c34` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H60i Pro XT               | `0c29` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H60i Pro XT               | `0c30` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
@@ -41,7 +41,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 1. Software mode only.
 
-2. The speed ramping in the Commander CORE XT is too slow for automatic sensor pairing and start/stop detection to function in Fan Control. Therefore, assisted setup will fail. Each control will need to be paired with its corresponding sensor manually and its start/stop values will need to be set manually.
+2. The speed ramping in the Commander CORE and CORE XT is too slow for automatic sensor pairing and start/stop detection to function in Fan Control. Therefore, assisted setup will fail. Each control will need to be paired with its corresponding sensor manually and its start/stop values will need to be set manually.
 
 3. Support is currently experimental and only available in a pre-release (see [Releases](https://github.com/EvanMulawski/FanControl.CorsairLink/releases)). Please provide your feedback in issues and discussions.
 
