@@ -229,12 +229,12 @@ public sealed class CommanderCoreDevice : IDevice
 
         for (int i = 0, c = 1; i < sensorCount; i++, c += 3)
         {
-            int? temp = default;
+            float? temp = default;
             var connected = responseData[c] == 0x00;
 
             if (connected)
             {
-                temp = BinaryPrimitives.ReadInt16LittleEndian(responseData.Slice(c + 1, 2)) / 10;
+                temp = BinaryPrimitives.ReadInt16LittleEndian(responseData.Slice(c + 1, 2)) / 10f;
             }
 
             if (!_firstChannelExt)
