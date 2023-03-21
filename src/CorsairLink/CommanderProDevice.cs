@@ -182,13 +182,13 @@ public sealed class CommanderProDevice : IDevice
         _requestedChannelPower.ResetDirty();
     }
 
-    private int GetTemperatureSensorValue(int channelId)
+    private float GetTemperatureSensorValue(int channelId)
     {
         var request = CreateRequest(Commands.ReadTemperatureValue);
         request[2] = Convert.ToByte(Utils.Clamp(channelId, 0, TEMP_CHANNEL_COUNT - 1));
         var response = WriteAndRead(request);
 
-        return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100;
+        return BinaryPrimitives.ReadInt16BigEndian(response.AsSpan().Slice(2)) / 100f;
     }
 
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors()
@@ -223,7 +223,7 @@ public sealed class CommanderProDevice : IDevice
 
         for (int ch = 0, i = 2; ch < TEMP_CHANNEL_COUNT; ch++, i++)
         {
-            int? temp = default;
+            float? temp = default;
             var connected = response[i] == 0x01;
 
             if (connected)
