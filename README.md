@@ -14,20 +14,20 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Commander CORE XT               | `0c2a` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
 | Commander CORE (ELITE CAPELLIX) | `0c1c` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
 | Commander CORE                  | `0c32` | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
-| Hydro H60i Elite                | `0c34` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H60i Pro XT               | `0c29` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H60i Pro XT               | `0c30` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Elite               | `0c35` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Platinum            | `0c18` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Platinum SE         | `0c19` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Pro XT              | `0c20` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Pro XT              | `0c2d` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Elite               | `0c36` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Platinum            | `0c17` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Pro XT              | `0c21` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Pro XT              | `0c2e` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H150i Pro XT              | `0c22` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H150i Pro XT              | `0c2f` | Full Support <sup>1,3</sup> | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H60i Elite                | `0c34` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H60i Pro XT               | `0c29` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H60i Pro XT               | `0c30` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Elite               | `0c35` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Platinum            | `0c18` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Platinum SE         | `0c19` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Pro XT              | `0c20` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Pro XT              | `0c2d` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Elite               | `0c36` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Platinum            | `0c17` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Pro XT              | `0c21` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Pro XT              | `0c2e` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H150i Pro XT              | `0c22` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H150i Pro XT              | `0c2f` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H80i GT                   | `0c02` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
 | Hydro H80i GT V2                | `0c08` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
 | Hydro H80i Pro                  | `0c16` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
