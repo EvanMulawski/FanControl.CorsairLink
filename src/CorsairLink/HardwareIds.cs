@@ -14,14 +14,14 @@ public static class HardwareIds
     public static readonly int CorsairHydroH150iProXTProductId = 0x0c22;
     public static readonly int CorsairHydroH60iProXTProductId = 0x0c29;
     public static readonly int CorsairCommanderCoreXTProductId = 0x0c2a;
-    public static readonly int Corsair0c2dProductId = 0x0c2d; // Platinum XT Family (2 Fan), H100iRGBPROXT ?
-    public static readonly int Corsair0c2eProductId = 0x0c2e; // Platinum XT Family (2 Fan)
-    public static readonly int Corsair0c2fProductId = 0x0c2f; // HydroH150iXT Family (3 Fan)
-    public static readonly int Corsair0c30ProductId = 0x0c30; // Platinum XT Family (2 Fan)
+    public static readonly int CorsairHydroH100iProXT2ProductId = 0x0c2d;
+    public static readonly int CorsairHydroH115iProXT2ProductId = 0x0c2e;
+    public static readonly int CorsairHydroH150iProXT2ProductId = 0x0c2f;
+    public static readonly int CorsairHydroH60iProXT2ProductId = 0x0c30;
     public static readonly int CorsairCommanderSTProductId = 0x0c32;
-    public static readonly int Corsair0c34ProductId = 0x0c34; // Tamriel Family (2 Fan)
+    public static readonly int CorsairHydroH60iEliteProductId = 0x0c34;
     public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
-    public static readonly int Corsair0c36ProductId = 0x0c36; // Tamriel Family (2 Fan), HydroH115iElite ?
+    public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
     public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
     public static readonly int CorsairObsidian1000DCommanderProProductId = 0x1d00;
 
@@ -44,16 +44,16 @@ public static class HardwareIds
         CorsairHydroH100iEliteProductId,
         CorsairHydroH115iProXTProductId,
         CorsairHydroH115iPlatinumProductId,
-        Corsair0c2dProductId,
-        Corsair0c2eProductId,
-        Corsair0c30ProductId,
-        Corsair0c34ProductId,
-        Corsair0c36ProductId,
+        CorsairHydroH100iProXT2ProductId,
+        CorsairHydroH115iProXT2ProductId,
+        CorsairHydroH60iProXT2ProductId,
+        CorsairHydroH60iEliteProductId,
+        CorsairHydroH115iEliteProductId,
 
         // Hydro 3 Fan
         CorsairHydroH150iEliteProductId,
         CorsairHydroH150iProXTProductId,
-        Corsair0c2fProductId,
+        CorsairHydroH150iProXT2ProductId,
     };
 
     public static class DeviceDriverGroups
@@ -84,18 +84,18 @@ public static class HardwareIds
             CorsairHydroH100iEliteProductId,
             CorsairHydroH115iProXTProductId,
             CorsairHydroH115iPlatinumProductId,
-            Corsair0c2dProductId,
-            Corsair0c2eProductId,
-            Corsair0c30ProductId,
-            Corsair0c34ProductId,
-            Corsair0c36ProductId,
+            CorsairHydroH100iProXT2ProductId,
+            CorsairHydroH115iProXT2ProductId,
+            CorsairHydroH60iProXT2ProductId,
+            CorsairHydroH60iEliteProductId,
+            CorsairHydroH115iEliteProductId,
         };
 
         public static readonly IReadOnlyCollection<int> Hydro3Fan = new List<int>
         {
             CorsairHydroH150iEliteProductId,
             CorsairHydroH150iProXTProductId,
-            Corsair0c2fProductId,
+            CorsairHydroH150iProXT2ProductId,
         };
     }
 }
