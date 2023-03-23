@@ -26,6 +26,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Hydro H115i Platinum            | `0c17` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H115i Pro XT              | `0c21` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H115i Pro XT              | `0c2e` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H150i Elite               | `0c37` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H150i Pro XT              | `0c22` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H150i Pro XT              | `0c2f` | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H80i GT                   | `0c02` | No Support <sup>6</sup>     | ❌                | ❌                 | ❌               |
