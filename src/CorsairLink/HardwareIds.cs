@@ -51,6 +51,7 @@ public static class HardwareIds
         Corsair0c36ProductId,
 
         // Hydro 3 Fan
+        CorsairHydroH150iEliteProductId,
         CorsairHydroH150iProXTProductId,
         Corsair0c2fProductId,
     };
@@ -92,6 +93,7 @@ public static class HardwareIds
 
         public static readonly IReadOnlyCollection<int> Hydro3Fan = new List<int>
         {
+            CorsairHydroH150iEliteProductId,
             CorsairHydroH150iProXTProductId,
             Corsair0c2fProductId,
         };
