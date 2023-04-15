@@ -12,4 +12,6 @@ public class TemperatureSensor
     public string Name { get; }
     public int Channel { get; }
     public float? TemperatureCelsius { get; set; }
+
+    public override string ToString() => $"{Name} (channel: {Channel}): {TemperatureCelsius} C";
 }

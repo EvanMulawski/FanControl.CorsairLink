@@ -3,7 +3,7 @@ using System.Security.Principal;
 
 namespace CorsairLink.Synchronization;
 
-internal sealed class CorsairDevicesGuard
+internal static class CorsairDevicesGuard
 {
     public const string MutexName = "Global\\CorsairLinkReadWriteGuardMutex";
     private static readonly Mutex _mutex = CreateMutex();

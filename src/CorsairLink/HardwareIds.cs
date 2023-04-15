@@ -4,6 +4,7 @@ public static class HardwareIds
 {
     public static readonly int CorsairVendorId = 0x1b1c;
 
+    public static readonly int CorsairCoolitFamilyProductId = 0x0c04;
     public static readonly int CorsairCommanderProProductId = 0x0c10;
     public static readonly int CorsairHydroH115iPlatinumProductId = 0x0c17;
     public static readonly int CorsairHydroH100iPlatinumProductId = 0x0c18;
@@ -54,6 +55,9 @@ public static class HardwareIds
         CorsairHydroH150iEliteProductId,
         CorsairHydroH150iProXTProductId,
         CorsairHydroH150iProXT2ProductId,
+
+        // CoolIT Product Family
+        CorsairCoolitFamilyProductId,
     };
 
     public static class DeviceDriverGroups
@@ -96,6 +100,11 @@ public static class HardwareIds
             CorsairHydroH150iEliteProductId,
             CorsairHydroH150iProXTProductId,
             CorsairHydroH150iProXT2ProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> CoolitFamily = new List<int>
+        {
+            CorsairCoolitFamilyProductId,
         };
     }
 }

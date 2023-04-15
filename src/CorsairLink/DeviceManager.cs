@@ -42,6 +42,10 @@ public static class DeviceManager
             .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro3Fan)
                 .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 3 }, logger)));
 
+        collection.CoolitDevices
+            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CoolitFamily)
+                .Select(x => new CoolitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+
         return collection;
     }
 
