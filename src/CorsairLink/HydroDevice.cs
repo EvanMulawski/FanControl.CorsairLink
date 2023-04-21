@@ -106,13 +106,13 @@ namespace CorsairLink
         private void Initialize()
         {
             _requestedChannelPower.Clear();
-            _requestedChannelPower[PUMP_CHANNEL] = DEFAULT_SPEED_CHANNEL_POWER;
+            SetChannelPower(PUMP_CHANNEL, DEFAULT_SPEED_CHANNEL_POWER);
             _speedSensors[PUMP_CHANNEL] = new SpeedSensor("Pump", PUMP_CHANNEL, default, supportsControl: true);
             _temperatureSensors[PUMP_CHANNEL] = new TemperatureSensor("Liquid Temp", PUMP_CHANNEL, default);
 
             for (var i = 0; i < _fanCount; i++)
             {
-                _requestedChannelPower[i] = DEFAULT_SPEED_CHANNEL_POWER;
+                SetChannelPower(i, DEFAULT_SPEED_CHANNEL_POWER);
                 _speedSensors[i] = new SpeedSensor($"Fan #{i + 1}", i, default, supportsControl: true);
             }
         }
