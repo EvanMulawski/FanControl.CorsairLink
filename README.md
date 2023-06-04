@@ -80,3 +80,17 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 3. Exit Fan Control.
 4. Copy `FanControl.CorsairLink.dll` to the Fan Control `Plugins` directory.
 5. Start Fan Control.
+
+## Interoperability
+
+This plugin implements a standard global mutex (`Global\CorsairLinkReadWriteGuardMutex`) to synchronize device communication.
+
+### Compatibility
+
+| Application  | Compatibility                                                                                                                         |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| SignalRGB    | ✅ 2.2.29+                                                                                                                            |
+| HWiNFO       | ✅ 5.34+                                                                                                                              |
+| SIV          | ✅ 5.17+                                                                                                                              |
+| Corsair iCUE | ❌ ([more info](https://forum.corsair.com/forums/topic/138062-corsair-link-doesnt-work-with-hwinfo64/?do=findComment&comment=824447)) |
+| OpenRGB      | ❌ ([more info](https://gitlab.com/CalcProgrammer1/OpenRGB/-/issues/605))                                                             |
