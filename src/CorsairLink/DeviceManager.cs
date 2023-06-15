@@ -5,7 +5,7 @@ namespace CorsairLink;
 
 public static class DeviceManager
 {
-    public static SupportedDeviceCollection GetSupportedDevices(IDeviceGuardManager deviceGuardManager, ILogger? logger)
+    public static IReadOnlyCollection<IDevice> GetSupportedDevices(IDeviceGuardManager deviceGuardManager, ILogger? logger)
     {
         var corsairDevices = DeviceList.Local
             .GetHidDevices(vendorID: HardwareIds.CorsairVendorId)
@@ -20,31 +20,28 @@ public static class DeviceManager
         var supportedDevicesByProductId = supportedDevices
             .ToLookup(x => x.ProductID);
 
-        var collection = new SupportedDeviceCollection();
+        var collection = new List<IDevice>();
 
-        collection.CommanderProDevices
-            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderPro)
-                .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderPro)
+            .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
-        collection.CommanderCoreDevices
-            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCore)
-                .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCore)
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
 
-        collection.CommanderCoreDevices
-            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCoreWithDesignatedPump)
-                .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCoreWithDesignatedPump)
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
-        collection.HydroDevices
-            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro2Fan)
-                .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 2 }, logger)));
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro2Fan)
+            .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 2 }, logger)));
 
-        collection.HydroDevices
-            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro3Fan)
-                .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 3 }, logger)));
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro3Fan)
+            .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 3 }, logger)));
 
-        collection.CoolitDevices
-            .AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CoolitFamily)
-                .Select(x => new CoolitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CoolitFamily)
+            .Select(x => new CoolitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.PowerSupplyUnits)
+            .Select(x => new PowerSupplyUnitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         return collection;
     }

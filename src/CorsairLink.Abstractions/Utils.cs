@@ -35,4 +35,29 @@ public static class Utils
     }
 
     public static string ToHexString(this byte[] bytes) => ToHexString(bytes.AsSpan());
+
+    public static float FromLinear11(ReadOnlySpan<byte> bytes)
+    {
+        int value = bytes[1] << 8 | bytes[0];
+
+        int mantissa = value & 0x7FF;
+        if (mantissa > 1023)
+            mantissa -= 2048;
+
+        int exponent = value >> 11;
+        if (exponent > 15)
+            exponent -= 32;
+
+        return mantissa * (float)Math.Pow(2, exponent);
+    }
+
+    public static bool GetEnvironmentFlag(string flagName)
+    {
+        var variableValue = Environment.GetEnvironmentVariable(flagName);
+        if (string.IsNullOrEmpty(variableValue))
+        {
+            variableValue = Environment.GetEnvironmentVariable(flagName, EnvironmentVariableTarget.Machine);
+        }
+        return !string.IsNullOrEmpty(variableValue) && (variableValue.ToLower() == "true" || variableValue == "1");
+    }
 }

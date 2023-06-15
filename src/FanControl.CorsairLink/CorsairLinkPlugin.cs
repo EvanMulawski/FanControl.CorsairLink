@@ -45,8 +45,8 @@ public class CorsairLinkPlugin : IPlugin
                     }
                     catch (Exception ex)
                     {
-                        Log($"An exception occurred refreshing device '{device.Name}' ({device.UniqueId}):");
-                        Log(ex.ToString());
+                        _logger?.Error(device.Name, $"An exception occurred refreshing device '{device.Name}' ({device.UniqueId}):");
+                        _logger?.Error(device.Name, ex.ToString());
                     }
                 }
             }
@@ -58,11 +58,6 @@ public class CorsairLinkPlugin : IPlugin
                 Monitor.Exit(_timerLock);
             }
         }
-    }
-
-    private void Log(string message)
-    {
-        _logger?.Log(message);
     }
 
     void IPlugin.Close()
@@ -103,7 +98,7 @@ public class CorsairLinkPlugin : IPlugin
             {
                 if (!device.Connect())
                 {
-                    Log($"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
+                    _logger?.Error(device.Name, $"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
                     continue;
                 }
 
@@ -111,8 +106,8 @@ public class CorsairLinkPlugin : IPlugin
             }
             catch (Exception ex)
             {
-                Log($"An exception occurred attempting to initialize device '{device.Name}' ({device.UniqueId}):");
-                Log(ex.ToString());
+                _logger?.Error(device.Name, $"An exception occurred attempting to initialize device '{device.Name}' ({device.UniqueId}):");
+                _logger?.Error(device.Name, ex.ToString());
             }
         }
 
@@ -130,7 +125,7 @@ public class CorsairLinkPlugin : IPlugin
 
         foreach (var device in _devices)
         {
-            Log($"Device '{device.Name}' ({device.UniqueId}, FW: {device.GetFirmwareVersion()}):");
+            _logger?.Normal(device.Name, $"Device '{device.Name}' ({device.UniqueId}, FW: {device.GetFirmwareVersion()}):");
 
             AddDeviceSpeedSensors(container, device);
             AddDeviceSpeedControllers(container, device);
@@ -144,7 +139,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkSpeedSensor(device, sensor);
             container.FanSensors.Add(pluginSensor);
-            Log($"  added {pluginSensor.Id}");
+            _logger.Normal(device.Name, $"  added {pluginSensor.Id}");
         }
     }
 
@@ -154,7 +149,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginController = new CorsairLinkSpeedController(device, sensor);
             container.ControlSensors.Add(pluginController);
-            Log($"  added {pluginController.Id}");
+            _logger.Normal(device.Name, $"  added {pluginController.Id}");
         }
     }
 
@@ -164,7 +159,7 @@ public class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkTemperatureSensor(device, sensor);
             container.TempSensors.Add(pluginSensor);
-            Log($"  added {pluginSensor.Id}");
+            _logger.Normal(device.Name, $"  added {pluginSensor.Id}");
         }
     }
 }

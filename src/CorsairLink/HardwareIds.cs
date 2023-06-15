@@ -24,6 +24,19 @@ public static class HardwareIds
     public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
     public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
+    public static readonly int CorsairPsuHX550iProductId = 0x1c03;
+    public static readonly int CorsairPsuHX650iProductId = 0x1c04;
+    public static readonly int CorsairPsuHX750iProductId = 0x1c05;
+    public static readonly int CorsairPsuHX850iProductId = 0x1c06;
+    public static readonly int CorsairPsuHX1000iProductId = 0x1c07;
+    public static readonly int CorsairPsuHX1200iProductId = 0x1c08;
+    public static readonly int CorsairPsuHX1000i2021ProductId = 0x1c1e;
+    public static readonly int CorsairPsuHX1500i2021ProductId = 0x1c1f;
+    public static readonly int CorsairPsuRM550iProductId = 0x1c09;
+    public static readonly int CorsairPsuRM650iProductId = 0x1c0a;
+    public static readonly int CorsairPsuRM750iProductId = 0x1c0b;
+    public static readonly int CorsairPsuRM850iProductId = 0x1c0c;
+    public static readonly int CorsairPsuRM1000iProductId = 0x1c0d;
     public static readonly int CorsairObsidian1000DCommanderProProductId = 0x1d00;
 
     public static readonly IReadOnlyCollection<int> SupportedProductIds = new List<int>
@@ -58,6 +71,21 @@ public static class HardwareIds
 
         // CoolIT Product Family
         CorsairCoolitFamilyProductId,
+
+        // HID PSU
+        CorsairPsuHX550iProductId,
+        CorsairPsuHX650iProductId,
+        CorsairPsuHX750iProductId,
+        CorsairPsuHX850iProductId,
+        CorsairPsuHX1000iProductId,
+        CorsairPsuHX1200iProductId,
+        CorsairPsuHX1000i2021ProductId,
+        CorsairPsuHX1500i2021ProductId,
+        CorsairPsuRM550iProductId,
+        CorsairPsuRM650iProductId,
+        CorsairPsuRM750iProductId,
+        CorsairPsuRM850iProductId,
+        CorsairPsuRM1000iProductId,
     };
 
     public static class DeviceDriverGroups
@@ -105,6 +133,23 @@ public static class HardwareIds
         public static readonly IReadOnlyCollection<int> CoolitFamily = new List<int>
         {
             CorsairCoolitFamilyProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> PowerSupplyUnits = new List<int>
+        {
+            CorsairPsuHX550iProductId,
+            CorsairPsuHX650iProductId,
+            CorsairPsuHX750iProductId,
+            CorsairPsuHX850iProductId,
+            CorsairPsuHX1000iProductId,
+            CorsairPsuHX1200iProductId,
+            CorsairPsuHX1000i2021ProductId,
+            CorsairPsuHX1500i2021ProductId,
+            CorsairPsuRM550iProductId,
+            CorsairPsuRM650iProductId,
+            CorsairPsuRM750iProductId,
+            CorsairPsuRM850iProductId,
+            CorsairPsuRM1000iProductId,
         };
     }
 }
