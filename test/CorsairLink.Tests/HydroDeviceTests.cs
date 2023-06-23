@@ -1,3 +1,5 @@
+using CorsairLink.Devices;
+
 namespace CorsairLink.Tests;
 
 public class HydroDeviceTests
@@ -21,7 +23,7 @@ public class HydroDeviceTests
         var deviceProxy = new TestDeviceProxy(
             IncomingStatePacketBytes
         );
-        var device = new HydroDevice(deviceProxy, new TestGuardManager(), new HydroDeviceOptions { FanChannelCount = 2 }, null);
+        var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, null);
 
         // Act
         var fwVersion = device.GetFirmwareVersion();
@@ -35,7 +37,7 @@ public class HydroDeviceTests
     {
         // Arrange
         var deviceProxy = new TestDeviceProxy();
-        var device = new HydroDevice(deviceProxy, new TestGuardManager(), new HydroDeviceOptions { FanChannelCount = 2 }, null);
+        var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, null);
 
         // Act
         var state = device.ReadState(IncomingStatePacketBytes.AsSpan(1));
@@ -45,7 +47,7 @@ public class HydroDeviceTests
         Assert.Equal(1, state.FirmwareVersionMinor);
         Assert.Equal(31, state.FirmwareVersionRevision);
         Assert.Equal(31.3, state.LiquidTempCelsius, 0.00001);
-        Assert.Equal(HydroDevice.PumpMode.Balanced, state.PumpMode);
+        Assert.Equal(HydroPlatinumDevice.PumpMode.Balanced, state.PumpMode);
         Assert.Equal(2336, state.PumpRpm);
         Assert.Equal(0, state.FanRpm[0]);
         Assert.Equal(1231, state.FanRpm[1]);
@@ -69,7 +71,7 @@ public class HydroDeviceTests
         var bytesForChecksum = readBytes.AsSpan(2, readBytes.Length - 3);
 
         // Act
-        var result = HydroDevice.GenerateChecksum(bytesForChecksum);
+        var result = HydroPlatinumDevice.GenerateChecksum(bytesForChecksum);
 
         // Assert
         Assert.Equal(readBytes.Last(), result);
@@ -82,17 +84,17 @@ public class HydroDeviceTests
         const int FAN_0_POWER = 37;
         const int FAN_1_POWER = 85;
         var PUMP_POWER = Utils.ToFractionalByte(68);
-        var coolingData = HydroDevice.CreateCoolingCommandData(FAN_0_POWER, FAN_1_POWER, PUMP_POWER);
-        var coolingCommand = HydroDevice.CreateCoolingCommand(coolingData);
+        var coolingData = HydroPlatinumDevice.CreateCoolingCommandData(FAN_0_POWER, FAN_1_POWER, PUMP_POWER);
+        var coolingCommand = HydroPlatinumDevice.CreateCoolingCommand(coolingData);
         byte sequenceNumber = 0x00;
 
         // Act
-        var result = HydroDevice.CreateCommand(HydroDevice.Commands.Cooling, sequenceNumber, coolingCommand);
+        var result = HydroPlatinumDevice.CreateCommand(HydroPlatinumDevice.Commands.Cooling, sequenceNumber, coolingCommand);
 
         // Assert
         Assert.Equal(0x00, result[0]);
         Assert.Equal(0x3f, result[1]);
-        Assert.Equal(sequenceNumber | HydroDevice.Commands.Cooling, result[2]);
+        Assert.Equal(sequenceNumber | HydroPlatinumDevice.Commands.Cooling, result[2]);
         Assert.Equal(0x14, result[3]);
         Assert.Equal(0x00, result[4]);
         Assert.Equal(0xff, result[5]);
@@ -114,7 +116,7 @@ public class HydroDeviceTests
         Assert.Equal(0xff, result[21]);
         Assert.Equal(0xff, result[22]);
         Assert.Equal(FAN_1_POWER, result[23]); // fan 1 power
-        Assert.Equal((byte)HydroDevice.PumpMode.Performance, result[24]); // pump mode
+        Assert.Equal((byte)HydroPlatinumDevice.PumpMode.Performance, result[24]); // pump mode
         Assert.Equal(0xff, result[25]);
         Assert.Equal(0xff, result[26]);
         Assert.Equal(0xff, result[27]);
@@ -158,19 +160,19 @@ public class HydroDeviceTests
     }
 
     [Theory]
-    [InlineData(0, HydroDevice.PumpMode.Quiet)]
-    [InlineData(33, HydroDevice.PumpMode.Quiet)]
-    [InlineData(34, HydroDevice.PumpMode.Balanced)]
-    [InlineData(67, HydroDevice.PumpMode.Balanced)]
-    [InlineData(68, HydroDevice.PumpMode.Performance)]
-    [InlineData(100, HydroDevice.PumpMode.Performance)]
-    internal void GetPumpMode_ShouldReturnExpectedPumpMode(int requestedPowerPercent, HydroDevice.PumpMode expectedPumpMode)
+    [InlineData(0, HydroPlatinumDevice.PumpMode.Quiet)]
+    [InlineData(33, HydroPlatinumDevice.PumpMode.Quiet)]
+    [InlineData(34, HydroPlatinumDevice.PumpMode.Balanced)]
+    [InlineData(67, HydroPlatinumDevice.PumpMode.Balanced)]
+    [InlineData(68, HydroPlatinumDevice.PumpMode.Performance)]
+    [InlineData(100, HydroPlatinumDevice.PumpMode.Performance)]
+    internal void GetPumpMode_ShouldReturnExpectedPumpMode(int requestedPowerPercent, HydroPlatinumDevice.PumpMode expectedPumpMode)
     {
         // Arrange
         var requestedPower = Utils.ToFractionalByte(requestedPowerPercent);
 
         // Act
-        var result = HydroDevice.GetPumpMode(requestedPower);
+        var result = HydroPlatinumDevice.GetPumpMode(requestedPower);
 
         // Assert
         Assert.Equal(expectedPumpMode, result);

@@ -1,4 +1,4 @@
-﻿namespace CorsairLink;
+﻿namespace CorsairLink.Devices;
 
 public class CommanderCoreDeviceOptions
 {

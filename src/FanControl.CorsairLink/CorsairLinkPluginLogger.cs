@@ -6,17 +6,18 @@ namespace FanControl.CorsairLink;
 internal class CorsairLinkPluginLogger : ILogger
 {
     private readonly IPluginLogger _pluginLogger;
-    private readonly bool _debugEnabled;
+
+    public bool DebugEnabled { get; }
 
     public CorsairLinkPluginLogger(IPluginLogger pluginLogger)
     {
         _pluginLogger = pluginLogger;
-        _debugEnabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED");
+        DebugEnabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED");
     }
 
     public void Debug(string deviceName, string message)
     {
-        if (!_debugEnabled)
+        if (!DebugEnabled)
         {
             return;
         }

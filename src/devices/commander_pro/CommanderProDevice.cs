@@ -1,8 +1,8 @@
 ﻿using System.Buffers.Binary;
 
-namespace CorsairLink;
+namespace CorsairLink.Devices;
 
-public sealed class CommanderProDevice : IDevice
+public sealed class CommanderProDevice : DeviceBase
 {
     private static class Commands
     {
@@ -25,36 +25,30 @@ public sealed class CommanderProDevice : IDevice
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly ILogger? _logger;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderProDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger? logger)
+    public CommanderProDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
+        : base(logger)
     {
         _device = device;
         _guardManager = guardManager;
-        _logger = logger;
 
         var deviceInfo = device.GetDeviceInfo();
         Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
         UniqueId = deviceInfo.DevicePath;
     }
 
-    public string UniqueId { get; }
+    public override string UniqueId { get; }
 
-    public string Name { get; }
+    public override string Name { get; }
 
-    public IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
+    public override IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
 
-    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
+    public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    private void Log(string message)
-    {
-        _logger?.Log($"{Name}: {message}");
-    }
-
-    public bool Connect()
+    public override bool Connect()
     {
         Disconnect();
 
@@ -67,18 +61,18 @@ public sealed class CommanderProDevice : IDevice
 
         if (exception is not null)
         {
-            Log(exception.ToString());
+            LogError(exception.ToString());
         }
 
         return false;
     }
 
-    public void Disconnect()
+    public override void Disconnect()
     {
         _device.Close();
     }
 
-    public string GetFirmwareVersion()
+    public override string GetFirmwareVersion()
     {
         var request = CreateRequest(Commands.ReadFirmwareVersion);
         var response = WriteAndRead(request);
@@ -96,14 +90,14 @@ public sealed class CommanderProDevice : IDevice
         Refresh();
     }
 
-    public void Refresh()
+    public override void Refresh()
     {
         WriteRequestedSpeeds();
         RefreshTemperatures();
         RefreshSpeeds();
     }
 
-    public void SetChannelPower(int channel, int percent)
+    public override void SetChannelPower(int channel, int percent)
     {
         _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
     }
@@ -252,12 +246,22 @@ public sealed class CommanderProDevice : IDevice
 
     private void Write(byte[] buffer)
     {
+        if (CanLogDebug)
+        {
+            LogDebug($"WRITE: {buffer.ToHexString()}");
+        }
+
         _device.Write(buffer);
     }
 
     private void Read(byte[] buffer)
     {
         _device.Read(buffer);
+
+        if (CanLogDebug)
+        {
+            LogDebug($"READ:  {buffer.ToHexString()}");
+        }
     }
 
     private static byte[] CreateRequest(byte command)

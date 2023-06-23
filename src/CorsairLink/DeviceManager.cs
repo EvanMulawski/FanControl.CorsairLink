@@ -1,4 +1,6 @@
-﻿using HidSharp;
+﻿using CorsairLink.Devices;
+using CorsairLink.Hid;
+using HidSharp;
 using System.Text;
 
 namespace CorsairLink;
@@ -32,16 +34,16 @@ public static class DeviceManager
             .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro2Fan)
-            .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 2 }, logger)));
+            .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro3Fan)
-            .Select(x => new HydroDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroDeviceOptions { FanChannelCount = 3 }, logger)));
+            .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 3 }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CoolitFamily)
             .Select(x => new CoolitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.PowerSupplyUnits)
-            .Select(x => new PowerSupplyUnitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+            .Select(x => new HidPsuDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         return collection;
     }

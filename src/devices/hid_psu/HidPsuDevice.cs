@@ -1,8 +1,8 @@
 ﻿using System.Text;
 
-namespace CorsairLink;
+namespace CorsairLink.Devices;
 
-public sealed class PowerSupplyUnitDevice : IDevice
+public sealed class HidPsuDevice : DeviceBase
 {
     private static class CommandModes
     {
@@ -37,7 +37,6 @@ public sealed class PowerSupplyUnitDevice : IDevice
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly ILogger? _logger;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly SpeedChannelPowerTrackingStore _fanControlModeStore = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
@@ -46,35 +45,30 @@ public sealed class PowerSupplyUnitDevice : IDevice
     private string _name;
     private readonly string _serialNumber;
 
-    public PowerSupplyUnitDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger? logger)
+    public HidPsuDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
+        : base(logger)
     {
         _device = device;
         _guardManager = guardManager;
-        _logger = logger;
 
         var deviceInfo = device.GetDeviceInfo();
         _serialNumber = deviceInfo.SerialNumber;
         _name = "Corsair PSU";
 
-        Name = GetName();
         UniqueId = deviceInfo.DevicePath;
     }
 
     private string GetName() => $"{_name} ({_serialNumber})";
 
-    public string UniqueId { get; }
+    public override string UniqueId { get; }
 
-    public string Name { get; private set; }
+    public override string Name => GetName();
 
-    public IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
+    public override IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
 
-    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
+    public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    private void LogNormal(string message) => _logger?.Normal(Name, message);
-    private void LogError(string message) => _logger?.Error(Name, message);
-    private void LogDebug(string message) => _logger?.Debug(Name, message);
-
-    public bool Connect()
+    public override bool Connect()
     {
         Disconnect();
 
@@ -93,7 +87,7 @@ public sealed class PowerSupplyUnitDevice : IDevice
         return false;
     }
 
-    public void Disconnect()
+    public override void Disconnect()
     {
         try
         {
@@ -107,7 +101,7 @@ public sealed class PowerSupplyUnitDevice : IDevice
         _device.Close();
     }
 
-    public string GetFirmwareVersion()
+    public override string GetFirmwareVersion()
     {
         var request = CreateRequest(CommandModes.Read, Commands.ReadFirmwareVersion);
         var response = WriteAndRead(request);
@@ -145,18 +139,16 @@ public sealed class PowerSupplyUnitDevice : IDevice
 
             _name = Encoding.ASCII.GetString(modelNameData.Slice(0, lastCharIndex).ToArray());
         }
-
-        Name = GetName();
     }
 
-    public void Refresh()
+    public override void Refresh()
     {
         WriteRequestedSpeeds();
         RefreshTemperatures();
         RefreshSpeeds();
     }
 
-    public void SetChannelPower(int channel, int percent)
+    public override void SetChannelPower(int channel, int percent)
     {
         _requestedChannelPower[SPEED_CHANNEL] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
 
@@ -242,7 +234,12 @@ public sealed class PowerSupplyUnitDevice : IDevice
         if (_fanControlModeStore.Dirty)
         {
             var mode = _fanControlModeStore[SPEED_CHANNEL];
-            LogDebug($"Changing fan control mode ({mode:X2})");
+
+            if (CanLogDebug)
+            {
+                LogDebug($"Changing fan control mode ({mode:X2})");
+            }
+
             SetFanControlMode(mode);
             _fanControlModeStore.ResetDirty();
         }
@@ -312,14 +309,22 @@ public sealed class PowerSupplyUnitDevice : IDevice
 
     private void Write(byte[] buffer)
     {
-        LogDebug($"WRITE: {buffer.ToHexString()}");
+        if (CanLogDebug)
+        {
+            LogDebug($"WRITE: {buffer.ToHexString()}");
+        }
+
         _device.Write(buffer);
     }
 
     private void Read(byte[] buffer)
     {
         _device.Read(buffer);
-        LogDebug($"READ:  {buffer.ToHexString()}");
+
+        if (CanLogDebug)
+        {
+            LogDebug($"READ:  {buffer.ToHexString()}");
+        }
     }
 
     private static byte[] CreateRequest(byte commandMode, byte command, byte data = default)

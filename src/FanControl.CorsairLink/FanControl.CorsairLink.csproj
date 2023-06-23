@@ -32,7 +32,13 @@
     <ItemGroup>
       <InputAssemblies Include="CorsairLink.dll" />
       <InputAssemblies Include="CorsairLink.Abstractions.dll" />
+      <InputAssemblies Include="CorsairLink.Hid.dll" />
       <InputAssemblies Include="CorsairLink.Synchronization.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.CommanderCore.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.CommanderPro.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.Coolit.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.HidPsu.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.HydroPlatinum.dll" />
     </ItemGroup>
     <ItemGroup>
       <InternalizeExcludeAssemblies Include="FanControl.Plugins.dll" />

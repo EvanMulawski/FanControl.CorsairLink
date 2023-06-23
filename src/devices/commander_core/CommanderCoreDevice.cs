@@ -1,8 +1,8 @@
 ﻿using System.Buffers.Binary;
 
-namespace CorsairLink;
+namespace CorsairLink.Devices;
 
-public sealed class CommanderCoreDevice : IDevice
+public sealed class CommanderCoreDevice : DeviceBase
 {
     private static class Commands
     {
@@ -42,18 +42,17 @@ public sealed class CommanderCoreDevice : IDevice
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly ILogger? _logger;
     private byte _speedChannelCount;
     private readonly bool _firstChannelExt;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public CommanderCoreDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, CommanderCoreDeviceOptions options, ILogger? logger)
+    public CommanderCoreDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, CommanderCoreDeviceOptions options, ILogger logger)
+        : base(logger)
     {
         _device = device;
         _guardManager = guardManager;
-        _logger = logger;
 
         var deviceInfo = device.GetDeviceInfo();
         Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
@@ -62,20 +61,15 @@ public sealed class CommanderCoreDevice : IDevice
         _firstChannelExt = options.IsFirstChannelExt ?? CommanderCoreDeviceOptions.IsFirstChannelExtDefault;
     }
 
-    public string UniqueId { get; }
+    public override string UniqueId { get; }
 
-    public string Name { get; }
+    public override string Name { get; }
 
-    public IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
+    public override IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
 
-    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
+    public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    private void Log(string message)
-    {
-        _logger?.Log($"{Name}: {message}");
-    }
-
-    public bool Connect()
+    public override bool Connect()
     {
         Disconnect();
 
@@ -89,18 +83,18 @@ public sealed class CommanderCoreDevice : IDevice
 
         if (exception is not null)
         {
-            Log(exception.ToString());
+            LogError(exception.ToString());
         }
 
         return false;
     }
 
-    public void Disconnect()
+    public override void Disconnect()
     {
         _device.Close();
     }
 
-    public string GetFirmwareVersion()
+    public override string GetFirmwareVersion()
     {
         byte[] response;
 
@@ -116,7 +110,7 @@ public sealed class CommanderCoreDevice : IDevice
         return $"{v1}.{v2}.{v3}";
     }
 
-    public void Refresh() => RefreshImpl();
+    public override void Refresh() => RefreshImpl();
 
     private void RefreshImpl(bool initialize = false)
     {
@@ -142,7 +136,7 @@ public sealed class CommanderCoreDevice : IDevice
         RefreshTemperatures(temperaturesResponse);
     }
 
-    public void SetChannelPower(int channel, int percent)
+    public override void SetChannelPower(int channel, int percent)
     {
         _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
     }

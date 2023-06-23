@@ -2,7 +2,7 @@
 using System.Security.Cryptography;
 using System.Text;
 
-namespace CorsairLink;
+namespace CorsairLink.Hid;
 
 public static class HidSharpDeviceExtensions
 {

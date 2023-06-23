@@ -1,4 +1,6 @@
-﻿namespace CorsairLink.Tests
+﻿using CorsairLink.Devices;
+
+namespace CorsairLink.Tests
 {
     public class CoolitDeviceTests
     {

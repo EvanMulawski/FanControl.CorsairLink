@@ -1,8 +1,8 @@
 ﻿using HidSharp;
 
-namespace CorsairLink;
+namespace CorsairLink.Hid;
 
-internal class HidSharpDeviceProxy : IHidDeviceProxy
+public sealed class HidSharpDeviceProxy : IHidDeviceProxy
 {
     private readonly HidDevice _device;
     private HidStream? _stream;
@@ -46,7 +46,7 @@ internal class HidSharpDeviceProxy : IHidDeviceProxy
     public void Read(byte[] buffer)
     {
         ThrowIfNotReady();
-        
+
         _stream?.Read(buffer, 0, buffer.Length);
     }
 

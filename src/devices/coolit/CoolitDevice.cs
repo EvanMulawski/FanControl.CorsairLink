@@ -1,9 +1,9 @@
 ﻿using System.Buffers.Binary;
 using System.Text;
 
-namespace CorsairLink;
+namespace CorsairLink.Devices;
 
-public sealed class CoolitDevice : IDevice
+public sealed class CoolitDevice : DeviceBase
 {
     private static class DeviceModels
     {
@@ -56,7 +56,6 @@ public sealed class CoolitDevice : IDevice
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly ILogger? _logger;
     private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -73,37 +72,31 @@ public sealed class CoolitDevice : IDevice
     private string? _firmwareVersion;
     private readonly string _serialNumber;
 
-    public CoolitDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger? logger)
+    public CoolitDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
+        : base(logger)
     {
         _device = device;
         _guardManager = guardManager;
-        _logger = logger;
 
         var deviceInfo = device.GetDeviceInfo();
         _serialNumber = deviceInfo.SerialNumber;
         _name = deviceInfo.ProductName;
         _model = DeviceModels.CreateUnknown();
 
-        Name = GetName();
         UniqueId = deviceInfo.DevicePath;
     }
 
     private string GetName() => $"{_name} ({_serialNumber})";
 
-    public string UniqueId { get; }
+    public override string UniqueId { get; }
 
-    public string Name { get; private set; }
+    public override string Name => GetName();
 
-    public IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
+    public override IReadOnlyCollection<SpeedSensor> SpeedSensors => _speedSensors.Values;
 
-    public IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
+    public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    private void Log(string message)
-    {
-        _logger?.Log($"{Name}: {message}");
-    }
-
-    public bool Connect()
+    public override bool Connect()
     {
         Disconnect();
 
@@ -115,21 +108,20 @@ public sealed class CoolitDevice : IDevice
 
             if (!deviceInfo.IsSupported)
             {
-                Log($"Device model {_model.Id:X2} is not supported");
+                LogError($"Device model {_model.Id:X2} is not supported");
                 return false;
             }
 
             _name = _model.Name;
             _firmwareVersion = deviceInfo.FirmwareVersion;
 
-            Name = GetName();
             Initialize();
             return true;
         }
 
         if (exception is not null)
         {
-            Log(exception.ToString());
+            LogError(exception.ToString());
         }
 
         return false;
@@ -158,7 +150,7 @@ public sealed class CoolitDevice : IDevice
         return ParseDeviceFirmwareVersion(response);
     }
 
-    public void Disconnect()
+    public override void Disconnect()
     {
         _device.Close();
     }
@@ -169,18 +161,23 @@ public sealed class CoolitDevice : IDevice
         RefreshImpl(initialize: true);
     }
 
-    public string GetFirmwareVersion() => _firmwareVersion ?? "?";
+    public override string GetFirmwareVersion() => _firmwareVersion ?? "?";
 
-    public void Refresh() => RefreshImpl();
+    public override void Refresh() => RefreshImpl();
 
     private void RefreshImpl(bool initialize = false)
     {
         WriteRequestedSpeeds(setMode: initialize);
         RefreshTemperatures();
         RefreshSpeeds();
+
+        if (CanLogDebug)
+        {
+            LogDebug($"STATE: {GetStateStringRepresentation()}");
+        }
     }
 
-    public void SetChannelPower(int channel, int percent)
+    public override void SetChannelPower(int channel, int percent)
     {
         _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
     }
@@ -423,7 +420,7 @@ public sealed class CoolitDevice : IDevice
         return new byte[RESPONSE_LENGTH];
     }
 
-    private void LogState()
+    private string GetStateStringRepresentation()
     {
         var sb = new StringBuilder().AppendLine("STATE");
 
@@ -442,7 +439,7 @@ public sealed class CoolitDevice : IDevice
             sb.AppendLine(sensor.ToString());
         }
 
-        Log(sb.ToString());
+        return sb.ToString();
     }
 
     internal static string ParseDeviceFirmwareVersion(ReadOnlySpan<byte> data)

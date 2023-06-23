@@ -8,18 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="HidSharp" Version="2.1.0" />
     <PackageReference Include="System.Memory" Version="4.5.4" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CorsairLink.Abstractions\CorsairLink.Abstractions.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
-      <_Parameter1>$(AssemblyName).Tests</_Parameter1>
-    </AssemblyAttribute>
+    <ProjectReference Include="..\CorsairLink.Hid\CorsairLink.Hid.csproj" />
+    <ProjectReference Include="..\devices\commander_core\CorsairLink.Devices.CommanderCore.csproj" />
+    <ProjectReference Include="..\devices\commander_pro\CorsairLink.Devices.CommanderPro.csproj" />
+    <ProjectReference Include="..\devices\coolit\CorsairLink.Devices.Coolit.csproj" />
+    <ProjectReference Include="..\devices\hid_psu\CorsairLink.Devices.HidPsu.csproj" />
+    <ProjectReference Include="..\devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj" />
   </ItemGroup>
 
 </Project>
