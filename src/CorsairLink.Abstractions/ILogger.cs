@@ -2,9 +2,9 @@
 
 public interface ILogger
 {
-    void Log(string message);
-    void Normal(string deviceName, string message);
-    void Error(string deviceName, string message);
-    void Debug(string deviceName, string message);
+    void Info(string category, string message);
+    void Error(string category, string message);
+    void Debug(string category, string message);
+    void Flush();
     bool DebugEnabled { get; }
 }

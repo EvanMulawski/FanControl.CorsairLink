@@ -7,17 +7,17 @@ namespace CorsairLink;
 
 public static class DeviceManager
 {
-    public static IReadOnlyCollection<IDevice> GetSupportedDevices(IDeviceGuardManager deviceGuardManager, ILogger? logger)
+    public static IReadOnlyCollection<IDevice> GetSupportedDevices(IDeviceGuardManager deviceGuardManager, ILogger logger)
     {
         var corsairDevices = DeviceList.Local
             .GetHidDevices(vendorID: HardwareIds.CorsairVendorId)
             .ToList();
-        logger?.LogDevices(corsairDevices, "Corsair device(s)");
+        logger.LogDevices(corsairDevices, "Corsair device(s)");
 
         var supportedDevices = corsairDevices
             .Where(x => HardwareIds.SupportedProductIds.Contains(x.ProductID) && x.GetMaxOutputReportLength() > 0)
             .ToList();
-        logger?.LogDevices(supportedDevices, "supported Corsair device(s)");
+        logger.LogDevices(supportedDevices, "supported Corsair device(s)");
 
         var supportedDevicesByProductId = supportedDevices
             .ToLookup(x => x.ProductID);
@@ -61,11 +61,11 @@ public static class DeviceManager
         }
 
         var sb = new StringBuilder();
-        sb.AppendLine($"DeviceManager: Found {devices.Count} {description}");
+        sb.AppendLine($"Found {devices.Count} {description}");
         foreach (var device in devices)
         {
             sb.AppendLine($"  name={device.GetProductNameOrDefault()}, devicePath={device.DevicePath}");
         }
-        logger.Log(sb.ToString());
+        logger.Info("Device Manager", sb.ToString());
     }
 }

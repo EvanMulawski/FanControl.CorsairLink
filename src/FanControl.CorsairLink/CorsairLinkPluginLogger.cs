@@ -1,33 +1,94 @@
 ﻿using CorsairLink;
-using FanControl.Plugins;
+using System.Collections.Concurrent;
+using System.Text;
 
 namespace FanControl.CorsairLink;
 
-internal class CorsairLinkPluginLogger : ILogger
+internal sealed class CorsairLinkPluginLogger : ILogger
 {
-    private readonly IPluginLogger _pluginLogger;
+    private readonly FileLogger _logger;
 
     public bool DebugEnabled { get; }
 
-    public CorsairLinkPluginLogger(IPluginLogger pluginLogger)
+    public CorsairLinkPluginLogger()
     {
-        _pluginLogger = pluginLogger;
+        _logger = new FileLogger("CorsairLink");
         DebugEnabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED");
     }
 
-    public void Debug(string deviceName, string message)
+    public void Debug(string category, string message)
     {
         if (!DebugEnabled)
         {
             return;
         }
 
-        Log($"(debug) {deviceName}: {message}");
+        Log($"[DBG] {category}: {message}");
     }
 
-    public void Error(string deviceName, string message) => Log($"(error) {deviceName}: {message}");
+    public void Error(string category, string message) => Log($"[ERR] {category}: {message}");
 
-    public void Normal(string deviceName, string message) => Log($"{deviceName}: {message}");
+    public void Info(string category, string message) => Log($"[INF] {category}: {message}");
 
-    public void Log(string message) => _pluginLogger.Log($"[CorsairLink] {message}");
+    public void Flush() => _logger.Flush();
+
+    private void Log(string message) => _logger.Log(message);
+
+    private sealed class FileLogger
+    {
+        private const long MAX_FILE_SIZE = 5000000L;
+        private const string FILE_EXTENSION = ".log";
+
+        private readonly string _logFileName;
+        private readonly object _lock = new();
+        private readonly ConcurrentQueue<string> _logs = new();
+
+        public FileLogger(string logFileName)
+        {
+            _logFileName = logFileName + FILE_EXTENSION;
+            var fileInfo = new FileInfo(_logFileName);
+            var logFileNumber = 0;
+            for (; fileInfo.Exists && fileInfo.Length > MAX_FILE_SIZE; fileInfo = new FileInfo(_logFileName))
+            {
+                _logFileName = logFileName + string.Format(".{0}", ++logFileNumber) + FILE_EXTENSION;
+            }
+        }
+
+        public void Log(string message)
+        {
+            _logs.Enqueue($"{DateTime.UtcNow:O} {message}{Environment.NewLine}");
+        }
+
+        public void Flush()
+        {
+            bool lockTaken = false;
+
+            try
+            {
+                Monitor.TryEnter(_lock, 1000, ref lockTaken);
+                if (lockTaken)
+                {
+                    var sb = new StringBuilder();
+                    var i = 0;
+                    while (_logs.TryDequeue(out var log) && ++i < 1024)
+                    {
+                        sb.Append(log);
+                    }
+
+                    File.AppendAllText(_logFileName, sb.ToString(), Encoding.UTF8);
+                }
+                else
+                {
+                    throw new IOException("Unable to flush logs - timeout expired.");
+                }
+            }
+            finally
+            {
+                if (lockTaken)
+                {
+                    Monitor.Exit(_lock);
+                }
+            }
+        }
+    }
 }

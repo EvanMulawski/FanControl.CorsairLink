@@ -14,7 +14,7 @@ public abstract class DeviceBase : IDevice
         _logger = logger;
     }
 
-    protected void LogNormal(string message) => _logger.Normal(Name, message);
+    protected void LogInfo(string message) => _logger.Info(Name, message);
 
     protected void LogError(string message) => _logger.Error(Name, message);
 

@@ -23,7 +23,7 @@ public class HydroDeviceTests
         var deviceProxy = new TestDeviceProxy(
             IncomingStatePacketBytes
         );
-        var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, null);
+        var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, new FakeLogger());
 
         // Act
         var fwVersion = device.GetFirmwareVersion();
@@ -37,7 +37,7 @@ public class HydroDeviceTests
     {
         // Arrange
         var deviceProxy = new TestDeviceProxy();
-        var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, null);
+        var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, new FakeLogger());
 
         // Act
         var state = device.ReadState(IncomingStatePacketBytes.AsSpan(1));

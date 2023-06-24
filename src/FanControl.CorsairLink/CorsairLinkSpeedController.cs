@@ -13,7 +13,6 @@ public sealed class CorsairLinkSpeedController : IPluginControlSensor
     {
         _device = device;
         _sensor = sensor;
-
         Id = $"CorsairLink/{device.UniqueId}/SpeedController/{sensor.Channel}";
         Name = $"{device.Name} {sensor.Name}";
         _sensor = sensor;
