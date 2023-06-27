@@ -46,4 +46,9 @@ public abstract class DeviceBase : IDevice
     {
         throw new NotImplementedException();
     }
+
+    public virtual void ResetChannel(int channel)
+    {
+        SetChannelPower(channel, 50);
+    }
 }

@@ -33,7 +33,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private readonly IDeviceGuardManager _guardManager;
     private readonly SequenceCounter _sequenceCounter;
     private readonly uint _fanCount;
-    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
+    private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -141,6 +141,8 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private State WriteCooling()
     {
+        _requestedChannelPower.ApplyChanges();
+
         if (_fanCount == 3)
         {
             SendCoolingCommand(Commands.CoolingThreeFanPacket, CreateCoolingCommandData(_requestedChannelPower[2]));

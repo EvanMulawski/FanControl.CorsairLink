@@ -56,7 +56,7 @@ public sealed class CoolitDevice : DeviceBase
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
+    private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -276,7 +276,7 @@ public sealed class CoolitDevice : DeviceBase
 
     private void WriteRequestedSpeeds(bool setMode)
     {
-        if (!_requestedChannelPower.Dirty)
+        if (!_requestedChannelPower.ApplyChanges())
         {
             return;
         }
@@ -285,8 +285,6 @@ public sealed class CoolitDevice : DeviceBase
         {
             SetFanPower(c, _requestedChannelPower[c], setMode);
         }
-
-        _requestedChannelPower.ResetDirty();
     }
 
     private void SelectTemperatureSensorChannel(int channelId)

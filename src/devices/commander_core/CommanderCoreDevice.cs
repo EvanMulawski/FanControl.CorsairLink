@@ -44,7 +44,7 @@ public sealed class CommanderCoreDevice : DeviceBase
     private readonly IDeviceGuardManager _guardManager;
     private byte _speedChannelCount;
     private readonly bool _firstChannelExt;
-    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
+    private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -246,7 +246,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private void WriteRequestedSpeeds()
     {
-        if (!_requestedChannelPower.Dirty)
+        if (!_requestedChannelPower.ApplyChanges())
         {
             return;
         }
@@ -279,8 +279,6 @@ public sealed class CommanderCoreDevice : DeviceBase
         }
 
         WriteToEndpoint(Endpoints.SoftwareSpeedFixedPercent, DataTypes.SoftwareSpeedFixedPercent, speedFixedPercentBuf);
-
-        _requestedChannelPower.ResetDirty();
     }
 
     private byte[] SendCommand(ReadOnlySpan<byte> command, ReadOnlySpan<byte> data = default, ReadOnlySpan<byte> waitForDataType = default)

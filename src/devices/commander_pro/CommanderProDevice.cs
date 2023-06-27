@@ -25,7 +25,7 @@ public sealed class CommanderProDevice : DeviceBase
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
+    private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -163,7 +163,7 @@ public sealed class CommanderProDevice : DeviceBase
 
     private void WriteRequestedSpeeds()
     {
-        if (!_requestedChannelPower.Dirty)
+        if (!_requestedChannelPower.ApplyChanges())
         {
             return;
         }
@@ -172,8 +172,6 @@ public sealed class CommanderProDevice : DeviceBase
         {
             SetFanPower(c, _requestedChannelPower[c]);
         }
-
-        _requestedChannelPower.ResetDirty();
     }
 
     private float GetTemperatureSensorValue(int channelId)

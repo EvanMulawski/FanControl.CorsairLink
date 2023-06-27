@@ -12,4 +12,5 @@ public interface IDevice
     string GetFirmwareVersion();
     void Refresh();
     void SetChannelPower(int channel, int percent);
+    void ResetChannel(int channel);
 }

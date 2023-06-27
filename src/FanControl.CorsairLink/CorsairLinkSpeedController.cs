@@ -27,7 +27,7 @@ public sealed class CorsairLinkSpeedController : IPluginControlSensor
     public void Reset()
     {
         _value = null;
-        _device.SetChannelPower(_sensor.Channel, 50);
+        _device.ResetChannel(_sensor.Channel);
     }
 
     public void Set(float val)

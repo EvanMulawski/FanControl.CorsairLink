@@ -37,8 +37,8 @@ public sealed class HidPsuDevice : DeviceBase
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly SpeedChannelPowerTrackingStore _requestedChannelPower = new();
-    private readonly SpeedChannelPowerTrackingStore _fanControlModeStore = new();
+    private readonly ChannelTrackingStore _requestedChannelPower = new();
+    private readonly ChannelTrackingStore _fanControlModeStore = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
@@ -70,6 +70,8 @@ public sealed class HidPsuDevice : DeviceBase
 
     public override bool Connect()
     {
+        LogDebug("Connect");
+
         Disconnect();
 
         var (opened, exception) = _device.Open();
@@ -89,6 +91,8 @@ public sealed class HidPsuDevice : DeviceBase
 
     public override void Disconnect()
     {
+        LogDebug("Disconnect");
+
         try
         {
             SetFanControlMode(FanControlModes.Normal);
@@ -150,6 +154,7 @@ public sealed class HidPsuDevice : DeviceBase
 
     public override void SetChannelPower(int channel, int percent)
     {
+        LogDebug($"SetChannelPower {channel} {percent}%");
         _requestedChannelPower[SPEED_CHANNEL] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
 
         // When the user sets the power to 0%, set the fan control mode to Normal. This allows the device
@@ -161,7 +166,7 @@ public sealed class HidPsuDevice : DeviceBase
 
     private void InitializeSpeedChannelStores()
     {
-        _requestedChannelPower.Clear();
+        LogDebug("InitializeSpeedChannelStores");
         _requestedChannelPower[SPEED_CHANNEL] = DEFAULT_SPEED_CHANNEL_POWER;
         _fanControlModeStore[SPEED_CHANNEL] = FanControlModes.Manual;
     }
@@ -213,25 +218,28 @@ public sealed class HidPsuDevice : DeviceBase
 
     private void SetFanPower(byte percent)
     {
+        LogDebug($"SetFanPower {percent}%");
         var request = CreateRequest(CommandModes.Write, Commands.WriteFanPower, percent);
         _ = WriteAndRead(request);
     }
 
     private void SetFanControlMode(byte mode)
     {
+        LogDebug($"SetFanControlMode {mode}");
         var request = CreateRequest(CommandModes.Write, Commands.WriteFanControlMode, mode);
         _ = WriteAndRead(request);
     }
 
     private void WriteRequestedSpeeds()
     {
-        if (_requestedChannelPower.Dirty)
+        LogDebug("WriteRequestedSpeeds");
+
+        if (_requestedChannelPower.ApplyChanges())
         {
             SetFanPower(_requestedChannelPower[SPEED_CHANNEL]);
-            _requestedChannelPower.ResetDirty();
         }
 
-        if (_fanControlModeStore.Dirty)
+        if (_fanControlModeStore.ApplyChanges())
         {
             var mode = _fanControlModeStore[SPEED_CHANNEL];
 
@@ -241,7 +249,6 @@ public sealed class HidPsuDevice : DeviceBase
             }
 
             SetFanControlMode(mode);
-            _fanControlModeStore.ResetDirty();
         }
     }
 
