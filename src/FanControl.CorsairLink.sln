@@ -3,13 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink", "CorsairLink\CorsairLink.csproj", "{E0167E3C-34F6-4F67-92D8-8769BF72991B}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FanControl.CorsairLink", "FanControl.CorsairLink\FanControl.CorsairLink.csproj", "{1225B205-64F2-46A6-B20F-F9EB2F5E8F87}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Abstractions", "CorsairLink.Abstractions\CorsairLink.Abstractions.csproj", "{5B2539DD-E62B-4A73-A635-38A9EE3E5823}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TestingApp", "TestingApp\TestingApp.csproj", "{4E276246-EBDD-4119-9EAA-2BC212999B57}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Synchronization", "CorsairLink.Synchronization\CorsairLink.Synchronization.csproj", "{14879B61-7857-43B0-9AC3-1389D638800B}"
 EndProject
@@ -17,17 +13,25 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Tests", "..\tes
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "devices", "devices", "{C44527E6-C6F5-4957-B8A9-E8388416E54E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Devices.CommanderCore", "devices\commander_core\CorsairLink.Devices.CommanderCore.csproj", "{651FE5D0-E074-4358-AC10-610B174A86A4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.CommanderCore", "devices\commander_core\CorsairLink.Devices.CommanderCore.csproj", "{651FE5D0-E074-4358-AC10-610B174A86A4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Devices.CommanderPro", "devices\commander_pro\CorsairLink.Devices.CommanderPro.csproj", "{A605D0D6-4EEB-4F92-8820-A098073A2DA9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.CommanderPro", "devices\commander_pro\CorsairLink.Devices.CommanderPro.csproj", "{A605D0D6-4EEB-4F92-8820-A098073A2DA9}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Devices.HydroPlatinum", "devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj", "{B90F1C2E-F1BA-4F19-9D65-6F7555F9CF5B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.HydroPlatinum", "devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj", "{B90F1C2E-F1BA-4F19-9D65-6F7555F9CF5B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Devices.Coolit", "devices\coolit\CorsairLink.Devices.Coolit.csproj", "{26EE84F3-556F-4391-8925-58E28E9E7127}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.Coolit", "devices\coolit\CorsairLink.Devices.Coolit.csproj", "{26EE84F3-556F-4391-8925-58E28E9E7127}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Devices.HidPsu", "devices\hid_psu\CorsairLink.Devices.HidPsu.csproj", "{7EF049F2-EAA7-4DF4-B724-0B00D062984A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.HidPsu", "devices\hid_psu\CorsairLink.Devices.HidPsu.csproj", "{7EF049F2-EAA7-4DF4-B724-0B00D062984A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CorsairLink.Hid", "CorsairLink.Hid\CorsairLink.Hid.csproj", "{B863A1E2-3734-4128-9745-EE4F68DBF83D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Hid", "CorsairLink.Hid\CorsairLink.Hid.csproj", "{B863A1E2-3734-4128-9745-EE4F68DBF83D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.FlexUsb", "CorsairLink.FlexUsb\CorsairLink.FlexUsb.csproj", "{03A80959-1F7B-4B57-84F1-2D5FD808D1F5}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.FlexUsbPsu", "devices\flex_usb_psu\CorsairLink.Devices.FlexUsbPsu.csproj", "{6202EE32-877F-40C0-B71F-02761B20DF02}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.SiUsbXpress", "CorsairLink.SiUsbXpress\CorsairLink.SiUsbXpress.csproj", "{E68D167C-010D-4380-86F0-BB4FC172831F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.SiUsbXpress.Driver", "CorsairLink.SiUsbXpress.Driver\CorsairLink.SiUsbXpress.Driver.csproj", "{F779E75A-2B08-4800-9892-2907647AE117}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -35,10 +39,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{E0167E3C-34F6-4F67-92D8-8769BF72991B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E0167E3C-34F6-4F67-92D8-8769BF72991B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E0167E3C-34F6-4F67-92D8-8769BF72991B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E0167E3C-34F6-4F67-92D8-8769BF72991B}.Release|Any CPU.Build.0 = Release|Any CPU
 		{1225B205-64F2-46A6-B20F-F9EB2F5E8F87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{1225B205-64F2-46A6-B20F-F9EB2F5E8F87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1225B205-64F2-46A6-B20F-F9EB2F5E8F87}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -47,10 +47,6 @@ Global
 		{5B2539DD-E62B-4A73-A635-38A9EE3E5823}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5B2539DD-E62B-4A73-A635-38A9EE3E5823}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5B2539DD-E62B-4A73-A635-38A9EE3E5823}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4E276246-EBDD-4119-9EAA-2BC212999B57}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E276246-EBDD-4119-9EAA-2BC212999B57}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E276246-EBDD-4119-9EAA-2BC212999B57}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4E276246-EBDD-4119-9EAA-2BC212999B57}.Release|Any CPU.Build.0 = Release|Any CPU
 		{14879B61-7857-43B0-9AC3-1389D638800B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{14879B61-7857-43B0-9AC3-1389D638800B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14879B61-7857-43B0-9AC3-1389D638800B}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -83,6 +79,22 @@ Global
 		{B863A1E2-3734-4128-9745-EE4F68DBF83D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B863A1E2-3734-4128-9745-EE4F68DBF83D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B863A1E2-3734-4128-9745-EE4F68DBF83D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{03A80959-1F7B-4B57-84F1-2D5FD808D1F5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{03A80959-1F7B-4B57-84F1-2D5FD808D1F5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{03A80959-1F7B-4B57-84F1-2D5FD808D1F5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{03A80959-1F7B-4B57-84F1-2D5FD808D1F5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6202EE32-877F-40C0-B71F-02761B20DF02}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6202EE32-877F-40C0-B71F-02761B20DF02}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6202EE32-877F-40C0-B71F-02761B20DF02}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6202EE32-877F-40C0-B71F-02761B20DF02}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E68D167C-010D-4380-86F0-BB4FC172831F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E68D167C-010D-4380-86F0-BB4FC172831F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E68D167C-010D-4380-86F0-BB4FC172831F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E68D167C-010D-4380-86F0-BB4FC172831F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F779E75A-2B08-4800-9892-2907647AE117}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F779E75A-2B08-4800-9892-2907647AE117}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F779E75A-2B08-4800-9892-2907647AE117}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F779E75A-2B08-4800-9892-2907647AE117}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -93,6 +105,7 @@ Global
 		{B90F1C2E-F1BA-4F19-9D65-6F7555F9CF5B} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
 		{26EE84F3-556F-4391-8925-58E28E9E7127} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
 		{7EF049F2-EAA7-4DF4-B724-0B00D062984A} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
+		{6202EE32-877F-40C0-B71F-02761B20DF02} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5ADA02C2-70F3-4CCD-93EA-684AA98C6A9E}

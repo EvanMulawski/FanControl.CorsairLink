@@ -1,4 +1,7 @@
-﻿namespace CorsairLink;
+﻿using System.Security.Cryptography;
+using System.Text;
+
+namespace CorsairLink;
 
 public static class Utils
 {
@@ -59,5 +62,21 @@ public static class Utils
             variableValue = Environment.GetEnvironmentVariable(flagName, EnvironmentVariableTarget.Machine);
         }
         return !string.IsNullOrEmpty(variableValue) && (variableValue.ToLower() == "true" || variableValue == "1");
+    }
+
+    public static void SyncWait(int milliseconds)
+    {
+        Task.Delay(milliseconds).GetAwaiter().GetResult();
+    }
+
+    public static string ParseString(byte[] data)
+    {
+        return Encoding.ASCII.GetString(data.TakeWhile(bt => bt != 0).ToArray()).Trim();
+    }
+
+    public static string ToMD5HexString(string str)
+    {
+        var hash = MD5.Create().ComputeHash(Encoding.Default.GetBytes(str));
+        return hash.ToHexString();
     }
 }

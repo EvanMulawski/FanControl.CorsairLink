@@ -5,22 +5,21 @@ using System.Text;
 
 namespace CorsairLink;
 
-public static class DeviceManager
+public static class HidDeviceManager
 {
     public static IReadOnlyCollection<IDevice> GetSupportedDevices(IDeviceGuardManager deviceGuardManager, ILogger logger)
     {
         var corsairDevices = DeviceList.Local
             .GetHidDevices(vendorID: HardwareIds.CorsairVendorId)
             .ToList();
-        logger.LogDevices(corsairDevices, "Corsair device(s)");
+        logger.LogDevices(corsairDevices, "Corsair HID device(s)");
+
+        var supportedProductIds = HardwareIds.GetSupportedProductIds();
 
         var supportedDevices = corsairDevices
-            .Where(x => HardwareIds.SupportedProductIds.Contains(x.ProductID) && x.GetMaxOutputReportLength() > 0)
+            .Where(x => supportedProductIds.Contains(x.ProductID) && x.GetMaxOutputReportLength() > 0)
             .ToList();
-        logger.LogDevices(supportedDevices, "supported Corsair device(s)");
-
-        var supportedDevicesByProductId = supportedDevices
-            .ToLookup(x => x.ProductID);
+        logger.LogDevices(supportedDevices, "supported Corsair HID device(s)");
 
         var collection = new List<IDevice>();
 
@@ -33,16 +32,16 @@ public static class DeviceManager
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCoreWithDesignatedPump)
             .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
 
-        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro2Fan)
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroPlatinum2Fan)
             .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, logger)));
 
-        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Hydro3Fan)
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroPlatinum3Fan)
             .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 3 }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CoolitFamily)
             .Select(x => new CoolitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
-        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.PowerSupplyUnits)
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HidPowerSupplyUnits)
             .Select(x => new HidPsuDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         return collection;
@@ -53,19 +52,14 @@ public static class DeviceManager
         return devices.Join(deviceDriverGroup, d => d.ProductID, g => g, (d, _) => d);
     }
 
-    private static void LogDevices(this ILogger? logger, IReadOnlyCollection<HidDevice> devices, string description)
+    private static void LogDevices(this ILogger logger, IReadOnlyCollection<HidDevice> devices, string description)
     {
-        if (logger is null)
-        {
-            return;
-        }
-
         var sb = new StringBuilder();
         sb.AppendLine($"Found {devices.Count} {description}");
         foreach (var device in devices)
         {
             sb.AppendLine($"  name={device.GetProductNameOrDefault()}, devicePath={device.DevicePath}");
         }
-        logger.Info("Device Manager", sb.ToString());
+        logger.Info("HID Device Manager", sb.ToString());
     }
 }

@@ -7,7 +7,7 @@ public sealed class CorsairLinkSpeedController : IPluginControlSensor
 {
     private readonly IDevice _device;
     private readonly SpeedSensor _sensor;
-    private float? _value;
+    private int? _value;
 
     public CorsairLinkSpeedController(IDevice device, SpeedSensor sensor)
     {
@@ -32,8 +32,9 @@ public sealed class CorsairLinkSpeedController : IPluginControlSensor
 
     public void Set(float val)
     {
-        _value = val;
-        _device.SetChannelPower(_sensor.Channel, (int)val);
+        var intVal = (int)val;
+        _value = intVal;
+        _device.SetChannelPower(_sensor.Channel, intVal);
     }
 
     public void Update()

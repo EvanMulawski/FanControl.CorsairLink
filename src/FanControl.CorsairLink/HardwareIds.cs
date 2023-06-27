@@ -24,6 +24,8 @@ public static class HardwareIds
     public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
     public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
+    public static readonly int CorsairPsuAXiDongleFamilyProductId = 0x1c00;
+    public static readonly int CorsairPsuAX1500iProductId = 0x1c02;
     public static readonly int CorsairPsuHX550iProductId = 0x1c03;
     public static readonly int CorsairPsuHX650iProductId = 0x1c04;
     public static readonly int CorsairPsuHX750iProductId = 0x1c05;
@@ -37,56 +39,11 @@ public static class HardwareIds
     public static readonly int CorsairPsuRM750iProductId = 0x1c0b;
     public static readonly int CorsairPsuRM850iProductId = 0x1c0c;
     public static readonly int CorsairPsuRM1000iProductId = 0x1c0d;
+    public static readonly int CorsairPsuAX850iProductId = 0x1c0e;
+    public static readonly int CorsairPsuAX1000iProductId = 0x1c0f;
+    public static readonly int CorsairPsuAX1300iProductId = 0x1c10;
+    public static readonly int CorsairPsuAX1600iProductId = 0x1c11;
     public static readonly int CorsairObsidian1000DCommanderProProductId = 0x1d00;
-
-    public static readonly IReadOnlyCollection<int> SupportedProductIds = new List<int>
-    {
-        // Commander PRO
-        CorsairCommanderProProductId,
-        CorsairObsidian1000DCommanderProProductId,
-
-        // Commander CORE
-        CorsairCommanderCoreProductId,
-        CorsairCommanderCoreXTProductId,
-        CorsairCommanderSTProductId,
-
-        // Hydro 2 Fan
-        CorsairHydroH60iProXTProductId,
-        CorsairHydroH100iPlatinumProductId,
-        CorsairHydroH100iPlatinumSEProductId,
-        CorsairHydroH100iProXTProductId,
-        CorsairHydroH100iEliteProductId,
-        CorsairHydroH115iProXTProductId,
-        CorsairHydroH115iPlatinumProductId,
-        CorsairHydroH100iProXT2ProductId,
-        CorsairHydroH115iProXT2ProductId,
-        CorsairHydroH60iProXT2ProductId,
-        CorsairHydroH60iEliteProductId,
-        CorsairHydroH115iEliteProductId,
-
-        // Hydro 3 Fan
-        CorsairHydroH150iEliteProductId,
-        CorsairHydroH150iProXTProductId,
-        CorsairHydroH150iProXT2ProductId,
-
-        // CoolIT Product Family
-        CorsairCoolitFamilyProductId,
-
-        // HID PSU
-        CorsairPsuHX550iProductId,
-        CorsairPsuHX650iProductId,
-        CorsairPsuHX750iProductId,
-        CorsairPsuHX850iProductId,
-        CorsairPsuHX1000iProductId,
-        CorsairPsuHX1200iProductId,
-        CorsairPsuHX1000i2021ProductId,
-        CorsairPsuHX1500i2021ProductId,
-        CorsairPsuRM550iProductId,
-        CorsairPsuRM650iProductId,
-        CorsairPsuRM750iProductId,
-        CorsairPsuRM850iProductId,
-        CorsairPsuRM1000iProductId,
-    };
 
     public static class DeviceDriverGroups
     {
@@ -107,7 +64,7 @@ public static class HardwareIds
             CorsairCommanderSTProductId,
         };
 
-        public static readonly IReadOnlyCollection<int> Hydro2Fan = new List<int>
+        public static readonly IReadOnlyCollection<int> HydroPlatinum2Fan = new List<int>
         {
             CorsairHydroH60iProXTProductId,
             CorsairHydroH100iPlatinumProductId,
@@ -123,7 +80,7 @@ public static class HardwareIds
             CorsairHydroH115iEliteProductId,
         };
 
-        public static readonly IReadOnlyCollection<int> Hydro3Fan = new List<int>
+        public static readonly IReadOnlyCollection<int> HydroPlatinum3Fan = new List<int>
         {
             CorsairHydroH150iEliteProductId,
             CorsairHydroH150iProXTProductId,
@@ -135,7 +92,7 @@ public static class HardwareIds
             CorsairCoolitFamilyProductId,
         };
 
-        public static readonly IReadOnlyCollection<int> PowerSupplyUnits = new List<int>
+        public static readonly IReadOnlyCollection<int> HidPowerSupplyUnits = new List<int>
         {
             CorsairPsuHX550iProductId,
             CorsairPsuHX650iProductId,
@@ -151,5 +108,31 @@ public static class HardwareIds
             CorsairPsuRM850iProductId,
             CorsairPsuRM1000iProductId,
         };
+
+        public static readonly IReadOnlyCollection<int> FlexDongleUsbPowerSupplyUnits = new List<int>
+        {
+            CorsairPsuAXiDongleFamilyProductId,
+            CorsairPsuAX1500iProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> FlexModernUsbPowerSupplyUnits = new List<int>
+        {
+            CorsairPsuAX850iProductId,
+            CorsairPsuAX1000iProductId,
+            CorsairPsuAX1300iProductId,
+            CorsairPsuAX1600iProductId,
+        };
     }
+
+    public static IReadOnlyCollection<int> GetSupportedProductIds() =>
+        DeviceDriverGroups.CommanderPro
+        .Concat(DeviceDriverGroups.CommanderCore)
+        .Concat(DeviceDriverGroups.CommanderCoreWithDesignatedPump)
+        .Concat(DeviceDriverGroups.HydroPlatinum2Fan)
+        .Concat(DeviceDriverGroups.HydroPlatinum3Fan)
+        .Concat(DeviceDriverGroups.CoolitFamily)
+        .Concat(DeviceDriverGroups.HidPowerSupplyUnits)
+        .Concat(DeviceDriverGroups.FlexDongleUsbPowerSupplyUnits)
+        .Concat(DeviceDriverGroups.FlexModernUsbPowerSupplyUnits)
+        .ToList();
 }

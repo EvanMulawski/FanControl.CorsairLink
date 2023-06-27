@@ -24,7 +24,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\CorsairLink.Abstractions\CorsairLink.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\CorsairLink.Synchronization\CorsairLink.Synchronization.csproj" />
-    <ProjectReference Include="..\..\src\CorsairLink\CorsairLink.csproj" />
+    <ProjectReference Include="..\..\src\devices\coolit\CorsairLink.Devices.Coolit.csproj" />
+    <ProjectReference Include="..\..\src\devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj" />
   </ItemGroup>
 
 </Project>

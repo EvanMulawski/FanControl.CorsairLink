@@ -1,6 +1,4 @@
-﻿using System.Text;
-
-namespace CorsairLink.Devices;
+﻿namespace CorsairLink.Devices;
 
 public sealed class HidPsuDevice : DeviceBase
 {
@@ -139,9 +137,7 @@ public sealed class HidPsuDevice : DeviceBase
             response.ThrowIfError();
 
             var modelNameData = response.GetData();
-            var lastCharIndex = modelNameData.IndexOf((byte)0);
-
-            _name = Encoding.ASCII.GetString(modelNameData.Slice(0, lastCharIndex).ToArray());
+            _name = Utils.ParseString(modelNameData.ToArray());
         }
     }
 

@@ -9,6 +9,7 @@ using System.Timers;
 public class CorsairLinkPlugin : IPlugin
 {
     private const string LOGGER_CATEGORY_PLUGIN = "Plugin";
+    private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
     private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
 
@@ -110,7 +111,7 @@ public class CorsairLinkPlugin : IPlugin
         }
 
         var initializedDevices = new List<IDevice>();
-        var devices = DeviceManager.GetSupportedDevices(_deviceGuardManager, _logger);
+        var devices = GetSupportedDevices();
 
         foreach (var device in devices)
         {
@@ -135,6 +136,25 @@ public class CorsairLinkPlugin : IPlugin
         _devices = initializedDevices;
         _timer.Enabled = true;
         IsInitialized = true;
+    }
+
+    private IEnumerable<IDevice> GetSupportedDevices()
+    {
+        var hidDevices = HidDeviceManager.GetSupportedDevices(_deviceGuardManager, _logger);
+        IEnumerable<IDevice> siUsbXpressDevices = Enumerable.Empty<IDevice>();
+
+        try
+        {
+            siUsbXpressDevices = SiUsbXpressDeviceManager.GetSupportedDevices(_deviceGuardManager, _logger);
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(LOGGER_CATEGORY_DEVICE_ENUM, "Failed to enumerate SiUsbXpress devices.");
+            _logger.Debug(LOGGER_CATEGORY_DEVICE_ENUM, ex.ToString());
+        }
+
+        var devices = hidDevices.Concat(siUsbXpressDevices);
+        return devices;
     }
 
     private bool IsRuntimeSupported()

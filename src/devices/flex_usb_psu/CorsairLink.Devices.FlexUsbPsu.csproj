@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <LangVersion>Latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\CorsairLink.Abstractions\CorsairLink.Abstractions.csproj" />
+    <ProjectReference Include="..\..\CorsairLink.FlexUsb\CorsairLink.FlexUsb.csproj" />
+  </ItemGroup>
+
+</Project>
