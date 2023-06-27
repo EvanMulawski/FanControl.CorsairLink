@@ -3,12 +3,16 @@
 using FanControl.Plugins;
 using global::CorsairLink;
 using global::CorsairLink.Synchronization;
+using System.Runtime.InteropServices;
 using System.Timers;
 
 public class CorsairLinkPlugin : IPlugin
 {
+    private const string LOGGER_CATEGORY_PLUGIN = "Plugin";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
+    private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
 
+    private readonly IPluginDialog _dialog;
     private readonly IDeviceGuardManager _deviceGuardManager;
     private readonly ILogger _logger;
     private readonly Timer _timer;
@@ -17,7 +21,7 @@ public class CorsairLinkPlugin : IPlugin
 
     string IPlugin.Name => "CorsairLink";
 
-    public CorsairLinkPlugin()
+    public CorsairLinkPlugin(IPluginDialog dialog)
     {
         _logger = new CorsairLinkPluginLogger();
         _deviceGuardManager = new CorsairDevicesGuardManager();
@@ -26,6 +30,13 @@ public class CorsairLinkPlugin : IPlugin
             Enabled = false,
         };
         _timer.Elapsed += new ElapsedEventHandler(OnTimerTick);
+        _dialog = dialog;
+
+        if (!IsRuntimeSupported())
+        {
+            _logger.Error(LOGGER_CATEGORY_PLUGIN, LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
+            _dialog.ShowMessageDialog(LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
+        }
     }
 
     public bool IsInitialized { get; private set; }
@@ -124,6 +135,20 @@ public class CorsairLinkPlugin : IPlugin
         _devices = initializedDevices;
         _timer.Enabled = true;
         IsInitialized = true;
+    }
+
+    private bool IsRuntimeSupported()
+    {
+        var runtime = RuntimeInformation.FrameworkDescription;
+        _logger.Debug(LOGGER_CATEGORY_PLUGIN, $"Runtime: {runtime}");
+
+        var supported = runtime.IndexOf(".NET Framework") > -1;
+        if (!supported)
+        {
+            _logger.Error(LOGGER_CATEGORY_PLUGIN, $"Unsupported Runtime: {runtime}");
+        }
+
+        return supported;
     }
 
     void IPlugin.Load(IPluginSensorsContainer container)
