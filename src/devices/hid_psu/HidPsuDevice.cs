@@ -1,4 +1,6 @@
-﻿namespace CorsairLink.Devices;
+﻿using System.Text;
+
+namespace CorsairLink.Devices;
 
 public sealed class HidPsuDevice : DeviceBase
 {
@@ -81,7 +83,7 @@ public sealed class HidPsuDevice : DeviceBase
 
         if (exception is not null)
         {
-            LogError(exception.ToString());
+            LogError(exception);
         }
 
         return false;
@@ -355,6 +357,23 @@ public sealed class HidPsuDevice : DeviceBase
         return new byte[RESPONSE_LENGTH];
     }
 
+    private void LogDebugState()
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("STATE:");
+
+        foreach (var k in _speedSensors.Keys)
+        {
+            sb.AppendLine(_speedSensors[k].ToString());
+        }
+        foreach (var k in _temperatureSensors.Keys)
+        {
+            sb.AppendLine(_temperatureSensors[k].ToString());
+        }
+
+        LogDebug(sb.ToString());
+    }
+
     internal sealed class DeviceResponse
     {
         private const byte RESPONSE_ERROR_CODE = 0xfe;
@@ -376,8 +395,16 @@ public sealed class HidPsuDevice : DeviceBase
         {
             if (IsError)
             {
-                throw new CorsairLinkDeviceException("Response was invalid.");
+                throw CreateException("Response was invalid.", Request, Response);
             }
+        }
+
+        private static CorsairLinkDeviceException CreateException(string message, ReadOnlySpan<byte> request, ReadOnlySpan<byte> response)
+        {
+            var exception = new CorsairLinkDeviceException(message);
+            exception.Data[nameof(request)] = request.ToHexString();
+            exception.Data[nameof(response)] = response.ToHexString();
+            return exception;
         }
 
         public bool IsValid()

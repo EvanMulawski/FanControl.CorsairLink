@@ -8,6 +8,8 @@ internal sealed class CorsairLinkPluginLogger : ILogger
 {
     private readonly FileLogger _logger;
 
+    public event EventHandler<EventArgs>? ErrorLogged;
+
     public bool DebugEnabled { get; }
 
     public CorsairLinkPluginLogger()
@@ -26,13 +28,38 @@ internal sealed class CorsairLinkPluginLogger : ILogger
         Log($"[DBG] {category}: {message}");
     }
 
-    public void Error(string category, string message) => Log($"[ERR] {category}: {message}");
+    public void Debug(string category, Exception exception)
+    {
+        if (!DebugEnabled)
+        {
+            return;
+        }
+
+        Debug(category, exception.FormatForLogging());
+    }
+
+    public void Warning(string category, string message) => Log($"[WRN] {category}: {message}");
+
+    public void Warning(string category, Exception exception) => Warning(category, exception.FormatForLogging());
+
+    public void Error(string category, string message)
+    {
+        OnErrorLogged();
+        Log($"[ERR] {category}: {message}");
+    }
+
+    public void Error(string category, Exception exception) => Error(category, exception.FormatForLogging());
 
     public void Info(string category, string message) => Log($"[INF] {category}: {message}");
 
     public void Flush() => _logger.Flush();
 
     private void Log(string message) => _logger.Log(message);
+
+    private void OnErrorLogged()
+    {
+        ErrorLogged?.Invoke(this, EventArgs.Empty);
+    }
 
     private sealed class FileLogger
     {

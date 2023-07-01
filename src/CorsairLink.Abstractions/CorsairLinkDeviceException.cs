@@ -1,18 +1,17 @@
-﻿namespace CorsairLink
+﻿namespace CorsairLink;
+
+[Serializable]
+public sealed class CorsairLinkDeviceException : Exception
 {
-    [Serializable]
-    public sealed class CorsairLinkDeviceException : Exception
+    public CorsairLinkDeviceException()
     {
-        public CorsairLinkDeviceException()
-        {
-        }
+    }
 
-        public CorsairLinkDeviceException(string message) : base(message)
-        {
-        }
+    public CorsairLinkDeviceException(string message) : base(message)
+    {
+    }
 
-        public CorsairLinkDeviceException(string message, Exception innerException) : base(message, innerException)
-        {
-        }
+    public CorsairLinkDeviceException(string message, Exception innerException) : base(message, innerException)
+    {
     }
 }

@@ -18,7 +18,11 @@ public abstract class DeviceBase : IDevice
 
     protected void LogError(string message) => _logger.Error(Name, message);
 
+    protected void LogError(Exception exception) => _logger.Error(Name, exception.FormatForLogging());
+
     protected void LogDebug(string message) => _logger.Debug(Name, message);
+
+    protected void LogDebug(Exception exception) => _logger.Error(Name, exception.FormatForLogging());
 
     protected bool CanLogDebug => _logger.DebugEnabled;
 

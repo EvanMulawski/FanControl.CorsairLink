@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Text;
 
 namespace CorsairLink.Devices;
 
@@ -61,7 +62,7 @@ public sealed class CommanderProDevice : DeviceBase
 
         if (exception is not null)
         {
-            LogError(exception.ToString());
+            LogError(exception);
         }
 
         return false;
@@ -95,6 +96,11 @@ public sealed class CommanderProDevice : DeviceBase
         WriteRequestedSpeeds();
         RefreshTemperatures();
         RefreshSpeeds();
+
+        if (CanLogDebug)
+        {
+            LogDebug(GetStateStringRepresentation());
+        }
     }
 
     public override void SetChannelPower(int channel, int percent)
@@ -272,5 +278,27 @@ public sealed class CommanderProDevice : DeviceBase
     private static byte[] CreateResponse()
     {
         return new byte[RESPONSE_LENGTH];
+    }
+
+    private string GetStateStringRepresentation()
+    {
+        var sb = new StringBuilder().AppendLine("STATE");
+
+        foreach (var channel in _requestedChannelPower.Channels)
+        {
+            sb.AppendLine($"Requested power for channel {channel}: {_requestedChannelPower[channel]} %");
+        }
+
+        foreach (var sensor in SpeedSensors)
+        {
+            sb.AppendLine(sensor.ToString());
+        }
+
+        foreach (var sensor in TemperatureSensors)
+        {
+            sb.AppendLine(sensor.ToString());
+        }
+
+        return sb.ToString();
     }
 }

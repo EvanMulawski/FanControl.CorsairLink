@@ -1,4 +1,5 @@
 ﻿using CorsairLink.FlexUsb;
+using System.Text;
 
 namespace CorsairLink.Devices.FlexUsbPsu;
 
@@ -58,7 +59,7 @@ public sealed class FlexUsbPsuDevice : DeviceBase
 
         if (exception is not null)
         {
-            LogError(exception.ToString());
+            LogError(exception);
         }
 
         return false;
@@ -100,6 +101,11 @@ public sealed class FlexUsbPsuDevice : DeviceBase
         WriteRequestedSpeeds();
         RefreshTemperatures();
         RefreshSpeeds();
+
+        if (CanLogDebug)
+        {
+            LogDebug(GetStateStringRepresentation());
+        }
     }
 
     public override void SetChannelPower(int channel, int percent)
@@ -245,5 +251,32 @@ public sealed class FlexUsbPsuDevice : DeviceBase
         }
 
         return sensors;
+    }
+
+    private string GetStateStringRepresentation()
+    {
+        var sb = new StringBuilder().AppendLine("STATE");
+
+        foreach (var channel in _requestedChannelPower.Channels)
+        {
+            sb.AppendLine($"Requested power for channel {channel}: {_requestedChannelPower[channel]} %");
+        }
+
+        foreach (var channel in _fanControlModeStore.Channels)
+        {
+            sb.AppendLine($"Requested fan control mode for channel {channel}: {_fanControlModeStore[channel]}");
+        }
+
+        foreach (var sensor in SpeedSensors)
+        {
+            sb.AppendLine(sensor.ToString());
+        }
+
+        foreach (var sensor in TemperatureSensors)
+        {
+            sb.AppendLine(sensor.ToString());
+        }
+
+        return sb.ToString();
     }
 }

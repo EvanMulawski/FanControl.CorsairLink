@@ -50,23 +50,21 @@ public sealed class SiUsbXpressDevice : ISiUsbXpressDevice
         var deviceNumber = SiUsbXpressDriverHelper.FindDevice(DeviceInfo);
 
         if (!deviceNumber.HasValue)
-            throw new SiUsbXpressDeviceOperationException(SiUsbXpressDriver.SI_STATUS.SI_DEVICE_NOT_FOUND);
+            throw new SiUsbXpressDriverException(SiUsbXpressDriver.SI_STATUS.SI_DEVICE_NOT_FOUND);
 
         var handle = IntPtr.Zero;
         SiUsbXpressDriver.SI_STATUS code = SiUsbXpressDriver.SI_Open((uint)deviceNumber, ref handle);
 
-        if (code.IsSuccess())
-        {
-            _deviceNumber = (uint)deviceNumber.Value;
-            DeviceHandle = new SafeFileHandle(handle, true);
-        }
-
         if (!code.IsSuccess())
-            throw new SiUsbXpressDeviceOperationException(code);
+            throw new SiUsbXpressDriverException(code);
+
+        _deviceNumber = (uint)deviceNumber.Value;
+        DeviceHandle = new SafeFileHandle(handle, true);
 
         _ = SiUsbXpressDriver.SI_SetTimeouts(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
         FlushBuffers();
         _ = SiUsbXpressDriver.SI_SetBaudRate(DeviceHandle!.DangerousGetHandle(), MAX_BAUD_RATE);
+
     }
 
     private static void WriteDataImpl(SafeHandle handle, byte[] data)
@@ -74,7 +72,7 @@ public sealed class SiUsbXpressDevice : ISiUsbXpressDevice
         uint lpdwBytesWritten = 0;
         SiUsbXpressDriver.SI_STATUS code = SiUsbXpressDriver.SI_Write(handle.DangerousGetHandle(), data, (uint)data.Length, ref lpdwBytesWritten, IntPtr.Zero);
         if (code.IsError() || lpdwBytesWritten != data.Length)
-            throw new SiUsbXpressDeviceOperationException(code);
+            throw new SiUsbXpressDriverException(code);
     }
 
     private static byte[] ReadDataImpl(SafeHandle handle)
@@ -83,7 +81,7 @@ public sealed class SiUsbXpressDevice : ISiUsbXpressDevice
         uint lpdwBytesReturned = 0;
         SiUsbXpressDriver.SI_STATUS code = SiUsbXpressDriver.SI_Read(handle.DangerousGetHandle(), buffer, (uint)buffer.Length, ref lpdwBytesReturned, IntPtr.Zero);
         if (code.IsError())
-            throw new SiUsbXpressDeviceOperationException(code);
+            throw new SiUsbXpressDriverException(code);
         return buffer.Take((int)lpdwBytesReturned).ToArray();
     }
 
@@ -102,7 +100,7 @@ public sealed class SiUsbXpressDevice : ISiUsbXpressDevice
         byte[] encodedData = ReadDataImpl(DeviceHandle!);
         return !EncodingHelper.HasError(encodedData)
             ? EncodingHelper.DecodeData(encodedData)
-            : throw new SiUsbXpressDeviceException("Failed to read - data error.");
+            : throw new SiUsbXpressException("Failed to read - data error.");
     }
 
     public AckStatus ReadAckStatus()
@@ -151,7 +149,7 @@ public sealed class SiUsbXpressDevice : ISiUsbXpressDevice
     private void ThrowIfDeviceNotReady()
     {
         if (!IsOpen)
-            throw new SiUsbXpressDeviceException("Device not ready.");
+            throw new SiUsbXpressException("Device not ready.");
     }
 
     public string GetProductString(ProductString productString)

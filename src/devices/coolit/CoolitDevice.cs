@@ -121,7 +121,7 @@ public sealed class CoolitDevice : DeviceBase
 
         if (exception is not null)
         {
-            LogError(exception.ToString());
+            LogError(exception);
         }
 
         return false;
@@ -173,7 +173,7 @@ public sealed class CoolitDevice : DeviceBase
 
         if (CanLogDebug)
         {
-            LogDebug($"STATE: {GetStateStringRepresentation()}");
+            LogDebug(GetStateStringRepresentation());
         }
     }
 

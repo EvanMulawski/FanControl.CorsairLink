@@ -79,4 +79,46 @@ public static class Utils
         var hash = MD5.Create().ComputeHash(Encoding.Default.GetBytes(str));
         return hash.ToHexString();
     }
+
+    public static string FormatForLogging(this Exception exception)
+        => exception.FormatForLogging(0);
+
+    private static string FormatForLogging(this Exception exception, int indentLevel = 0)
+    {
+        static string GetIndent(int level)
+        {
+            const int INDENT_SIZE = 4;
+            return new string(' ', level * INDENT_SIZE);
+        }
+
+        StringBuilder sb = new();
+
+        if (indentLevel == 0)
+        {
+            sb.AppendLine();
+        }
+
+        sb.AppendLine($"{GetIndent(indentLevel)}Type: {exception.GetType().FullName}");
+        sb.AppendLine($"{GetIndent(indentLevel)}Message: {exception.Message}");
+        sb.AppendLine($"{GetIndent(indentLevel)}Source: {exception.Source}");
+        sb.AppendLine($"{GetIndent(indentLevel)}Stack Trace:");
+        sb.AppendLine(exception.StackTrace);
+
+        if (exception.Data.Count > 0)
+        {
+            sb.AppendLine($"{GetIndent(indentLevel)}Data:");
+            foreach (var key in exception.Data.Keys)
+            {
+                sb.AppendLine($"{GetIndent(indentLevel + 1)}{key}: {exception.Data[key]}");
+            }
+        }
+
+        if (exception.InnerException != null)
+        {
+            sb.AppendLine($"{GetIndent(indentLevel)}Inner Exception:");
+            sb.AppendLine(exception.InnerException.FormatForLogging(indentLevel + 1));
+        }
+
+        return sb.ToString();
+    }
 }

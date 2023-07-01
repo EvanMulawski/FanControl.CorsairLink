@@ -72,7 +72,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
         if (exception is not null)
         {
-            LogError(exception.ToString());
+            LogError(exception);
         }
 
         return false;
@@ -312,13 +312,20 @@ public sealed class HydroPlatinumDevice : DeviceBase
         var readBufCrcResult = GenerateChecksum(readBuf.AsSpan(DEVICE_PAYLOAD_START_IDX, DEVICE_PAYLOAD_LENGTH_EX_CRC));
         if (readCrcByte != readBufCrcResult)
         {
-            throw new CorsairLinkDeviceException("SendCommand CRC mismatch"
-                + $" (device={Name}, data={data.ToHexString()},"
-                + $" writeBuf={writeBuf.ToHexString()}, readBuf={readBuf.ToHexString()},"
-                + $" readCrcByte={readCrcByte:X2}, readBufCrcResult={readBufCrcResult:X2})");
+            throw CreateCommandException("CRC mismatch.", writeBuf, readBuf, readCrcByte, readBufCrcResult);
         }
 
         return readBuf.AsSpan(1).ToArray();
+    }
+
+    private static CorsairLinkDeviceException CreateCommandException(string message, ReadOnlySpan<byte> writeBuffer, ReadOnlySpan<byte> readBuffer, byte readCrcByte, byte readBufferCrcResult)
+    {
+        var exception = new CorsairLinkDeviceException(message);
+        exception.Data[nameof(writeBuffer)] = writeBuffer.ToHexString();
+        exception.Data[nameof(readBuffer)] = readBuffer.ToHexString();
+        exception.Data[nameof(readCrcByte)] = readCrcByte.ToString("X2");
+        exception.Data[nameof(readBufferCrcResult)] = readBufferCrcResult.ToString("X2");
+        return exception;
     }
 
     private void Write(byte[] buffer)

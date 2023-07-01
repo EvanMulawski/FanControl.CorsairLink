@@ -12,6 +12,8 @@ public class CorsairLinkPlugin : IPlugin
     private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
     private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
+    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "CorsairLink: Multiple errors detected during this session. Review the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.";
+    private const byte DIALOG_MESSAGE_ERRORS_DETECTED_COUNT = 10;
 
     private readonly IPluginDialog _dialog;
     private readonly IDeviceGuardManager _deviceGuardManager;
@@ -19,12 +21,16 @@ public class CorsairLinkPlugin : IPlugin
     private readonly Timer _timer;
     private readonly object _timerLock = new();
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
+    private readonly ExclusiveTaskRunner _errorDialogAwaiter = new();
+    private readonly bool _errorNotificationsDisabled;
+    private byte _errorLogCount = 0;
 
     string IPlugin.Name => "CorsairLink";
 
     public CorsairLinkPlugin(IPluginDialog dialog)
     {
-        _logger = new CorsairLinkPluginLogger();
+        _errorNotificationsDisabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED");
+        _logger = CreateLogger();
         _deviceGuardManager = new CorsairDevicesGuardManager();
         _timer = new Timer(1000)
         {
@@ -36,11 +42,32 @@ public class CorsairLinkPlugin : IPlugin
         if (!IsRuntimeSupported())
         {
             _logger.Error(LOGGER_CATEGORY_PLUGIN, LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
-            _dialog.ShowMessageDialog(LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
+            _errorDialogAwaiter.TryRunSync(() => _dialog.ShowMessageDialog(LOGGER_MESSAGE_UNSUPPORTED_RUNTIME));
         }
     }
 
     public bool IsInitialized { get; private set; }
+
+    private ILogger CreateLogger()
+    {
+        var logger = new CorsairLinkPluginLogger();
+        logger.ErrorLogged += new EventHandler<EventArgs>(OnErrorLogged);
+        return logger;
+    }
+
+    private void OnErrorLogged(object sender, EventArgs e)
+    {
+        if (_errorNotificationsDisabled || ++_errorLogCount < DIALOG_MESSAGE_ERRORS_DETECTED_COUNT)
+        {
+            return;
+        }
+
+        var ack = _errorDialogAwaiter.TryRunSync(() => _dialog.ShowMessageDialog(DIALOG_MESSAGE_ERRORS_DETECTED));
+        if (ack)
+        {
+            _errorLogCount = 0;
+        }
+    }
 
     private void OnTimerTick(object sender, ElapsedEventArgs e)
     {
@@ -61,8 +88,8 @@ public class CorsairLinkPlugin : IPlugin
                     }
                     catch (Exception ex)
                     {
-                        _logger.Error(device.Name, $"An exception occurred refreshing device '{device.Name}' ({device.UniqueId}):");
-                        _logger.Error(device.Name, ex.ToString());
+                        _logger.Warning(device.Name, $"An error occurred refreshing device '{device.Name}' ({device.UniqueId}):");
+                        _logger.Error(device.Name, ex);
                     }
                 }
 
@@ -127,8 +154,8 @@ public class CorsairLinkPlugin : IPlugin
             }
             catch (Exception ex)
             {
-                _logger.Error(LOGGER_CATEGORY_DEVICE_INIT, $"An exception occurred attempting to initialize device '{device.Name}' ({device.UniqueId}):");
-                _logger.Error(LOGGER_CATEGORY_DEVICE_INIT, ex.ToString());
+                _logger.Warning(LOGGER_CATEGORY_DEVICE_INIT, $"An error occurred initializing device '{device.Name}' ({device.UniqueId}):");
+                _logger.Error(LOGGER_CATEGORY_DEVICE_INIT, ex);
             }
         }
 
@@ -149,8 +176,8 @@ public class CorsairLinkPlugin : IPlugin
         }
         catch (Exception ex)
         {
-            _logger.Error(LOGGER_CATEGORY_DEVICE_ENUM, "Failed to enumerate SiUsbXpress devices.");
-            _logger.Debug(LOGGER_CATEGORY_DEVICE_ENUM, ex.ToString());
+            _logger.Warning(LOGGER_CATEGORY_DEVICE_ENUM, "Failed to enumerate SiUsbXpress devices.");
+            _logger.Debug(LOGGER_CATEGORY_DEVICE_ENUM, ex);
         }
 
         var devices = hidDevices.Concat(siUsbXpressDevices);

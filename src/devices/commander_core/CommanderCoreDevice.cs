@@ -1,4 +1,5 @@
 ﻿using System.Buffers.Binary;
+using System.Text;
 
 namespace CorsairLink.Devices;
 
@@ -83,7 +84,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
         if (exception is not null)
         {
-            LogError(exception.ToString());
+            LogError(exception);
         }
 
         return false;
@@ -134,6 +135,11 @@ public sealed class CommanderCoreDevice : DeviceBase
 
         RefreshSpeeds(connectedSpeedsResponse, speedsResponse);
         RefreshTemperatures(temperaturesResponse);
+
+        if (CanLogDebug)
+        {
+            LogDebug(GetStateStringRepresentation());
+        }
     }
 
     public override void SetChannelPower(int channel, int percent)
@@ -315,12 +321,20 @@ public sealed class CommanderCoreDevice : DeviceBase
 
             if (cts.IsCancellationRequested)
             {
-                throw new CorsairLinkDeviceException("Operation canceled. The expected data type was not read within the specified time."
-                    + $" (command={command.ToHexString()}, data={data.ToHexString()}, waitForDataType={waitForDataType.ToHexString()})");
+                throw CreateCommandException("Operation canceled: The expected data type was not read within the specified time.", command, data, waitForDataType);
             }
         }
 
         return readBuf.AsSpan(1).ToArray();
+    }
+
+    private static CorsairLinkDeviceException CreateCommandException(string message, ReadOnlySpan<byte> command, ReadOnlySpan<byte> data, ReadOnlySpan<byte> waitForDataType)
+    {
+        var exception = new CorsairLinkDeviceException(message);
+        exception.Data[nameof(command)] = command.ToHexString();
+        exception.Data[nameof(data)] = data.ToHexString();
+        exception.Data[nameof(waitForDataType)] = waitForDataType.ToHexString();
+        return exception;
     }
 
     private bool DoesResponseDataTypeMatchExpected(byte[] responseBuffer, ReadOnlySpan<byte> expectedDataType)
@@ -365,6 +379,28 @@ public sealed class CommanderCoreDevice : DeviceBase
     private void Read(byte[] buffer)
     {
         _device.Read(buffer);
+    }
+
+    private string GetStateStringRepresentation()
+    {
+        var sb = new StringBuilder().AppendLine("STATE");
+
+        foreach (var channel in _requestedChannelPower.Channels)
+        {
+            sb.AppendLine($"Requested power for channel {channel}: {_requestedChannelPower[channel]} %");
+        }
+
+        foreach (var sensor in SpeedSensors)
+        {
+            sb.AppendLine(sensor.ToString());
+        }
+
+        foreach (var sensor in TemperatureSensors)
+        {
+            sb.AppendLine(sensor.ToString());
+        }
+
+        return sb.ToString();
     }
 
     private class EndpointResponse
