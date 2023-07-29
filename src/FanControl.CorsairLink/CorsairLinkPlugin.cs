@@ -12,37 +12,37 @@ public class CorsairLinkPlugin : IPlugin
     private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
     private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
-    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "CorsairLink: Multiple errors detected during this session. Review the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.";
-    private const byte DIALOG_MESSAGE_ERRORS_DETECTED_COUNT = 10;
+    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected during this session. Review the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.\n\nTo disable this message, set the FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED environment variable to 1 and restart Fan Control.";
+    private const int DIALOG_MESSAGE_ERRORS_DETECTED_COUNT = 10;
 
-    private readonly IPluginDialog _dialog;
     private readonly IDeviceGuardManager _deviceGuardManager;
     private readonly ILogger _logger;
     private readonly Timer _timer;
     private readonly object _timerLock = new();
-    private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
-    private readonly ExclusiveTaskRunner _errorDialogAwaiter = new();
+    private readonly ExclusiveMonitor _errorDialogDispatcher = new();
     private readonly bool _errorNotificationsDisabled;
-    private byte _errorLogCount = 0;
+
+    private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
+    private int _errorLogCount = 0;
+    private int _errorLogCountFlag = 1;
 
     string IPlugin.Name => "CorsairLink";
 
-    public CorsairLinkPlugin(IPluginDialog dialog)
+    public CorsairLinkPlugin()
     {
         _errorNotificationsDisabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED");
         _logger = CreateLogger();
+        _errorDialogDispatcher.TaskCompleted += OnErrorDialogAcknowledged;
         _deviceGuardManager = new CorsairDevicesGuardManager();
         _timer = new Timer(1000)
         {
             Enabled = false,
         };
         _timer.Elapsed += new ElapsedEventHandler(OnTimerTick);
-        _dialog = dialog;
-
         if (!IsRuntimeSupported())
         {
             _logger.Error(LOGGER_CATEGORY_PLUGIN, LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
-            _errorDialogAwaiter.TryRunSync(() => _dialog.ShowMessageDialog(LOGGER_MESSAGE_UNSUPPORTED_RUNTIME));
+            ShowErrorDialog(LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
         }
     }
 
@@ -55,21 +55,54 @@ public class CorsairLinkPlugin : IPlugin
         return logger;
     }
 
+    private void OnErrorDialogAcknowledged(object sender, EventArgs e)
+    {
+        ResetErrorLogCounterState();
+    }
+
+    private void ResetErrorLogCounterState()
+    {
+        Interlocked.Exchange(ref _errorLogCount, 0);
+        Interlocked.Exchange(ref _errorLogCountFlag, 1);
+    }
+
     private void OnErrorLogged(object sender, EventArgs e)
     {
-        if (_errorNotificationsDisabled || ++_errorLogCount < DIALOG_MESSAGE_ERRORS_DETECTED_COUNT)
+        TryShowMultipleErrorsDetectedErrorDialog();
+    }
+
+    private void TryShowMultipleErrorsDetectedErrorDialog()
+    {
+        if (_errorLogCountFlag == 0)
         {
             return;
         }
 
-        var ack = _errorDialogAwaiter.TryRunSync(() => _dialog.ShowMessageDialog(DIALOG_MESSAGE_ERRORS_DETECTED));
-        if (ack)
+        if (_errorNotificationsDisabled || Interlocked.Increment(ref _errorLogCount) < DIALOG_MESSAGE_ERRORS_DETECTED_COUNT)
         {
-            _errorLogCount = 0;
+            return;
         }
+
+        Interlocked.Exchange(ref _errorLogCountFlag, 0);
+        ShowErrorDialog(DIALOG_MESSAGE_ERRORS_DETECTED);
+    }
+
+    private void ShowErrorDialog(string message)
+    {
+        _errorDialogDispatcher.WaitNonBlocking(
+            () => NativeMethods.MessageBox(
+                IntPtr.Zero,
+                message,
+                "Fan Control - CorsairLink Error",
+                MessageBoxFlags.MB_OK | MessageBoxFlags.MB_ICONERROR | MessageBoxFlags.MB_APPLMODAL | MessageBoxFlags.MB_SETFOREGROUND));
     }
 
     private void OnTimerTick(object sender, ElapsedEventArgs e)
+    {
+        Refresh();
+    }
+
+    private void Refresh()
     {
         bool lockTaken = false;
 
