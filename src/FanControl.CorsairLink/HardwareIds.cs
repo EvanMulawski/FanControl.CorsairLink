@@ -4,8 +4,18 @@ public static class HardwareIds
 {
     public static readonly int CorsairVendorId = 0x1b1c;
 
+    public static readonly int CorsairH80iGTProductId = 0x0c02;
+    public static readonly int CorsairH100iGTXProductId = 0x0c03;
     public static readonly int CorsairCoolitFamilyProductId = 0x0c04;
+    public static readonly int CorsairH110iGTXProductId = 0x0c07;
+    public static readonly int CorsairH80iGTv2ProductId = 0x0c08;
+    public static readonly int CorsairH100iGTv2ProductId = 0x0c09;
+    public static readonly int CorsairH110iGTv2ProductId = 0x0c0a;
     public static readonly int CorsairCommanderProProductId = 0x0c10;
+    public static readonly int CorsairHydroH150iProProductId = 0x0c12;
+    public static readonly int CorsairHydroH115iProProductId = 0x0c13;
+    public static readonly int CorsairHydroH100iProProductId = 0x0c15;
+    public static readonly int CorsairHydroH80iProProductId = 0x0c16;
     public static readonly int CorsairHydroH115iPlatinumProductId = 0x0c17;
     public static readonly int CorsairHydroH100iPlatinumProductId = 0x0c18;
     public static readonly int CorsairHydroH100iPlatinumSEProductId = 0x0c19;
@@ -122,6 +132,32 @@ public static class HardwareIds
             CorsairPsuAX1300iProductId,
             CorsairPsuAX1600iProductId,
         };
+
+        public static readonly IReadOnlyCollection<int> HydroAsetekPro2Fan = new List<int>
+        {
+            CorsairHydroH115iProProductId,
+            CorsairHydroH100iProProductId,
+            CorsairHydroH80iProProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> HydroAsetekPro3Fan = new List<int>
+        {
+            CorsairHydroH150iProProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> HydroAsetekVersion1 = new List<int>
+        {
+            CorsairH80iGTProductId,
+            CorsairH100iGTXProductId,
+            CorsairH110iGTXProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> HydroAsetekVersion2 = new List<int>
+        {
+            CorsairH80iGTv2ProductId,
+            CorsairH100iGTv2ProductId,
+            CorsairH110iGTv2ProductId,
+        };
     }
 
     public static IReadOnlyCollection<int> GetSupportedProductIds() =>
@@ -134,5 +170,9 @@ public static class HardwareIds
         .Concat(DeviceDriverGroups.HidPowerSupplyUnits)
         .Concat(DeviceDriverGroups.FlexDongleUsbPowerSupplyUnits)
         .Concat(DeviceDriverGroups.FlexModernUsbPowerSupplyUnits)
+        .Concat(DeviceDriverGroups.HydroAsetekPro2Fan)
+        .Concat(DeviceDriverGroups.HydroAsetekPro3Fan)
+        .Concat(DeviceDriverGroups.HydroAsetekVersion1)
+        .Concat(DeviceDriverGroups.HydroAsetekVersion2)
         .ToList();
 }

@@ -1,4 +1,6 @@
-﻿using CorsairLink.Devices.FlexUsbPsu;
+﻿using CorsairLink.Asetek;
+using CorsairLink.Devices;
+using CorsairLink.Devices.FlexUsbPsu;
 using CorsairLink.FlexUsb;
 using CorsairLink.SiUsbXpress;
 using CorsairLink.SiUsbXpress.Driver;
@@ -25,10 +27,22 @@ public static class SiUsbXpressDeviceManager
         var collection = new List<IDevice>();
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.FlexDongleUsbPowerSupplyUnits)
-            .Select(x => new FlexUsbPsuDevice(new FlexDongleUsbPsuProtocol(new SiUsbXpressDevice(x)), deviceGuardManager, logger)));
+            .Select(x => new FlexUsbPsuDevice(new FlexDongleUsbPsuProtocol(new FlexSiUsbXpressDevice(x)), deviceGuardManager, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.FlexModernUsbPowerSupplyUnits)
-            .Select(x => new FlexUsbPsuDevice(new ModernPsuProtocol(new SiUsbXpressDevice(x)), deviceGuardManager, logger)));
+            .Select(x => new FlexUsbPsuDevice(new ModernPsuProtocol(new FlexSiUsbXpressDevice(x)), deviceGuardManager, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroAsetekPro2Fan)
+            .Select(x => new HydroAsetekProDevice(new AsetekCoolerProtocol(new AsetekSiUsbXpressDevice(x)), deviceGuardManager, new HydroAsetekProDeviceOptions { FanChannelCount = 2 }, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroAsetekPro3Fan)
+            .Select(x => new HydroAsetekProDevice(new AsetekCoolerProtocol(new AsetekSiUsbXpressDevice(x)), deviceGuardManager, new HydroAsetekProDeviceOptions { FanChannelCount = 3 }, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroAsetekVersion1)
+            .Select(x => new HydroAsetekDevice(new AsetekCoolerProtocol(new AsetekSiUsbXpressDevice(x)), deviceGuardManager, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroAsetekVersion2)
+            .Select(x => new HydroAsetekDevice(new AsetekCoolerProtocol(new AsetekSiUsbXpressDevice(x)), deviceGuardManager, logger)));
 
         return collection;
     }

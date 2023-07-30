@@ -22,6 +22,7 @@
     <ProjectReference Include="..\devices\coolit\CorsairLink.Devices.Coolit.csproj" />
     <ProjectReference Include="..\devices\flex_usb_psu\CorsairLink.Devices.FlexUsbPsu.csproj" />
     <ProjectReference Include="..\devices\hid_psu\CorsairLink.Devices.HidPsu.csproj" />
+    <ProjectReference Include="..\devices\hydro_asetek\CorsairLink.Devices.HydroAsetek.csproj" />
     <ProjectReference Include="..\devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj" />
   </ItemGroup>
 
@@ -38,6 +39,7 @@
     </PropertyGroup>
     <ItemGroup>
       <InputAssemblies Include="CorsairLink.Abstractions.dll" />
+      <InputAssemblies Include="CorsairLink.Asetek.dll" />
       <InputAssemblies Include="CorsairLink.FlexUsb.dll" />
       <InputAssemblies Include="CorsairLink.Hid.dll" />
       <InputAssemblies Include="CorsairLink.SiUsbXpress.dll" />
@@ -48,6 +50,7 @@
       <InputAssemblies Include="CorsairLink.Devices.Coolit.dll" />
       <InputAssemblies Include="CorsairLink.Devices.FlexUsbPsu.dll" />
       <InputAssemblies Include="CorsairLink.Devices.HidPsu.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.HydroAsetek.dll" />
       <InputAssemblies Include="CorsairLink.Devices.HydroPlatinum.dll" />
     </ItemGroup>
     <ItemGroup>
