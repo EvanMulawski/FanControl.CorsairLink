@@ -7,66 +7,66 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 ## Device Support
 
-| Device                          | Type       | PID        | Status                           | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
-| ------------------------------- | ---------- | ---------- | -------------------------------- | ----------------- | ------------------ | ---------------- |
-| Commander PRO                   | Controller | `0c10`     | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅               |
-| Commander PRO (Obsidian 1000D)  | Controller | `1d00`     | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅               |
-| Commander CORE XT               | Controller | `0c2a`     | Full Support <sup>1,2</sup>      | ✅                | ✅                 | ✅               |
-| Commander CORE (ELITE CAPELLIX) | Controller | `0c1c`     | Full Support <sup>1,2</sup>      | ✅                | ✅                 | ✅               |
-| Commander CORE                  | Controller | `0c32`     | Full Support <sup>1,2</sup>      | ✅                | ✅                 | ✅               |
-| Commander Mini                  | Controller | `0c04(3d)` | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅               |
-| Hydro H60i Elite                | AIO        | `0c34`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H60i Pro XT               | AIO        | `0c29`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H60i Pro XT               | AIO        | `0c30`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Elite               | AIO        | `0c35`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Platinum            | AIO        | `0c18`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Platinum SE         | AIO        | `0c19`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Pro XT              | AIO        | `0c20`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H100i Pro XT              | AIO        | `0c2d`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Elite               | AIO        | `0c36`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Platinum            | AIO        | `0c17`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Pro XT              | AIO        | `0c21`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H115i Pro XT              | AIO        | `0c2e`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H150i Elite               | AIO        | `0c37`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H150i Pro XT              | AIO        | `0c22`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H150i Pro XT              | AIO        | `0c2f`     | Full Support <sup>1</sup>        | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
-| Hydro H80i                      | AIO        | `0c04(3b)` | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅ <sup>5</sup>  |
-| Hydro H100i                     | AIO        | `0c04(3c)` | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅ <sup>5</sup>  |
-| Hydro H100i GT                  | AIO        | `0c04(40)` | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅ <sup>5</sup>  |
-| Hydro H110i                     | AIO        | `0c04(42)` | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅ <sup>5</sup>  |
-| Hydro H110i GT                  | AIO        | `0c04(41)` | Full Support <sup>1</sup>        | ✅                | ✅                 | ✅ <sup>5</sup>  |
-| HX550i                          | PSU        | `1c03`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX650i                          | PSU        | `1c04`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX750i                          | PSU        | `1c05`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX850i                          | PSU        | `1c06`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX1000i                         | PSU        | `1c07`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX1200i                         | PSU        | `1c08`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX1000i (2021)                  | PSU        | `1c1e`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| HX1500i (2021)                  | PSU        | `1c1f`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| RM550i                          | PSU        | `1c09`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| RM650i                          | PSU        | `1c0a`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| RM750i                          | PSU        | `1c0b`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| RM850i                          | PSU        | `1c0c`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| RM1000i                         | PSU        | `1c0d`     | 1.3.x Pre-release <sup>3,7</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| AX850i                          | PSU        | `1c0e`     | 1.3.x Pre-release <sup>3,8</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| AX1000i                         | PSU        | `1c0f`     | 1.3.x Pre-release <sup>3,8</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| AX1300i                         | PSU        | `1c10`     | 1.3.x Pre-release <sup>3,8</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| AX1500i                         | PSU        | `1c02`     | 1.3.x Pre-release <sup>3,8</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| AX1600i                         | PSU        | `1c11`     | 1.3.x Pre-release <sup>3,8</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| AX760i/AX860i/AX1200i           | PSU        | `1c00`     | 1.3.x Pre-release <sup>3,8</sup> | ✅                | ✅ <sup>6</sup>    | ✅               |
-| Cooling Node                    | Controller | `0c04(38)` | Support Upon Request             |                   |                    |                  |
-| Hydro H80                       | AIO        | `0c04(37)` | Support Upon Request             |                   |                    |                  |
-| Hydro H100                      | AIO        | `0c04(3a)` | Support Upon Request             |                   |                    |                  |
-| Hydro H80i GT                   | AIO        | `0c02`     | Support Upon Request             |                   |                    |                  |
-| Hydro H80i GT V2                | AIO        | `0c08`     | Support Upon Request             |                   |                    |                  |
-| Hydro H80i Pro                  | AIO        | `0c16`     | Support Upon Request             |                   |                    |                  |
-| Hydro H100i GT V2               | AIO        | `0c09`     | Support Upon Request             |                   |                    |                  |
-| Hydro H100i GTX                 | AIO        | `0c03`     | Support Upon Request             |                   |                    |                  |
-| Hydro H100i Pro                 | AIO        | `0c15`     | Support Upon Request             |                   |                    |                  |
-| Hydro H110i GT V2               | AIO        | `0c0a`     | Support Upon Request             |                   |                    |                  |
-| Hydro H110i GTX                 | AIO        | `0c07`     | Support Upon Request             |                   |                    |                  |
-| Hydro H115i Pro                 | AIO        | `0c13`     | Support Upon Request             |                   |                    |                  |
-| Hydro H150i Pro                 | AIO        | `0c12`     | Support Upon Request             |                   |                    |                  |
+| Device                          | Type       | PID        | Status                      | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
+| ------------------------------- | ---------- | ---------- | --------------------------- | ----------------- | ------------------ | ---------------- |
+| Commander PRO                   | Controller | `0c10`     | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
+| Commander PRO (Obsidian 1000D)  | Controller | `1d00`     | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
+| Commander CORE XT               | Controller | `0c2a`     | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
+| Commander CORE (ELITE CAPELLIX) | Controller | `0c1c`     | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
+| Commander CORE                  | Controller | `0c32`     | Full Support <sup>1,2</sup> | ✅                | ✅                 | ✅               |
+| Commander Mini                  | Controller | `0c04(3d)` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅               |
+| Hydro H60i Elite                | AIO        | `0c34`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H60i Pro XT               | AIO        | `0c29`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H60i Pro XT               | AIO        | `0c30`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Elite               | AIO        | `0c35`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Platinum            | AIO        | `0c18`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Platinum SE         | AIO        | `0c19`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Pro XT              | AIO        | `0c20`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H100i Pro XT              | AIO        | `0c2d`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Elite               | AIO        | `0c36`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Platinum            | AIO        | `0c17`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Pro XT              | AIO        | `0c21`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H115i Pro XT              | AIO        | `0c2e`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H150i Elite               | AIO        | `0c37`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H150i Pro XT              | AIO        | `0c22`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H150i Pro XT              | AIO        | `0c2f`     | Full Support <sup>1</sup>   | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
+| Hydro H80i                      | AIO        | `0c04(3b)` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅ <sup>5</sup>  |
+| Hydro H100i                     | AIO        | `0c04(3c)` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅ <sup>5</sup>  |
+| Hydro H100i GT                  | AIO        | `0c04(40)` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅ <sup>5</sup>  |
+| Hydro H110i                     | AIO        | `0c04(42)` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅ <sup>5</sup>  |
+| Hydro H110i GT                  | AIO        | `0c04(41)` | Full Support <sup>1</sup>   | ✅                | ✅                 | ✅ <sup>5</sup>  |
+| HX550i                          | PSU        | `1c03`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX650i                          | PSU        | `1c04`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX750i                          | PSU        | `1c05`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX850i                          | PSU        | `1c06`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX1000i                         | PSU        | `1c07`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX1200i                         | PSU        | `1c08`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX1000i (2021)                  | PSU        | `1c1e`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| HX1500i (2021)                  | PSU        | `1c1f`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| RM550i                          | PSU        | `1c09`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| RM650i                          | PSU        | `1c0a`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| RM750i                          | PSU        | `1c0b`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| RM850i                          | PSU        | `1c0c`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| RM1000i                         | PSU        | `1c0d`     | Full Support <sup>7</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| AX850i                          | PSU        | `1c0e`     | Full Support <sup>8</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| AX1000i                         | PSU        | `1c0f`     | Full Support <sup>8</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| AX1300i                         | PSU        | `1c10`     | Full Support <sup>8</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| AX1500i                         | PSU        | `1c02`     | Full Support <sup>8</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| AX1600i                         | PSU        | `1c11`     | Full Support <sup>8</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| AX760i/AX860i/AX1200i           | PSU        | `1c00`     | Full Support <sup>8</sup>   | ✅                | ✅ <sup>6</sup>    | ✅               |
+| Hydro H80i GT                   | AIO        | `0c02`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H80i GT V2                | AIO        | `0c08`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H80i Pro                  | AIO        | `0c16`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H100i GT V2               | AIO        | `0c09`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H100i GTX                 | AIO        | `0c03`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H100i Pro                 | AIO        | `0c15`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H110i GT V2               | AIO        | `0c0a`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H110i GTX                 | AIO        | `0c07`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H115i Pro                 | AIO        | `0c13`     | In Development <sup>8</sup> |                   |                    |                  |
+| Hydro H150i Pro                 | AIO        | `0c12`     | In Development <sup>8</sup> |                   |                    |                  |
+| Cooling Node                    | Controller | `0c04(38)` | Support Upon Request        |                   |                    |                  |
+| Hydro H80                       | AIO        | `0c04(37)` | Support Upon Request        |                   |                    |                  |
+| Hydro H100                      | AIO        | `0c04(3a)` | Support Upon Request        |                   |                    |                  |
 
 1. Software mode only. Device lighting will be software-based.
 
@@ -93,18 +93,38 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 7. The LibreHardwareMonitor "PSU (Corsair)" sensor source must be disabled in Fan Control's Sensor Settings.
 
-8. Requires driver installation and Windows 10/11 64-bit OS. See instructions included in download.
+8. Requires driver installation and Windows 10/11 64-bit OS. See [instructions](#siusbxpress-driver) (also included in download).
 
 ## Installation
 
-⚠ This plugin will not function correctly if Corsair iCUE (specifically, the "Corsair Service" service) is running. This service should be stopped before running Fan Control. Running other programs that attempt to communicate with these devices while Fan Control is running is not currently a supported scenario.
+⚠ This plugin will not function correctly if Corsair iCUE (specifically, the "Corsair Service" service) is running. This service should be stopped before running Fan Control. Running [incompatible programs](#compatibility) that attempt to communicate with these devices while Fan Control is running is not a supported scenario.
 
 ⚠ This plugin requires the .NET Framework build of Fan Control. Install Fan Control using the `FanControl_net_4_8.zip` release files.
 
 1. Download a [release](https://github.com/EvanMulawski/FanControl.CorsairLink/releases).
 2. Unblock the downloaded ZIP file. (Right-click, Properties, check Unblock, OK)
 3. Exit Fan Control.
-4. Copy `FanControl.CorsairLink.dll` to the Fan Control `Plugins` directory.
+4. Copy `FanControl.CorsairLink.dll` to Fan Control's `Plugins` directory.
+5. Start Fan Control.
+
+### SiUsbXpress Driver
+
+The SiUsbXpress driver is only necessary if:
+
+- the Status of your device in the [Device Support](#device-support) matrix has the **8** footnote superscript, e.g. Full Support <sup>8</sup>
+- the driver has not been installed previously (by Corsair iCUE or manually)
+
+The driver is only supported on:
+
+- Windows 10 64-bit
+- Windows 11 64-bit
+
+To install the driver:
+
+1. Ensure Fan Control is closed.
+2. Ensure `FanControl.CorsairLink.dll` has been copied to Fan Control's `Plugins` directory.
+3. Copy `SiUSBXp.dll` from the `Corsair-SiUsbXpress-Driver` directory to Fan Control's `Plugins` directory.
+4. Right-click the `CorsairSiUSBXp.inf` file in the `Corsair-SiUsbXpress-Driver` directory and select **Install**. (This is a signed driver shipped with Corsair iCUE.)
 5. Start Fan Control.
 
 ## Interoperability
