@@ -209,7 +209,7 @@ public class CorsairLinkPlugin : IPlugin
         }
         catch (Exception ex)
         {
-            _logger.Warning(LOGGER_CATEGORY_DEVICE_ENUM, "Failed to enumerate SiUsbXpress devices.");
+            _logger.Warning(LOGGER_CATEGORY_DEVICE_ENUM, "Failed to enumerate SiUsbXpress devices. This can be ignored if no devices require this driver.");
             _logger.Debug(LOGGER_CATEGORY_DEVICE_ENUM, ex);
         }
 
