@@ -28,6 +28,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private const byte PERCENT_MIN = 0;
     private const byte PERCENT_MAX = 100;
     private const int PUMP_CHANNEL = -1;
+    private const int SEND_COMMAND_WAIT_FOR_VALID_CRC_TIMEOUT_MS = 500;
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
@@ -85,13 +86,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override string GetFirmwareVersion()
     {
-        ReadOnlySpan<byte> stateResponse;
-
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
-        }
-
+        var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
         var state = ReadState(stateResponse);
 
         return $"{state.FirmwareVersionMajor}.{state.FirmwareVersionMinor}.{state.FirmwareVersionRevision}";
@@ -113,13 +108,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override void Refresh()
     {
-        State state;
-
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            state = WriteCooling();
-        }
-
+        var state = WriteCooling();
         RefreshSensors(state);
     }
 
@@ -305,14 +294,18 @@ public sealed class HydroPlatinumDevice : DeviceBase
         var readBuf = new byte[RESPONSE_LENGTH];
         var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
 
-        Write(writeBuf);
-        Read(readBuf);
-
-        var readCrcByte = readBuf[readBuf.Length - 1];
-        var readBufCrcResult = GenerateChecksum(readBuf.AsSpan(DEVICE_PAYLOAD_START_IDX, DEVICE_PAYLOAD_LENGTH_EX_CRC));
+        byte readCrcByte, readBufCrcResult;
+        var cts = new CancellationTokenSource(SEND_COMMAND_WAIT_FOR_VALID_CRC_TIMEOUT_MS);
+        do
+        {
+            WriteAndRead(writeBuf, readBuf);
+            readCrcByte = readBuf[readBuf.Length - 1];
+            readBufCrcResult = GenerateChecksum(readBuf.AsSpan(DEVICE_PAYLOAD_START_IDX, DEVICE_PAYLOAD_LENGTH_EX_CRC));
+        }
+        while (!cts.IsCancellationRequested && readCrcByte != readBufCrcResult);
         if (readCrcByte != readBufCrcResult)
         {
-            throw CreateCommandException("CRC mismatch.", writeBuf, readBuf, readCrcByte, readBufCrcResult);
+            throw CreateCommandException("CRC mismatch: A valid response was not read within the specified time.", writeBuf, readBuf, readCrcByte, readBufCrcResult);
         }
 
         return readBuf.AsSpan(1).ToArray();
@@ -328,23 +321,22 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return exception;
     }
 
-    private void Write(byte[] buffer)
+    private void WriteAndRead(byte[] writeBuffer, byte[] readBuffer)
     {
         if (CanLogDebug)
         {
-            LogDebug($"WRITE: {buffer.ToHexString()}");
+            LogDebug($"WRITE: {writeBuffer.ToHexString()}");
         }
 
-        _device.Write(buffer);
-    }
-
-    private void Read(byte[] buffer)
-    {
-        _device.Read(buffer);
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            _device.Write(writeBuffer);
+            _device.Read(readBuffer);
+        }
 
         if (CanLogDebug)
         {
-            LogDebug($"READ:  {buffer.ToHexString()}");
+            LogDebug($"READ:  {readBuffer.ToHexString()}");
         }
     }
 
