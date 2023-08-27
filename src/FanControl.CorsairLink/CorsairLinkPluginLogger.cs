@@ -38,9 +38,21 @@ internal sealed class CorsairLinkPluginLogger : ILogger
         Debug(category, exception.FormatForLogging());
     }
 
+    public void Debug(string category, string message, Exception exception)
+    {
+        if (!DebugEnabled)
+        {
+            return;
+        }
+
+        Debug(category, FormatMessageWithException(message, exception));
+    }
+
     public void Warning(string category, string message) => Log($"[WRN] {category}: {message}");
 
     public void Warning(string category, Exception exception) => Warning(category, exception.FormatForLogging());
+
+    public void Warning(string category, string message, Exception exception) => Warning(category, FormatMessageWithException(message, exception));
 
     public void Error(string category, string message)
     {
@@ -50,11 +62,16 @@ internal sealed class CorsairLinkPluginLogger : ILogger
 
     public void Error(string category, Exception exception) => Error(category, exception.FormatForLogging());
 
+    public void Error(string category, string message, Exception exception) => Error(category, FormatMessageWithException(message, exception));
+
     public void Info(string category, string message) => Log($"[INF] {category}: {message}");
 
     public void Flush() => _logger.Flush();
 
     private void Log(string message) => _logger.Log(message);
+
+    private string FormatMessageWithException(string message, Exception exception)
+        => string.Concat(message, Environment.NewLine, exception.FormatForLogging());
 
     private void OnErrorLogged()
     {

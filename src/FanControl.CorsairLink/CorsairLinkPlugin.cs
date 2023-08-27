@@ -6,14 +6,17 @@ using global::CorsairLink.Synchronization;
 using System.Runtime.InteropServices;
 using System.Timers;
 
-public class CorsairLinkPlugin : IPlugin
+public sealed class CorsairLinkPlugin : IPlugin
 {
     private const string LOGGER_CATEGORY_PLUGIN = "Plugin";
     private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
     private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
-    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected during this session. Review the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.\n\nTo disable this message, set the FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED environment variable to 1 and restart Fan Control.";
+    private const string DIALOG_MESSAGE_SUFFIX = "\n\nReview the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.\n\nTo disable this message, set the FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED environment variable to 1 and restart Fan Control.";
+    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected during this session." + DIALOG_MESSAGE_SUFFIX;
+    private const string DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED = "Consecutive attempts to refresh devices have failed. A device may be unresponsive." + DIALOG_MESSAGE_SUFFIX;
     private const int DIALOG_MESSAGE_ERRORS_DETECTED_COUNT = 10;
+    private const int DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED_COUNT = 10;
 
     private readonly IDeviceGuardManager _deviceGuardManager;
     private readonly ILogger _logger;
@@ -25,6 +28,8 @@ public class CorsairLinkPlugin : IPlugin
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
     private int _errorLogCount = 0;
     private int _errorLogCountFlag = 1;
+    private int _refreshSkipCount = 0;
+    private int _refreshSkipCountFlag = 1;
 
     string IPlugin.Name => "CorsairLink";
 
@@ -58,6 +63,7 @@ public class CorsairLinkPlugin : IPlugin
     private void OnErrorDialogAcknowledged(object sender, EventArgs e)
     {
         ResetErrorLogCounterState();
+        ResetRefreshSkipCounterState();
     }
 
     private void ResetErrorLogCounterState()
@@ -66,25 +72,49 @@ public class CorsairLinkPlugin : IPlugin
         Interlocked.Exchange(ref _errorLogCountFlag, 1);
     }
 
+    private void ResetRefreshSkipCounterState()
+    {
+        Interlocked.Exchange(ref _refreshSkipCount, 0);
+        Interlocked.Exchange(ref _refreshSkipCountFlag, 1);
+    }
+
     private void OnErrorLogged(object sender, EventArgs e)
     {
         TryShowMultipleErrorsDetectedErrorDialog();
     }
 
-    private void TryShowMultipleErrorsDetectedErrorDialog()
+    private bool TryShowMultipleErrorsDetectedErrorDialog()
     {
         if (_errorLogCountFlag == 0)
         {
-            return;
+            return false;
         }
 
         if (_errorNotificationsDisabled || Interlocked.Increment(ref _errorLogCount) < DIALOG_MESSAGE_ERRORS_DETECTED_COUNT)
         {
-            return;
+            return false;
         }
 
         Interlocked.Exchange(ref _errorLogCountFlag, 0);
         ShowErrorDialog(DIALOG_MESSAGE_ERRORS_DETECTED);
+        return true;
+    }
+
+    private bool TryShowMultipleRefreshSkipsDetectedErrorDialog()
+    {
+        if (_refreshSkipCountFlag == 0)
+        {
+            return false;
+        }
+
+        if (_errorNotificationsDisabled || Interlocked.Increment(ref _refreshSkipCount) < DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED_COUNT)
+        {
+            return false;
+        }
+
+        Interlocked.Exchange(ref _refreshSkipCountFlag, 0);
+        ShowErrorDialog(DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED);
+        return true;
     }
 
     private void ShowErrorDialog(string message)
@@ -121,11 +151,11 @@ public class CorsairLinkPlugin : IPlugin
                     }
                     catch (Exception ex)
                     {
-                        _logger.Warning(device.Name, $"An error occurred refreshing device '{device.Name}' ({device.UniqueId}):");
-                        _logger.Error(device.Name, ex);
+                        _logger.Error(device.Name, $"An error occurred refreshing device '{device.Name}' ({device.UniqueId})", ex);
                     }
                 }
 
+                ResetRefreshSkipCounterState();
                 _logger.Flush();
             }
         }
@@ -135,6 +165,13 @@ public class CorsairLinkPlugin : IPlugin
             {
                 Monitor.Exit(_timerLock);
             }
+        }
+
+        if (!lockTaken)
+        {
+            _logger.Warning(LOGGER_CATEGORY_PLUGIN, "Refresh skipped - refresh already in progress.");
+            TryShowMultipleRefreshSkipsDetectedErrorDialog();
+            _logger.Flush();
         }
     }
 
