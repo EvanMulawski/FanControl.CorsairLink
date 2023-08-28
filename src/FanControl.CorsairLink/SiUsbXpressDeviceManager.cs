@@ -1,6 +1,5 @@
 ﻿using CorsairLink.Asetek;
 using CorsairLink.Devices;
-using CorsairLink.Devices.FlexUsbPsu;
 using CorsairLink.FlexUsb;
 using CorsairLink.SiUsbXpress;
 using CorsairLink.SiUsbXpress.Driver;

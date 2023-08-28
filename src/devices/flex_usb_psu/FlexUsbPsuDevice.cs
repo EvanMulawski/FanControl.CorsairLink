@@ -1,7 +1,7 @@
 ﻿using CorsairLink.FlexUsb;
 using System.Text;
 
-namespace CorsairLink.Devices.FlexUsbPsu;
+namespace CorsairLink.Devices;
 
 public sealed class FlexUsbPsuDevice : DeviceBase
 {
