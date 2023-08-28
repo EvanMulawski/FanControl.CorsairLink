@@ -25,7 +25,7 @@ public static class Utils
 
     private static readonly char[] HEX_CHARS = "0123456789ABCDEF".ToCharArray();
 
-    public static string ToHexString(this Span<byte> bytes)
+    public static string ToHexString(this ReadOnlySpan<byte> bytes)
     {
         char[] hexChars = new char[bytes.Length * 2];
         for (int i = 0; i < bytes.Length; i++)
@@ -36,8 +36,6 @@ public static class Utils
         }
         return new string(hexChars);
     }
-
-    public static string ToHexString(this ReadOnlySpan<byte> bytes) => ToHexString(bytes);
 
     public static string ToHexString(this byte[] bytes) => ToHexString(bytes.AsSpan());
 
