@@ -2,7 +2,7 @@ using CorsairLink.Devices;
 
 namespace CorsairLink.Tests;
 
-public class HydroDeviceTests
+public class HydroPlatinumDeviceTests
 {
     private static readonly byte[] IncomingStatePacketBytes = new byte[] {
         0x00, 0xFF, 0xB0, 0x11, 0x1F, 0x00, 0x71, 0x02,
@@ -33,14 +33,14 @@ public class HydroDeviceTests
     }
 
     [Fact]
-    public void ReadState_ShouldReturnExpectedStateValues()
+    public void ParseState_ShouldReturnExpectedStateValues()
     {
         // Arrange
         var deviceProxy = new TestDeviceProxy();
         var device = new HydroPlatinumDevice(deviceProxy, new TestGuardManager(), new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, new FakeLogger());
 
         // Act
-        var state = device.ReadState(IncomingStatePacketBytes.AsSpan(1));
+        var state = device.ParseState(IncomingStatePacketBytes.AsSpan(1));
 
         // Assert
         Assert.Equal(1, state.FirmwareVersionMajor);
@@ -86,15 +86,14 @@ public class HydroDeviceTests
         var PUMP_POWER = Utils.ToFractionalByte(68);
         var coolingData = HydroPlatinumDevice.CreateCoolingCommandData(FAN_0_POWER, FAN_1_POWER, PUMP_POWER);
         var coolingCommand = HydroPlatinumDevice.CreateCoolingCommand(coolingData);
-        byte sequenceNumber = 0x00;
 
         // Act
-        var result = HydroPlatinumDevice.CreateCommand(HydroPlatinumDevice.Commands.Cooling, sequenceNumber, coolingCommand);
+        var result = HydroPlatinumDevice.CreateCommand(HydroPlatinumDevice.Commands.Cooling, coolingCommand);
 
         // Assert
         Assert.Equal(0x00, result[0]);
         Assert.Equal(0x3f, result[1]);
-        Assert.Equal(sequenceNumber | HydroPlatinumDevice.Commands.Cooling, result[2]);
+        Assert.Equal(HydroPlatinumDevice.DefaultSequenceNumber | HydroPlatinumDevice.Commands.Cooling, result[2]);
         Assert.Equal(0x14, result[3]);
         Assert.Equal(0x00, result[4]);
         Assert.Equal(0xff, result[5]);

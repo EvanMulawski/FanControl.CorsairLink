@@ -19,6 +19,8 @@ public sealed class HydroPlatinumDevice : DeviceBase
         Performance = 0x02,
     }
 
+    internal static readonly byte DefaultSequenceNumber = 0x08;
+
     private const int REQUEST_LENGTH = 65;
     private const int RESPONSE_LENGTH = 65;
     private const int DEVICE_PAYLOAD_START_IDX = 2;
@@ -28,11 +30,9 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private const byte PERCENT_MIN = 0;
     private const byte PERCENT_MAX = 100;
     private const int PUMP_CHANNEL = -1;
-    private const int SEND_COMMAND_WAIT_FOR_VALID_CRC_TIMEOUT_MS = 500;
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
-    private readonly SequenceCounter _sequenceCounter;
     private readonly uint _fanCount;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
@@ -43,7 +43,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
     {
         _device = device;
         _guardManager = guardManager;
-        _sequenceCounter = new SequenceCounter();
 
         var deviceInfo = device.GetDeviceInfo();
         Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
@@ -86,8 +85,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override string GetFirmwareVersion()
     {
-        var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
-        var state = ReadState(stateResponse);
+        var state = ReadState();
 
         return $"{state.FirmwareVersionMajor}.{state.FirmwareVersionMinor}.{state.FirmwareVersionRevision}";
     }
@@ -108,7 +106,8 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override void Refresh()
     {
-        var state = WriteCooling();
+        WriteCooling();
+        var state = ReadState();
         RefreshSensors(state);
     }
 
@@ -128,24 +127,31 @@ public sealed class HydroPlatinumDevice : DeviceBase
         }
     }
 
-    private State WriteCooling()
+    private void WriteCooling()
     {
-        _requestedChannelPower.ApplyChanges();
+        if (!_requestedChannelPower.ApplyChanges())
+        {
+            return;
+        }
 
         if (_fanCount == 3)
         {
             SendCoolingCommand(Commands.CoolingThreeFanPacket, CreateCoolingCommandData(_requestedChannelPower[2]));
         }
 
-        var stateResponse = SendCoolingCommand(Commands.Cooling, CreateCoolingCommandData(
+        SendCoolingCommand(Commands.Cooling, CreateCoolingCommandData(
             _requestedChannelPower[0],
             _requestedChannelPower[1],
             _requestedChannelPower[PUMP_CHANNEL]));
-
-        return ReadState(stateResponse);
     }
 
-    internal State ReadState(ReadOnlySpan<byte> stateResponse)
+    private State ReadState()
+    {
+        var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
+        return ParseState(stateResponse);
+    }
+
+    internal State ParseState(ReadOnlySpan<byte> stateResponse)
     {
         var response = stateResponse;
 
@@ -259,12 +265,12 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return coolingPayload;
     }
 
-    private byte[] SendCoolingCommand(byte command, ReadOnlySpan<byte> data)
+    private void SendCoolingCommand(byte command, ReadOnlySpan<byte> data)
     {
-        return SendCommand(command, CreateCoolingCommand(data));
+        SendWriteOnlyCommand(command, CreateCoolingCommand(data));
     }
 
-    internal static ReadOnlySpan<byte> CreateCommand(byte command, byte sequenceNumber, ReadOnlySpan<byte> data)
+    internal static ReadOnlySpan<byte> CreateCommand(byte command, ReadOnlySpan<byte> data)
     {
         // [0] = 0x00
         // [1] = 0x3f (63, XMCPayloadLength)
@@ -275,7 +281,9 @@ public sealed class HydroPlatinumDevice : DeviceBase
         var writeBuf = new byte[REQUEST_LENGTH];
         writeBuf.AsSpan(1).Fill(0xff);
         writeBuf[1] = DEVICE_PAYLOAD_LENGTH;
-        writeBuf[2] = (byte)(sequenceNumber | command);
+
+        // sequence number does not have to change for write to succeed
+        writeBuf[2] = (byte)(DefaultSequenceNumber | command);
 
         if (data.Length > 0)
         {
@@ -289,35 +297,58 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return writeBuf;
     }
 
+    private void SendWriteOnlyCommand(byte command, ReadOnlySpan<byte> data)
+    {
+        var writeBuf = CreateCommand(command, data).ToArray();
+
+        try
+        {
+            Write(writeBuf);
+        }
+        catch (Exception ex)
+        {
+            throw CreateCommandException("Communication failure.", ex, writeBuf);
+        }
+    }
+
     private byte[] SendCommand(byte command, ReadOnlySpan<byte> data)
     {
         var readBuf = new byte[RESPONSE_LENGTH];
-        var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
-
+        var writeBuf = CreateCommand(command, data).ToArray();
         byte readCrcByte, readBufCrcResult;
-        var cts = new CancellationTokenSource(SEND_COMMAND_WAIT_FOR_VALID_CRC_TIMEOUT_MS);
-        do
+
+        try
         {
             WriteAndRead(writeBuf, readBuf);
             readCrcByte = readBuf[readBuf.Length - 1];
             readBufCrcResult = GenerateChecksum(readBuf.AsSpan(DEVICE_PAYLOAD_START_IDX, DEVICE_PAYLOAD_LENGTH_EX_CRC));
         }
-        while (!cts.IsCancellationRequested && readCrcByte != readBufCrcResult);
+        catch (Exception ex)
+        {
+            throw CreateCommandException("Communication failure.", ex, writeBuf, readBuf);
+        }
+
         if (readCrcByte != readBufCrcResult)
         {
-            throw CreateCommandException("CRC mismatch: A valid response was not read within the specified time.", writeBuf, readBuf, readCrcByte, readBufCrcResult);
+            throw CreateCommandException("Checksum failure.", default, writeBuf, readBuf);
         }
 
         return readBuf.AsSpan(1).ToArray();
     }
 
-    private static CorsairLinkDeviceException CreateCommandException(string message, ReadOnlySpan<byte> writeBuffer, ReadOnlySpan<byte> readBuffer, byte readCrcByte, byte readBufferCrcResult)
+    private static CorsairLinkDeviceException CreateCommandException(string message, Exception? innerException, ReadOnlySpan<byte> writeBuffer, ReadOnlySpan<byte> readBuffer)
     {
-        var exception = new CorsairLinkDeviceException(message);
-        exception.Data[nameof(writeBuffer)] = writeBuffer.ToHexString();
+        var exception = CreateCommandException(message, innerException, writeBuffer);
         exception.Data[nameof(readBuffer)] = readBuffer.ToHexString();
-        exception.Data[nameof(readCrcByte)] = readCrcByte.ToString("X2");
-        exception.Data[nameof(readBufferCrcResult)] = readBufferCrcResult.ToString("X2");
+        return exception;
+    }
+
+    private static CorsairLinkDeviceException CreateCommandException(string message, Exception? innerException, ReadOnlySpan<byte> writeBuffer)
+    {
+        var exception = innerException is null
+            ? new CorsairLinkDeviceException(message)
+            : new CorsairLinkDeviceException(message, innerException);
+        exception.Data[nameof(writeBuffer)] = writeBuffer.ToHexString();
         return exception;
     }
 
@@ -337,6 +368,19 @@ public sealed class HydroPlatinumDevice : DeviceBase
         if (CanLogDebug)
         {
             LogDebug($"READ:  {readBuffer.ToHexString()}");
+        }
+    }
+
+    private void Write(byte[] writeBuffer)
+    {
+        if (CanLogDebug)
+        {
+            LogDebug($"WRITE: {writeBuffer.ToHexString()}");
+        }
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            _device.Write(writeBuffer);
         }
     }
 
@@ -369,21 +413,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
         174, 169, 160, 167, 178, 181, 188, 187, 150, 145, 152, 159, 138, 141, 132, 131,
         222, 217, 208, 215, 194, 197, 204, 203, 230, 225, 232, 239, 250, 253, 244, 243,
     };
-
-    private sealed class SequenceCounter
-    {
-        private byte _sequenceId = 0x00;
-
-        public byte Next()
-        {
-            do
-            {
-                _sequenceId += 0x08;
-            }
-            while (_sequenceId == 0x00);
-            return _sequenceId;
-        }
-    }
 
     internal sealed class State
     {
