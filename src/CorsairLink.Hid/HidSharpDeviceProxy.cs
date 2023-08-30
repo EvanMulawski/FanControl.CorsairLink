@@ -4,6 +4,9 @@ namespace CorsairLink.Hid;
 
 public sealed class HidSharpDeviceProxy : IHidDeviceProxy
 {
+    private const int DEFAULT_READ_TIMEOUT_MS = 500;
+    private const int DEFAULT_WRITE_TIMEOUT_MS = 500;
+
     private readonly HidDevice _device;
     private HidStream? _stream;
 
@@ -35,6 +38,11 @@ public sealed class HidSharpDeviceProxy : IHidDeviceProxy
         try
         {
             var opened = _device.TryOpen(out _stream);
+            if (opened)
+            {
+                _stream.ReadTimeout = DEFAULT_READ_TIMEOUT_MS;
+                _stream.WriteTimeout = DEFAULT_WRITE_TIMEOUT_MS;
+            }
             return (opened, null);
         }
         catch (Exception ex)
