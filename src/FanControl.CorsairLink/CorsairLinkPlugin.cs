@@ -13,10 +13,11 @@ public sealed class CorsairLinkPlugin : IPlugin
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
     private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
     private const string DIALOG_MESSAGE_SUFFIX = "\n\nReview the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.\n\nTo disable this message, set the FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED environment variable to 1 and restart Fan Control.";
-    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected during this session." + DIALOG_MESSAGE_SUFFIX;
+    private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected." + DIALOG_MESSAGE_SUFFIX;
     private const string DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED = "Consecutive attempts to refresh devices have failed. A device may be unresponsive." + DIALOG_MESSAGE_SUFFIX;
     private const int DIALOG_MESSAGE_ERRORS_DETECTED_COUNT = 10;
     private const int DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED_COUNT = 10;
+    private const int ERROR_CHECK_TICK_COUNT = 30;
 
     private readonly IDeviceGuardManager _deviceGuardManager;
     private readonly ILogger _logger;
@@ -30,6 +31,7 @@ public sealed class CorsairLinkPlugin : IPlugin
     private int _errorLogCountFlag = 1;
     private int _refreshSkipCount = 0;
     private int _refreshSkipCountFlag = 1;
+    private int _tickCount = 0;
 
     string IPlugin.Name => "CorsairLink";
 
@@ -129,6 +131,12 @@ public sealed class CorsairLinkPlugin : IPlugin
 
     private void OnTimerTick(object sender, ElapsedEventArgs e)
     {
+        if (Interlocked.Increment(ref _tickCount) > ERROR_CHECK_TICK_COUNT && _errorLogCount < DIALOG_MESSAGE_ERRORS_DETECTED_COUNT)
+        {
+            ResetErrorLogCounterState();
+            Interlocked.Exchange(ref _tickCount, 0);
+        }
+
         Refresh();
     }
 
