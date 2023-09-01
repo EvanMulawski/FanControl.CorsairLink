@@ -129,10 +129,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private void WriteCooling()
     {
-        if (!_requestedChannelPower.ApplyChanges())
-        {
-            return;
-        }
+        _requestedChannelPower.ApplyChanges();
 
         if (_fanCount == 3)
         {
