@@ -13,6 +13,7 @@ public sealed class HydroAsetekProDevice : DeviceBase
         public static readonly byte GetFanSpeed = 0x41;
         public static readonly byte SetFanPower = 0x42;
         public static readonly byte SetFanSafetyProfile = 0x4A;
+        public static readonly byte GetFanSafetyProfile = 0x4B;
         public static readonly byte GetLiquidTemperature = 0xA9;
         public static readonly byte GetFirmwareVersion = 0xAA;
     }
@@ -21,6 +22,8 @@ public sealed class HydroAsetekProDevice : DeviceBase
     private const byte PERCENT_MIN = 0;
     private const byte PERCENT_MAX = 100;
     private const int PUMP_CHANNEL = -1;
+    private const byte FAN_CURVE_MAX_TEMP = 60;
+    private const string SAFETY_PROFILE_OVERRIDE_FLAG = "FANCONTROL_CORSAIRLINK_HYDRO_ASETEK_PRO_SAFETY_PROFILE_OVERRIDE_ENABLED";
 
     private readonly IAsetekDeviceProxy _device;
     private readonly AsetekDeviceInfo _deviceInfo;
@@ -88,6 +91,7 @@ public sealed class HydroAsetekProDevice : DeviceBase
 
     private void Initialize()
     {
+        OverrideSafetyProfile();
         InitializeSpeedChannelStores();
         Refresh();
     }
@@ -102,6 +106,63 @@ public sealed class HydroAsetekProDevice : DeviceBase
         {
             LogDebug(GetStateStringRepresentation());
         }
+    }
+
+    private void OverrideSafetyProfile()
+    {
+        LogDebug("OverrideSafetyProfile");
+
+        var canSetSafetyProfile = Utils.GetEnvironmentFlag(SAFETY_PROFILE_OVERRIDE_FLAG);
+        if (!canSetSafetyProfile)
+        {
+            LogWarning($"Skipping safety profile override. Device may not function as expected. To override the safety profile, set the {SAFETY_PROFILE_OVERRIDE_FLAG} environment variable to 1 and restart Fan Control.");
+            return;
+        }
+
+        var newSafetyProfileRequest = new byte[21]
+        {
+            FAN_CURVE_MAX_TEMP, // [0] tMax
+            FAN_CURVE_MAX_TEMP - 1, // [1] tRampStart
+            FAN_CURVE_MAX_TEMP - 2, // [2] tActivate
+            FAN_CURVE_MAX_TEMP - 3, // [3] tDeactivate
+            PERCENT_MAX, // [4] first speed
+            FAN_CURVE_MAX_TEMP, // [5] temp 1
+            PERCENT_MAX, // [6] speed 1
+            FAN_CURVE_MAX_TEMP, // [7] temp 2
+            PERCENT_MAX, // [8] speed 2
+            FAN_CURVE_MAX_TEMP, // [9] temp 3
+            PERCENT_MAX, // [10] speed 3
+            FAN_CURVE_MAX_TEMP, // [11] temp 4
+            PERCENT_MAX, // [12] speed 4
+            FAN_CURVE_MAX_TEMP, // [13] temp 5
+            PERCENT_MAX, // [14] speed 5
+            FAN_CURVE_MAX_TEMP, // [15] temp 6
+            PERCENT_MAX, // [16] speed 6
+            FAN_CURVE_MAX_TEMP, // [17] temp 7
+            PERCENT_MAX, // [18] speed 7
+            0,   // [19] crc
+            0,   // [20] crc
+        };
+        var newSafetyProfile = newSafetyProfileRequest.AsSpan(0, 19);
+
+        WriteChecksum(newSafetyProfileRequest.AsSpan(0, 19), newSafetyProfileRequest.AsSpan(19));
+        var writeResponse = WriteAndRead(CreateRequest(Commands.SetFanSafetyProfile, newSafetyProfileRequest));
+        if (writeResponse.IsError)
+        {
+            writeResponse.Throw("Failed to set safety profile.");
+            return;
+        }
+        var readResponse = WriteAndRead(CreateRequest(Commands.GetFanSafetyProfile));
+        readResponse.ThrowIfError();
+        var readSafetyProfile = readResponse.GetData();
+
+        if (!readSafetyProfile.SequenceEqual(newSafetyProfile))
+        {
+            LogWarning("Safety profile readback mismatch. Device may not function as expected.");
+            return;
+        }
+
+        LogInfo("Successfully set safety profile.");
     }
 
     public override void SetChannelPower(int channel, int percent)
@@ -202,14 +263,16 @@ public sealed class HydroAsetekProDevice : DeviceBase
     {
         LogDebug("WriteRequestedSpeeds");
 
-        if (_requestedChannelPower.ApplyChanges())
+        if (!_requestedChannelPower.ApplyChanges())
         {
-            SetPumpPower(_requestedChannelPower[PUMP_CHANNEL]);
+            return;
+        }
 
-            for (var i = 0; i < _fanCount; i++)
-            {
-                SetFanPower(i, _requestedChannelPower[i]);
-            }
+        SetPumpPower(_requestedChannelPower[PUMP_CHANNEL]);
+
+        for (var i = 0; i < _fanCount; i++)
+        {
+            SetFanPower(i, _requestedChannelPower[i]);
         }
     }
 
@@ -319,6 +382,14 @@ public sealed class HydroAsetekProDevice : DeviceBase
         return result;
     }
 
+    internal static void WriteChecksum(ReadOnlySpan<byte> data, Span<byte> destination)
+    {
+        var checksum = GenerateChecksum(data);
+        // device requires CRC in big endian
+        BinaryPrimitives.WriteUInt16BigEndian(destination, checksum);
+    }
+
+    // polynomial: 33,800
     private static readonly ushort[] CRC16_CCITT_TABLE = new ushort[256]
     {
         0, 4489, 8978, 12955, 17956, 22445, 25910, 29887,
