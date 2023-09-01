@@ -25,4 +25,11 @@ public class AsetekSiUsbXpressDevice : SiUsbXpressDevice
         _ = SiUsbXpressDriver.SI_SetTimeouts((uint)DeviceOptions.ReadTimeout.TotalMilliseconds, (uint)DeviceOptions.ReadTimeout.TotalMilliseconds);
         FlushBuffers();
     }
+
+    public override void Write(byte[] buffer)
+    {
+        FlushBuffers();
+
+        base.Write(buffer);
+    }
 }
