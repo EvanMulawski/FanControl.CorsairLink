@@ -1,22 +1,28 @@
-﻿namespace CorsairLink.SiUsbXpress.Driver;
+﻿using System;
+
+namespace CorsairLink.SiUsbXpress.Driver;
 
 public class AsetekSiUsbXpressDevice : SiUsbXpressDevice
 {
-    private const uint DEFAULT_TIMEOUT = 500U;
-    private const uint READ_BUFFER_SIZE = 32;
+    private readonly SiUsbXpressDeviceOptions _deviceOptions = new()
+    {
+        ReadBufferSize = 32,
+        ReadTimeout = TimeSpan.FromMilliseconds(500),
+        WriteTimeout = TimeSpan.FromMilliseconds(500),
+    };
 
     public AsetekSiUsbXpressDevice(SiUsbXpressDeviceInfo deviceInfo)
         : base(deviceInfo)
     {
     }
 
-    protected override uint ReadBufferSize { get; } = READ_BUFFER_SIZE;
+    protected override SiUsbXpressDeviceOptions DeviceOptions => _deviceOptions;
 
     public override void Open()
     {
         base.Open();
 
-        _ = SiUsbXpressDriver.SI_SetTimeouts(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
+        _ = SiUsbXpressDriver.SI_SetTimeouts((uint)DeviceOptions.ReadTimeout.TotalMilliseconds, (uint)DeviceOptions.ReadTimeout.TotalMilliseconds);
         FlushBuffers();
     }
 }

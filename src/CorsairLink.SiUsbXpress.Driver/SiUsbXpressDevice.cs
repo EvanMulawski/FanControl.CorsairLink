@@ -18,7 +18,7 @@ public abstract class SiUsbXpressDevice : ISiUsbXpressDevice
 
     public SiUsbXpressDeviceInfo DeviceInfo { get; }
 
-    protected abstract uint ReadBufferSize { get; }
+    protected abstract SiUsbXpressDeviceOptions DeviceOptions { get; }
 
     public bool IsOpen => DeviceHandle != null && !DeviceHandle.IsInvalid && !DeviceHandle.IsClosed;
 
@@ -70,7 +70,7 @@ public abstract class SiUsbXpressDevice : ISiUsbXpressDevice
 
     protected byte[] ReadInternal()
     {
-        byte[] buffer = new byte[ReadBufferSize];
+        byte[] buffer = new byte[DeviceOptions.ReadBufferSize];
         uint lpdwBytesReturned = 0;
         SiUsbXpressDriver.SI_STATUS code = SiUsbXpressDriver.SI_Read(DeviceHandle!.DangerousGetHandle(), buffer, (uint)buffer.Length, ref lpdwBytesReturned, IntPtr.Zero);
         if (code.IsError())

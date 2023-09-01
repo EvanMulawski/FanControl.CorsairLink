@@ -1,23 +1,30 @@
+using System;
+
 namespace CorsairLink.SiUsbXpress.Driver;
 
 public sealed class FlexSiUsbXpressDevice : SiUsbXpressDevice
 {
     private const uint MAX_BAUD_RATE = 115200U;
-    private const uint DEFAULT_TIMEOUT = 200U;
-    private const uint READ_BUFFER_SIZE = 16;
+
+    private readonly SiUsbXpressDeviceOptions _deviceOptions = new()
+    {
+        ReadBufferSize = 16,
+        ReadTimeout = TimeSpan.FromMilliseconds(200),
+        WriteTimeout = TimeSpan.FromMilliseconds(200),
+    };
 
     public FlexSiUsbXpressDevice(SiUsbXpressDeviceInfo deviceInfo)
         : base(deviceInfo)
     {
     }
 
-    protected override uint ReadBufferSize { get; } = READ_BUFFER_SIZE;
+    protected override SiUsbXpressDeviceOptions DeviceOptions => _deviceOptions;
 
     public override void Open()
     {
         base.Open();
 
-        _ = SiUsbXpressDriver.SI_SetTimeouts(DEFAULT_TIMEOUT, DEFAULT_TIMEOUT);
+        _ = SiUsbXpressDriver.SI_SetTimeouts((uint)DeviceOptions.ReadTimeout.TotalMilliseconds, (uint)DeviceOptions.ReadTimeout.TotalMilliseconds);
         FlushBuffers();
         _ = SiUsbXpressDriver.SI_SetBaudRate(DeviceHandle!.DangerousGetHandle(), MAX_BAUD_RATE);
     }
