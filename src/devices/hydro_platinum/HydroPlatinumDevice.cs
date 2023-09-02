@@ -107,6 +107,11 @@ public sealed class HydroPlatinumDevice : DeviceBase
     public override void Refresh()
     {
         WriteCooling();
+
+        // the device may not respond if attempting to read the state too quickly after other commands
+        // a delay resolves this issue
+        Utils.SyncWait(50);
+
         var state = ReadState();
         RefreshSensors(state);
     }
