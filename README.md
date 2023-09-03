@@ -5,6 +5,10 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 [![Support](https://img.shields.io/badge/Support-Venmo-blue?style=for-the-badge&logo=venmo&color=3D95CE)](https://www.venmo.com/u/EvanMulawski)
 [![Support](https://img.shields.io/badge/Support-Buy_Me_A_Coffee-yellow?style=for-the-badge&logo=buy%20me%20a%20coffee&color=FFDD00)](https://www.buymeacoffee.com/evanmulawski)
 
+## Important
+
+This project is under active development, with frequent Beta releases that address issues and incorporate user feedback. These releases may include device-specific fixes and enhancements. Review the [release notes for each version](https://github.com/EvanMulawski/FanControl.CorsairLink/releases) before selecting one to use and regularly check back for updates.
+
 ## Device Support
 
 | Device                          | Type       | PID        | Status                               | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
