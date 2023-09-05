@@ -23,6 +23,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private const int REQUEST_LENGTH = 65;
     private const int RESPONSE_LENGTH = 65;
+    private const int DEVICE_WAIT_BEFORE_READ_DELAY_MS = 50;
     private const int DEVICE_PAYLOAD_START_IDX = 2;
     private const byte DEVICE_PAYLOAD_LENGTH = 63;
     private const byte DEVICE_PAYLOAD_LENGTH_EX_CRC = DEVICE_PAYLOAD_LENGTH - 1;
@@ -110,7 +111,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
         // the device may not respond if attempting to read the state too quickly after other commands
         // a delay resolves this issue
-        Utils.SyncWait(50);
+        Utils.SyncWait(DEVICE_WAIT_BEFORE_READ_DELAY_MS);
 
         var state = ReadState();
         RefreshSensors(state);
