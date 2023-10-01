@@ -83,17 +83,18 @@ public class HydroPlatinumDeviceTests
         // Arrange
         const int FAN_0_POWER = 37;
         const int FAN_1_POWER = 85;
+        const byte SEQUENCE_NBR = 0x08;
         var PUMP_POWER = Utils.ToFractionalByte(68);
         var coolingData = HydroPlatinumDevice.CreateCoolingCommandData(FAN_0_POWER, FAN_1_POWER, PUMP_POWER);
         var coolingCommand = HydroPlatinumDevice.CreateCoolingCommand(coolingData);
 
         // Act
-        var result = HydroPlatinumDevice.CreateCommand(HydroPlatinumDevice.Commands.Cooling, coolingCommand);
+        var result = HydroPlatinumDevice.CreateCommand(HydroPlatinumDevice.Commands.Cooling, SEQUENCE_NBR, coolingCommand);
 
         // Assert
         Assert.Equal(0x00, result[0]);
         Assert.Equal(0x3f, result[1]);
-        Assert.Equal(HydroPlatinumDevice.DefaultSequenceNumber | HydroPlatinumDevice.Commands.Cooling, result[2]);
+        Assert.Equal(SEQUENCE_NBR | HydroPlatinumDevice.Commands.Cooling, result[2]);
         Assert.Equal(0x14, result[3]);
         Assert.Equal(0x00, result[4]);
         Assert.Equal(0xff, result[5]);
@@ -104,22 +105,22 @@ public class HydroPlatinumDeviceTests
         Assert.Equal(0xff, result[10]);
         Assert.Equal(0xff, result[11]);
         Assert.Equal(0x03, result[12]); // fan 0 mode
-        Assert.Equal(0xff, result[13]);
-        Assert.Equal(0xff, result[14]);
-        Assert.Equal(0xff, result[15]);
-        Assert.Equal(0xff, result[16]);
+        Assert.Equal(0x00, result[13]);
+        Assert.Equal(0x00, result[14]);
+        Assert.Equal(0x00, result[15]);
+        Assert.Equal(0x00, result[16]);
         Assert.Equal(FAN_0_POWER, result[17]); // fan 0 power
         Assert.Equal(0x03, result[18]); // fan 1 mode
-        Assert.Equal(0xff, result[19]);
-        Assert.Equal(0xff, result[20]);
-        Assert.Equal(0xff, result[21]);
-        Assert.Equal(0xff, result[22]);
+        Assert.Equal(0x00, result[19]);
+        Assert.Equal(0x00, result[20]);
+        Assert.Equal(0x00, result[21]);
+        Assert.Equal(0x00, result[22]);
         Assert.Equal(FAN_1_POWER, result[23]); // fan 1 power
         Assert.Equal((byte)HydroPlatinumDevice.PumpMode.Performance, result[24]); // pump mode
         Assert.Equal(0xff, result[25]);
         Assert.Equal(0xff, result[26]);
-        Assert.Equal(0xff, result[27]);
-        Assert.Equal(0xff, result[28]);
+        Assert.Equal(0x00, result[27]);
+        Assert.Equal(0x00, result[28]);
         Assert.Equal(0xff, result[29]);
         Assert.Equal(0xff, result[30]);
         Assert.Equal(0xff, result[31]);

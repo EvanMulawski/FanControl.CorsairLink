@@ -19,8 +19,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
         Performance = 0x02,
     }
 
-    internal static readonly byte DefaultSequenceNumber = 0x08;
-
     private const int REQUEST_LENGTH = 65;
     private const int RESPONSE_LENGTH = 65;
     private const int DEVICE_WAIT_BEFORE_READ_DELAY_MS = 50;
@@ -38,6 +36,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
+    private readonly SequenceCounter _sequenceCounter = new();
 
     public HydroPlatinumDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, HydroPlatinumDeviceOptions options, ILogger logger)
         : base(logger)
@@ -86,7 +85,11 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override string GetFirmwareVersion()
     {
-        var state = ReadState();
+        State state;
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            state = ReadState();
+        }
 
         return $"{state.FirmwareVersionMajor}.{state.FirmwareVersionMinor}.{state.FirmwareVersionRevision}";
     }
@@ -107,13 +110,17 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override void Refresh()
     {
-        WriteCooling();
-
         // the device may not respond if attempting to read the state too quickly after other commands
         // a delay resolves this issue
         Utils.SyncWait(DEVICE_WAIT_BEFORE_READ_DELAY_MS);
 
-        var state = ReadState();
+        State state;
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            state = ReadState();
+            WriteCooling();
+        }
+
         RefreshSensors(state);
     }
 
@@ -151,7 +158,9 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private State ReadState()
     {
         var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
-        return ParseState(stateResponse);
+        var state = ParseState(stateResponse);
+        _sequenceCounter.Set(state.SequenceNumber);
+        return state;
     }
 
     internal State ParseState(ReadOnlySpan<byte> stateResponse)
@@ -165,6 +174,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
         var state = new State
         {
+            SequenceNumber = response[1],
             FirmwareVersionMajor = fwMajor,
             FirmwareVersionMinor = fwMinor,
             FirmwareVersionRevision = fwRevision,
@@ -228,17 +238,27 @@ public sealed class HydroPlatinumDevice : DeviceBase
         // [5] = 0xff
 
         data[0] = 0x03;
+        data[1] = 0x00;
+        data[2] = 0x00;
+        data[3] = 0x00;
+        data[4] = 0x00;
         data[5] = fan0ChannelPower;
 
         if (fan1ChannelPower.HasValue)
         {
             data[6] = 0x03;
+            data[7] = 0x00;
+            data[8] = 0x00;
+            data[9] = 0x00;
+            data[10] = 0x00;
             data[11] = fan1ChannelPower.Value;
         }
 
         if (pumpChannelPower.HasValue)
         {
             data[12] = (byte)GetPumpMode(pumpChannelPower.Value);
+            data[15] = 0x00;
+            data[16] = 0x00;
         }
 
         return data.ToArray();
@@ -273,7 +293,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         SendWriteOnlyCommand(command, CreateCoolingCommand(data));
     }
 
-    internal static ReadOnlySpan<byte> CreateCommand(byte command, ReadOnlySpan<byte> data)
+    internal static ReadOnlySpan<byte> CreateCommand(byte command, byte sequenceNumber, ReadOnlySpan<byte> data)
     {
         // [0] = 0x00
         // [1] = 0x3f (63, XMCPayloadLength)
@@ -286,7 +306,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         writeBuf[1] = DEVICE_PAYLOAD_LENGTH;
 
         // sequence number does not have to change for write to succeed
-        writeBuf[2] = (byte)(DefaultSequenceNumber | command);
+        writeBuf[2] = (byte)(sequenceNumber | command);
 
         if (data.Length > 0)
         {
@@ -302,7 +322,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private void SendWriteOnlyCommand(byte command, ReadOnlySpan<byte> data)
     {
-        var writeBuf = CreateCommand(command, data).ToArray();
+        var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
 
         try
         {
@@ -317,7 +337,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private byte[] SendCommand(byte command, ReadOnlySpan<byte> data)
     {
         var readBuf = new byte[RESPONSE_LENGTH];
-        var writeBuf = CreateCommand(command, data).ToArray();
+        var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
         byte readCrcByte, readBufCrcResult;
 
         try
@@ -362,11 +382,8 @@ public sealed class HydroPlatinumDevice : DeviceBase
             LogDebug($"WRITE: {writeBuffer.ToHexString()}");
         }
 
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            _device.Write(writeBuffer);
-            _device.Read(readBuffer);
-        }
+        _device.Write(writeBuffer);
+        _device.Read(readBuffer);
 
         if (CanLogDebug)
         {
@@ -381,10 +398,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
             LogDebug($"WRITE: {writeBuffer.ToHexString()}");
         }
 
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            _device.Write(writeBuffer);
-        }
+        _device.Write(writeBuffer);
     }
 
     internal static byte GenerateChecksum(ReadOnlySpan<byte> data)
@@ -419,6 +433,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     internal sealed class State
     {
+        public byte SequenceNumber { get; set; }
         public int FirmwareVersionMajor { get; set; }
         public int FirmwareVersionMinor { get; set; }
         public int FirmwareVersionRevision { get; set; }
@@ -450,5 +465,25 @@ public sealed class HydroPlatinumDevice : DeviceBase
             <= 67 => PumpMode.Balanced,
             _ => PumpMode.Performance,
         };
+    }
+
+    private sealed class SequenceCounter
+    {
+        private byte _sequenceId = 0x00;
+
+        public byte Next()
+        {
+            do
+            {
+                _sequenceId += 0x08;
+            }
+            while (_sequenceId == 0x00);
+            return _sequenceId;
+        }
+
+        public void Set(byte value)
+        {
+            _sequenceId = value;
+        }
     }
 }
