@@ -5,6 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
+    <InformationalVersion>$(FANCONTROL_CORSAIRLINK_VERSION)</InformationalVersion>
   </PropertyGroup>
 
   <ItemGroup>

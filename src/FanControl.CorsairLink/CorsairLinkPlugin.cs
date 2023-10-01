@@ -3,6 +3,7 @@
 using FanControl.Plugins;
 using global::CorsairLink;
 using global::CorsairLink.Synchronization;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Timers;
 
@@ -25,6 +26,7 @@ public sealed class CorsairLinkPlugin : IPlugin
     private readonly object _timerLock = new();
     private readonly ExclusiveMonitor _errorDialogDispatcher = new();
     private readonly bool _errorNotificationsDisabled;
+    private readonly string _pluginVersion;
 
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
     private int _errorLogCount = 0;
@@ -37,6 +39,7 @@ public sealed class CorsairLinkPlugin : IPlugin
 
     public CorsairLinkPlugin()
     {
+        _pluginVersion = GetVersion();
         _errorNotificationsDisabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED");
         _logger = CreateLogger();
         _errorDialogDispatcher.TaskCompleted += OnErrorDialogAcknowledged;
@@ -54,6 +57,9 @@ public sealed class CorsairLinkPlugin : IPlugin
     }
 
     public bool IsInitialized { get; private set; }
+
+    private static string GetVersion() =>
+        typeof(CorsairLinkPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "UNKNOWN";
 
     private ILogger CreateLogger()
     {
@@ -214,6 +220,8 @@ public sealed class CorsairLinkPlugin : IPlugin
         {
             CloseImpl();
         }
+
+        _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion}");
 
         var initializedDevices = new List<IDevice>();
         var devices = GetSupportedDevices();

@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup>
+    <FANCONTROL_CORSAIRLINK_VERSION>1.4.1</FANCONTROL_CORSAIRLINK_VERSION>
+  </PropertyGroup>
+</Project>

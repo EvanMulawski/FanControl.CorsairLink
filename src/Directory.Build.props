@@ -1,4 +1,5 @@
 <Project>
+  <Import Project="version.props" />
   <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>CorsairLink.Tests</_Parameter1>
