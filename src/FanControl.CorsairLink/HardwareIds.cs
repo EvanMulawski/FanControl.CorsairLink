@@ -29,7 +29,7 @@ public static class HardwareIds
     public static readonly int CorsairHydroH115iProXT2ProductId = 0x0c2e;
     public static readonly int CorsairHydroH150iProXT2ProductId = 0x0c2f;
     public static readonly int CorsairHydroH60iProXT2ProductId = 0x0c30;
-    public static readonly int CorsairCommanderSTProductId = 0x0c32;
+    public static readonly int CorsairCommanderCore2022ProductId = 0x0c32;
     public static readonly int CorsairHydroH60iEliteProductId = 0x0c34;
     public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
@@ -71,7 +71,7 @@ public static class HardwareIds
         public static readonly IReadOnlyCollection<int> CommanderCoreWithDesignatedPump = new List<int>
         {
             CorsairCommanderCoreProductId,
-            CorsairCommanderSTProductId,
+            CorsairCommanderCore2022ProductId,
         };
 
         public static readonly IReadOnlyCollection<int> HydroPlatinum2Fan = new List<int>

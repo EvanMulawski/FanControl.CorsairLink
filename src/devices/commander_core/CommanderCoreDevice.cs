@@ -34,8 +34,6 @@ public sealed class CommanderCoreDevice : DeviceBase
         public static ReadOnlySpan<byte> SoftwareSpeedFixedPercent => new byte[] { 0x07, 0x00 };
     }
 
-    private const int REQUEST_LENGTH = 65;
-    private const int RESPONSE_LENGTH = 64;
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const byte PERCENT_MIN = 0x00;
     private const byte PERCENT_MAX = 0x64;
@@ -45,6 +43,7 @@ public sealed class CommanderCoreDevice : DeviceBase
     private readonly IDeviceGuardManager _guardManager;
     private byte _speedChannelCount;
     private readonly bool _firstChannelExt;
+    private readonly int _packetSize;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -60,6 +59,7 @@ public sealed class CommanderCoreDevice : DeviceBase
         UniqueId = deviceInfo.DevicePath;
 
         _firstChannelExt = options.IsFirstChannelExt ?? CommanderCoreDeviceOptions.IsFirstChannelExtDefault;
+        _packetSize = options.PacketSize ?? CommanderCoreDeviceOptions.PacketSizeDefault;
     }
 
     public override string UniqueId { get; }
@@ -77,8 +77,7 @@ public sealed class CommanderCoreDevice : DeviceBase
         var (opened, exception) = _device.Open();
         if (opened)
         {
-            SendCommand(Commands.EnterSoftwareMode);
-            RefreshImpl(initialize: true);
+            Initialize();
             return true;
         }
 
@@ -88,6 +87,12 @@ public sealed class CommanderCoreDevice : DeviceBase
         }
 
         return false;
+    }
+
+    private void Initialize()
+    {
+        SendCommand(Commands.EnterSoftwareMode);
+        RefreshImpl(initialize: true);
     }
 
     public override void Disconnect()
@@ -111,7 +116,7 @@ public sealed class CommanderCoreDevice : DeviceBase
         return $"{v1}.{v2}.{v3}";
     }
 
-    public override void Refresh() => RefreshImpl();
+    public override void Refresh() => RefreshImpl(initialize: false);
 
     private void RefreshImpl(bool initialize = false)
     {
@@ -294,8 +299,8 @@ public sealed class CommanderCoreDevice : DeviceBase
         // [2,a] = command
         // [a+1,] = data
 
-        var readBuf = new byte[RESPONSE_LENGTH];
-        var writeBuf = new byte[REQUEST_LENGTH];
+        var readBuf = new byte[_packetSize];
+        var writeBuf = new byte[_packetSize + 1];
         writeBuf[1] = 0x08;
 
         var commandSpan = writeBuf.AsSpan(2, command.Length);

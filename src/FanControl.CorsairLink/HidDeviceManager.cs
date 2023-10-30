@@ -30,7 +30,11 @@ public static class HidDeviceManager
             .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCoreWithDesignatedPump)
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = true }, logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions
+            {
+                IsFirstChannelExt = true,
+                PacketSize = x.ProductID == HardwareIds.CorsairCommanderCoreProductId ? 96 : null,
+            }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroPlatinum2Fan)
             .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 2 }, logger)));
