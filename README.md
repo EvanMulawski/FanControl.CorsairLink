@@ -16,8 +16,8 @@ This project is under active development, with frequent Beta releases that addre
 | Commander PRO                  | `0c10`     | CommanderPro   | Full Support <sup>1</sup>     | ✅                | ✅                 | ✅               |
 | Commander PRO (Obsidian 1000D) | `1d00`     | CommanderPro   | Full Support <sup>1</sup>     | ✅                | ✅                 | ✅               |
 | Commander CORE XT              | `0c2a`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                | ✅                 | ✅               |
-| Commander CORE                 | `0c1c`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                | ✅                 | ✅               |
-| Commander CORE (2022)          | `0c32`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                | ✅                 | ✅               |
+| Commander CORE                 | `0c1c`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                | ✅ <sup>10</sup>   | ✅               |
+| Commander CORE (2022)          | `0c32`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                | ✅ <sup>10</sup>   | ✅               |
 | Commander Mini                 | `0c04(3d)` | Coolit         | Full Support <sup>1</sup>     | ✅                | ✅                 | ✅               |
 | Hydro H60i Elite               | `0c34`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
 | Hydro H60i Pro XT              | `0c29`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                | ✅ <sup>4</sup>    | ✅ <sup>5</sup>  |
@@ -105,6 +105,8 @@ This project is under active development, with frequent Beta releases that addre
    | ---------- | ---- | -------- |
    | Activate   | 58°C | 100%     |
    | Deactivate | 57°C | -        |
+
+10. As of v1.4.3, the minimum pump power is 50% (regardless of the requested power in Fan Control) to prevent a "pump failure" state and noise/resonance that may occur due to low pump RPM. Additionally, the default pump power is 100%.
 
 ## Installation
 
