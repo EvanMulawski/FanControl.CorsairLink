@@ -35,9 +35,12 @@ public sealed class CommanderCoreDevice : DeviceBase
     }
 
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
-    private const byte PERCENT_MIN = 0x00;
-    private const byte PERCENT_MAX = 0x64;
+    private const int DEFAULT_SPEED_CHANNEL_POWER_PUMP = 100;
+    private const byte PERCENT_MIN = 0;
+    private const byte PERCENT_MIN_PUMP = 50;
+    private const byte PERCENT_MAX = 100;
     private const int SEND_COMMAND_WAIT_FOR_DATA_TYPE_READ_TIMEOUT_MS = 500;
+    private const int PUMP_CHANNEL = 0;
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
@@ -149,7 +152,24 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     public override void SetChannelPower(int channel, int percent)
     {
-        _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
+        var clampMin = PERCENT_MIN;
+        if (_firstChannelExt && channel == PUMP_CHANNEL)
+        {
+            clampMin = PERCENT_MIN_PUMP;
+        }
+
+        _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, clampMin, PERCENT_MAX);
+    }
+
+    public override void ResetChannel(int channel)
+    {
+        var value = DEFAULT_SPEED_CHANNEL_POWER;
+        if (_firstChannelExt && channel == PUMP_CHANNEL)
+        {
+            value = DEFAULT_SPEED_CHANNEL_POWER_PUMP;
+        }
+
+        SetChannelPower(channel, value);
     }
 
     private void RefreshTemperatures(EndpointResponse temperaturesResponse)
@@ -190,9 +210,9 @@ public sealed class CommanderCoreDevice : DeviceBase
         _speedChannelCount = connectedSpeedsResponseData[0];
         _requestedChannelPower.Clear();
 
-        for (int i = 0, s = 1; i < _speedChannelCount; i++, s += 2)
+        for (int i = 0; i < _speedChannelCount; i++)
         {
-            _requestedChannelPower[i] = DEFAULT_SPEED_CHANNEL_POWER;
+            ResetChannel(i);
         }
     }
 
@@ -219,7 +239,7 @@ public sealed class CommanderCoreDevice : DeviceBase
             }
             else
             {
-                sensors.Add(new SpeedSensor(i == 0 ? "Pump" : $"Fan #{i}", i, rpm, supportsControl: true));
+                sensors.Add(new SpeedSensor(i == PUMP_CHANNEL ? "Pump" : $"Fan #{i}", i, rpm, supportsControl: true));
             }
         }
 
@@ -248,7 +268,7 @@ public sealed class CommanderCoreDevice : DeviceBase
             }
             else
             {
-                sensors.Add(new TemperatureSensor(i == 0 ? "Liquid Temp" : $"Temp #{i}", i, temp));
+                sensors.Add(new TemperatureSensor(i == PUMP_CHANNEL ? "Liquid Temp" : $"Temp #{i}", i, temp));
             }
         }
 
