@@ -37,6 +37,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.HydroAs
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Asetek", "CorsairLink.Asetek\CorsairLink.Asetek.csproj", "{0433FDB8-F465-4C62-9B96-803723B7D9BB}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "CorsairLink.Devices.ICueLink", "devices\icue_link\CorsairLink.Devices.ICueLink.csproj", "{25F5950E-921C-4010-8897-A368AC19188D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,6 +109,10 @@ Global
 		{0433FDB8-F465-4C62-9B96-803723B7D9BB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0433FDB8-F465-4C62-9B96-803723B7D9BB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0433FDB8-F465-4C62-9B96-803723B7D9BB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{25F5950E-921C-4010-8897-A368AC19188D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{25F5950E-921C-4010-8897-A368AC19188D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{25F5950E-921C-4010-8897-A368AC19188D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{25F5950E-921C-4010-8897-A368AC19188D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -119,6 +125,7 @@ Global
 		{7EF049F2-EAA7-4DF4-B724-0B00D062984A} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
 		{6202EE32-877F-40C0-B71F-02761B20DF02} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
 		{02778AD1-7CA2-4F8E-8513-56FE49EF8D79} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
+		{25F5950E-921C-4010-8897-A368AC19188D} = {C44527E6-C6F5-4957-B8A9-E8388416E54E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5ADA02C2-70F3-4CCD-93EA-684AA98C6A9E}

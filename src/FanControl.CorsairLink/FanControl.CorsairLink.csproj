@@ -25,6 +25,7 @@
     <ProjectReference Include="..\devices\hid_psu\CorsairLink.Devices.HidPsu.csproj" />
     <ProjectReference Include="..\devices\hydro_asetek\CorsairLink.Devices.HydroAsetek.csproj" />
     <ProjectReference Include="..\devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj" />
+    <ProjectReference Include="..\devices\icue_link\CorsairLink.Devices.ICueLink.csproj" />
   </ItemGroup>
 
   <ItemGroup>
@@ -53,6 +54,7 @@
       <InputAssemblies Include="CorsairLink.Devices.HidPsu.dll" />
       <InputAssemblies Include="CorsairLink.Devices.HydroAsetek.dll" />
       <InputAssemblies Include="CorsairLink.Devices.HydroPlatinum.dll" />
+      <InputAssemblies Include="CorsairLink.Devices.ICueLink.dll" />
     </ItemGroup>
     <ItemGroup>
       <InternalizeExcludeAssemblies Include="FanControl.Plugins.dll" />

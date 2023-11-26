@@ -34,6 +34,7 @@ public static class HardwareIds
     public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
     public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
+    public static readonly int CorsairICueLinkHubProductId = 0x0c3f;
     public static readonly int CorsairPsuAXiDongleFamilyProductId = 0x1c00;
     public static readonly int CorsairPsuAX1500iProductId = 0x1c02;
     public static readonly int CorsairPsuHX550iProductId = 0x1c03;
@@ -61,6 +62,11 @@ public static class HardwareIds
         {
             CorsairCommanderProProductId,
             CorsairObsidian1000DCommanderProProductId,
+        };
+
+        public static readonly IReadOnlyCollection<int> ICueLinkHub = new List<int>
+        {
+            CorsairICueLinkHubProductId,
         };
 
         public static readonly IReadOnlyCollection<int> CommanderCore = new List<int>
@@ -162,6 +168,7 @@ public static class HardwareIds
 
     public static IReadOnlyCollection<int> GetSupportedProductIds() =>
         DeviceDriverGroups.CommanderPro
+        .Concat(DeviceDriverGroups.ICueLinkHub)
         .Concat(DeviceDriverGroups.CommanderCore)
         .Concat(DeviceDriverGroups.CommanderCoreWithDesignatedPump)
         .Concat(DeviceDriverGroups.HydroPlatinum2Fan)

@@ -1,4 +1,5 @@
 ﻿using CorsairLink.Devices;
+using CorsairLink.Devices.ICueLink;
 using CorsairLink.Hid;
 using HidSharp;
 using System.Text;
@@ -25,6 +26,9 @@ public static class HidDeviceManager
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderPro)
             .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.ICueLinkHub)
+            .Select(x => new ICueLinkHubDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCore)
             .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
