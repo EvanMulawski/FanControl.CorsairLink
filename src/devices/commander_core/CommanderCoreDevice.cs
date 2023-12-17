@@ -1,4 +1,4 @@
-﻿using System.Buffers.Binary;
+﻿using CorsairLink.Devices.CommanderCore;
 using System.Text;
 
 namespace CorsairLink.Devices;
@@ -7,7 +7,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 {
     private static class Commands
     {
-        private const byte HANDLE_ID = 0xfc;
+        private const byte HANDLE_ID = 0x01;
 
         public static ReadOnlySpan<byte> EnterSoftwareMode => new byte[] { 0x01, 0x03, 0x00, 0x02 };
         public static ReadOnlySpan<byte> EnterHardwareMode => new byte[] { 0x01, 0x03, 0x00, 0x01 };
@@ -112,36 +112,26 @@ public sealed class CommanderCoreDevice : DeviceBase
             response = SendCommand(Commands.ReadFirmwareVersion);
         }
 
-        var v1 = (int)response[3];
-        var v2 = (int)response[4];
-        var v3 = (int)response[5];
-
-        return $"{v1}.{v2}.{v3}";
+        return CommanderCoreDataReader.GetFirmwareVersion(response);
     }
 
     public override void Refresh() => RefreshImpl(initialize: false);
 
     private void RefreshImpl(bool initialize = false)
     {
-        EndpointResponse connectedSpeedsResponse;
-        EndpointResponse speedsResponse;
-        EndpointResponse temperaturesResponse;
+        var connectedSpeedsResponse = ReadFromEndpoint(Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
 
-        using (_guardManager.AwaitExclusiveAccess())
+        if (initialize)
         {
-            connectedSpeedsResponse = ReadFromEndpoint(Endpoints.GetConnectedSpeeds, DataTypes.ConnectedSpeeds);
-            speedsResponse = ReadFromEndpoint(Endpoints.GetSpeeds, DataTypes.Speeds);
-            temperaturesResponse = ReadFromEndpoint(Endpoints.GetTemperatures, DataTypes.Temperatures);
-
-            if (initialize)
-            {
-                InitializeSpeedChannels(connectedSpeedsResponse);
-            }
-
-            WriteRequestedSpeeds();
+            InitializeSpeedChannels(connectedSpeedsResponse);
         }
 
+        WriteRequestedSpeeds();
+
+        var speedsResponse = ReadFromEndpoint(Endpoints.GetSpeeds, DataTypes.Speeds);
         RefreshSpeeds(connectedSpeedsResponse, speedsResponse);
+
+        var temperaturesResponse = ReadFromEndpoint(Endpoints.GetTemperatures, DataTypes.Temperatures);
         RefreshTemperatures(temperaturesResponse);
 
         if (CanLogDebug)
@@ -206,8 +196,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private void InitializeSpeedChannels(EndpointResponse connectedSpeedsResponse)
     {
-        var connectedSpeedsResponseData = connectedSpeedsResponse.GetData();
-        _speedChannelCount = connectedSpeedsResponseData[0];
+        _speedChannelCount = CommanderCoreDataReader.GetSpeedSensorCount(connectedSpeedsResponse.GetData());
         _requestedChannelPower.Clear();
 
         for (int i = 0; i < _speedChannelCount; i++)
@@ -218,28 +207,20 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
     {
-        var connectedSpeedsResponseData = connectedSpeedsResponse.GetData();
-        var speedsResponseData = speedsResponse.GetData().Slice(1);
-        var sensorCount = connectedSpeedsResponseData[0];
-        var sensors = new List<SpeedSensor>(sensorCount);
+        var speedSensors = CommanderCoreDataReader.GetSpeedSensors(connectedSpeedsResponse.GetData(), speedsResponse.GetData());
+        var sensors = new List<SpeedSensor>(speedSensors.Count);
 
-        for (int i = 0, c = 1, s = 0; i < sensorCount; i++, c++, s += 2)
+        foreach (var speedSensor in speedSensors)
         {
-            int? rpm = default;
-            var connected = connectedSpeedsResponseData[c] == 0x07;
-
-            if (connected)
-            {
-                rpm = BinaryPrimitives.ReadInt16LittleEndian(speedsResponseData.Slice(s, 2));
-            }
+            var i = speedSensor.Channel;
 
             if (!_firstChannelExt)
             {
-                sensors.Add(new SpeedSensor($"Fan #{i + 1}", i, rpm, supportsControl: true));
+                sensors.Add(new SpeedSensor($"Fan #{i + 1}", i, speedSensor.Rpm, supportsControl: true));
             }
             else
             {
-                sensors.Add(new SpeedSensor(i == PUMP_CHANNEL ? "Pump" : $"Fan #{i}", i, rpm, supportsControl: true));
+                sensors.Add(new SpeedSensor(i == PUMP_CHANNEL ? "Pump" : $"Fan #{i}", i, speedSensor.Rpm, supportsControl: true));
             }
         }
 
@@ -248,27 +229,20 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors(EndpointResponse temperaturesResponse)
     {
-        var responseData = temperaturesResponse.GetData();
-        var sensorCount = responseData[0];
-        var sensors = new List<TemperatureSensor>(sensorCount);
+        var temperatureSensors = CommanderCoreDataReader.GetTemperatureSensors(temperaturesResponse.GetData());
+        var sensors = new List<TemperatureSensor>(temperatureSensors.Count);
 
-        for (int i = 0, c = 1; i < sensorCount; i++, c += 3)
+        foreach (var temperatureSensor in temperatureSensors)
         {
-            float? temp = default;
-            var connected = responseData[c] == 0x00;
-
-            if (connected)
-            {
-                temp = BinaryPrimitives.ReadInt16LittleEndian(responseData.Slice(c + 1, 2)) / 10f;
-            }
+            var i = temperatureSensor.Channel;
 
             if (!_firstChannelExt)
             {
-                sensors.Add(new TemperatureSensor($"Temp #{i + 1}", i, temp));
+                sensors.Add(new TemperatureSensor($"Temp #{i + 1}", i, temperatureSensor.TempCelsius));
             }
             else
             {
-                sensors.Add(new TemperatureSensor(i == PUMP_CHANNEL ? "Liquid Temp" : $"Temp #{i}", i, temp));
+                sensors.Add(new TemperatureSensor(i == PUMP_CHANNEL ? "Liquid Temp" : $"Temp #{i}", i, temperatureSensor.TempCelsius));
             }
         }
 
@@ -282,55 +256,21 @@ public sealed class CommanderCoreDevice : DeviceBase
             return;
         }
 
-        // [0] number of channels
-        // [1,4] channel 0 data
-        // [5,8] channel 1 data
-        // [9,12] channel 2 data
-        // [13,16] channel 3 data
-        // [17,20] channel 4 data
-        // [21,24] channel 5 data
-        // [25,28] channel 6 data
-        // ...
-
-        // channel data:
-        // [0] = channel id
-        // [1] = 0x00
-        // [2] = percent
-        // [3] = 0x00
-
-        var speedFixedPercentBuf = new byte[_speedChannelCount * 4 + 1];
-        speedFixedPercentBuf[0] = _speedChannelCount;
-
-        var channelsSpan = speedFixedPercentBuf.AsSpan(1);
-
-        foreach (var c in _requestedChannelPower.Channels)
+        var channelSpeeds = new Dictionary<int, byte>(_speedChannelCount);
+        for (var channel = 0; channel < _speedChannelCount; channel++)
         {
-            channelsSpan[c * 4] = (byte)c;
-            channelsSpan[c * 4 + 2] = _requestedChannelPower[c];
+            channelSpeeds[channel] = _requestedChannelPower[channel];
         }
 
-        WriteToEndpoint(Endpoints.SoftwareSpeedFixedPercent, DataTypes.SoftwareSpeedFixedPercent, speedFixedPercentBuf);
+        var data = CommanderCoreDataWriter.CreateSoftwareSpeedFixedPercentData(channelSpeeds);
+
+        WriteToEndpoint(Endpoints.SoftwareSpeedFixedPercent, DataTypes.SoftwareSpeedFixedPercent, data);
     }
 
     private byte[] SendCommand(ReadOnlySpan<byte> command, ReadOnlySpan<byte> data = default, ReadOnlySpan<byte> waitForDataType = default)
     {
-        // [0] = 0x00
-        // [1] = 0x08
-        // [2,a] = command
-        // [a+1,] = data
-
+        var writeBuf = CommanderCoreDataWriter.CreateCommandPacket(_packetSize + 1, command, data);
         var readBuf = new byte[_packetSize];
-        var writeBuf = new byte[_packetSize + 1];
-        writeBuf[1] = 0x08;
-
-        var commandSpan = writeBuf.AsSpan(2, command.Length);
-        command.CopyTo(commandSpan);
-
-        if (data.Length > 0)
-        {
-            var dataSpan = writeBuf.AsSpan(2 + commandSpan.Length, data.Length);
-            data.CopyTo(dataSpan);
-        }
 
         Write(writeBuf);
         Read(readBuf);
@@ -370,40 +310,50 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private EndpointResponse ReadFromEndpoint(ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType)
     {
-        SendCommand(Commands.OpenEndpoint, endpoint);
-        var res = SendCommand(Commands.Read, waitForDataType: dataType);
-        SendCommand(Commands.CloseEndpoint);
+        byte[] res;
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            SendCommand(Commands.CloseEndpoint, endpoint);
+            SendCommand(Commands.OpenEndpoint, endpoint);
+            res = SendCommand(Commands.Read, waitForDataType: dataType);
+            SendCommand(Commands.CloseEndpoint, endpoint);
+        }
 
         return new EndpointResponse(res, dataType);
     }
 
     private void WriteToEndpoint(ReadOnlySpan<byte> endpoint, ReadOnlySpan<byte> dataType, ReadOnlySpan<byte> data)
     {
-        const int HEADER_LENGTH = 4;
+        var writeBuf = CommanderCoreDataWriter.CreateWriteData(dataType, data);
 
-        // [0,1] = payload length
-        // [2,3] = 0x00 0x00
-        // [4,5] = data type
-        // [6,]  = data
-
-        var writeBuf = new byte[dataType.Length + data.Length + HEADER_LENGTH];
-        BinaryPrimitives.WriteInt16LittleEndian(writeBuf.AsSpan(0, 2), (short)(data.Length + 2));
-        dataType.CopyTo(writeBuf.AsSpan(HEADER_LENGTH, dataType.Length));
-        data.CopyTo(writeBuf.AsSpan(HEADER_LENGTH + dataType.Length, data.Length));
-
-        SendCommand(Commands.OpenEndpoint, endpoint);
-        SendCommand(Commands.Write, writeBuf);
-        SendCommand(Commands.CloseEndpoint);
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            SendCommand(Commands.CloseEndpoint, endpoint);
+            SendCommand(Commands.OpenEndpoint, endpoint);
+            SendCommand(Commands.Write, writeBuf);
+            SendCommand(Commands.CloseEndpoint, endpoint);
+        }
     }
 
     private void Write(byte[] buffer)
     {
+        if (CanLogDebug)
+        {
+            LogDebug($"WRITE: {buffer.ToHexString()}");
+        }
+
         _device.Write(buffer);
     }
 
     private void Read(byte[] buffer)
     {
         _device.Read(buffer);
+
+        if (CanLogDebug)
+        {
+            LogDebug($"READ:  {buffer.ToHexString()}");
+        }
     }
 
     private string GetStateStringRepresentation()
