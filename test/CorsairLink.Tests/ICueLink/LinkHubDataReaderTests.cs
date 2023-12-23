@@ -1,6 +1,6 @@
 ﻿using CorsairLink.Devices.ICueLink;
 
-namespace CorsairLink.Tests;
+namespace CorsairLink.Tests.ICueLink;
 
 public class LinkHubDataReaderTests
 {

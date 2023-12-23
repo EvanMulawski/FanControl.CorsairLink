@@ -1,6 +1,6 @@
 ﻿using CorsairLink.Devices;
 
-namespace CorsairLink.Tests;
+namespace CorsairLink.Tests.HydroAsetek;
 
 public class HydroAsetekProDeviceTests
 {
