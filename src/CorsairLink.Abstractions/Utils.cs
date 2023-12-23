@@ -66,6 +66,11 @@ public static class Utils
 
     public static void SyncWait(int milliseconds)
     {
+        if (milliseconds <= 0)
+        {
+            return;
+        }
+
         Task.Delay(milliseconds).GetAwaiter().GetResult();
     }
 

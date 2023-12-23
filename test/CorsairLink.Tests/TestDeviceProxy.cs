@@ -11,12 +11,12 @@
 
         public void ClearEnqueuedReports()
         {
-            
+
         }
 
         public void Close()
         {
-            
+
         }
 
         public HidDeviceInfo GetDeviceInfo()
@@ -42,7 +42,12 @@
 
         public void Write(byte[] buffer)
         {
-            
+
+        }
+
+        public void WriteDirect(byte[] buffer)
+        {
+
         }
     }
 
@@ -57,7 +62,7 @@
         {
             public void Dispose()
             {
-                
+
             }
         }
     }

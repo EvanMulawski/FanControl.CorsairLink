@@ -1,4 +1,5 @@
-﻿using System.Buffers.Binary;
+﻿using CorsairLink.Devices.HydroPlatinum;
+using System.Buffers.Binary;
 using System.Text;
 
 namespace CorsairLink.Devices;
@@ -21,7 +22,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private const int REQUEST_LENGTH = 65;
     private const int RESPONSE_LENGTH = 65;
-    private const int DEVICE_WAIT_BEFORE_READ_DELAY_MS = 50;
+    private const int DEVICE_INITIAL_WRITE_DELAY_MS = 60;
     private const int DEVICE_PAYLOAD_START_IDX = 2;
     private const byte DEVICE_PAYLOAD_LENGTH = 63;
     private const byte DEVICE_PAYLOAD_LENGTH_EX_CRC = DEVICE_PAYLOAD_LENGTH - 1;
@@ -29,26 +30,37 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private const byte PERCENT_MIN = 0;
     private const byte PERCENT_MAX = 100;
     private const int PUMP_CHANNEL = -1;
+    private const int MAX_READ_FAIL_BEFORE_REBOOT = 3;
+    private const int DEVICE_POST_REBOOT_WAIT_MS = 3000;
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
     private readonly uint _fanCount;
+    private readonly bool _sendLedPaletteIndex2Packet;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
     private readonly SequenceCounter _sequenceCounter = new();
+    private readonly RebootManager _rebootManager = new(MAX_READ_FAIL_BEFORE_REBOOT);
+    private readonly object _refreshLock = new();
+    private readonly DeviceMetrics _deviceMetrics;
+
+    private bool _rebootRequested;
+    private bool _firstWrite = true;
 
     public HydroPlatinumDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, HydroPlatinumDeviceOptions options, ILogger logger)
         : base(logger)
     {
         _device = device;
         _guardManager = guardManager;
+        _deviceMetrics = new DeviceMetrics(DEVICE_INITIAL_WRITE_DELAY_MS);
 
         var deviceInfo = device.GetDeviceInfo();
         Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
         UniqueId = deviceInfo.DevicePath;
 
         _fanCount = options.FanChannelCount;
+        _sendLedPaletteIndex2Packet = !(deviceInfo.ProductId == 0x0c22 || deviceInfo.ProductId == 0x0c2f);
     }
 
     public override string UniqueId { get; }
@@ -66,6 +78,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         var (opened, exception) = _device.Open();
         if (opened)
         {
+            _rebootManager.RebootRequired += RebootManager_RebootRequired;
             Initialize();
             return true;
         }
@@ -80,6 +93,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override void Disconnect()
     {
+        _rebootManager.RebootRequired -= RebootManager_RebootRequired;
         _device.Close();
     }
 
@@ -110,18 +124,39 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override void Refresh()
     {
-        // the device may not respond if attempting to read the state too quickly after other commands
-        // a delay resolves this issue
-        Utils.SyncWait(DEVICE_WAIT_BEFORE_READ_DELAY_MS);
-
-        State state;
-        using (_guardManager.AwaitExclusiveAccess())
+        void RefreshImpl()
         {
-            state = ReadState();
-            WriteCooling();
+            State state;
+            using (_guardManager.AwaitExclusiveAccess())
+            {
+                state = ReadState();
+                WriteCooling();
+            }
+
+            RefreshSensors(state);
         }
 
-        RefreshSensors(state);
+        var lockTaken = false;
+
+        try
+        {
+            Monitor.TryEnter(_refreshLock, 0, ref lockTaken);
+            if (lockTaken)
+            {
+                RefreshImpl();
+            }
+            else
+            {
+                LogWarning($"Refresh skipped (refresh lock)");
+            }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                Monitor.Exit(_refreshLock);
+            }
+        }
     }
 
     public override void SetChannelPower(int channel, int percent)
@@ -348,12 +383,19 @@ public sealed class HydroPlatinumDevice : DeviceBase
         }
         catch (Exception ex)
         {
+            _rebootManager.NotifyReadFailure();
             throw CreateCommandException("Communication failure.", ex, writeBuf, readBuf);
         }
 
         if (readCrcByte != readBufCrcResult)
         {
-            throw CreateCommandException("Checksum failure.", default, writeBuf, readBuf);
+            _rebootManager.NotifyReadFailure();
+            var checksumEx = CreateCommandException("Checksum failure.", default, writeBuf, readBuf);
+            LogWarning(checksumEx);
+        }
+        else
+        {
+            _rebootManager.NotifyReadSuccess();
         }
 
         return readBuf.AsSpan(1).ToArray();
@@ -382,7 +424,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
             LogDebug($"WRITE: {writeBuffer.ToHexString()}");
         }
 
-        _device.Write(writeBuffer);
+        Write(writeBuffer);
         _device.Read(readBuffer);
 
         if (CanLogDebug)
@@ -393,12 +435,157 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private void Write(byte[] writeBuffer)
     {
+        if (_firstWrite)
+        {
+            _firstWrite = false;
+            Utils.SyncWait(DEVICE_INITIAL_WRITE_DELAY_MS);
+        }
+
         if (CanLogDebug)
         {
             LogDebug($"WRITE: {writeBuffer.ToHexString()}");
         }
 
-        _device.Write(writeBuffer);
+        var useDelay = true;
+
+        try
+        {
+            _deviceMetrics.WriteStart();
+            _device.Write(writeBuffer);
+        }
+        catch
+        {
+            useDelay = false;
+        }
+        finally
+        {
+            var delay = (int)_deviceMetrics.WriteEnd();
+
+            if (CanLogDebug)
+            {
+                LogDebug($"Hydro Platinum Device Metrics: delay = {delay} ms");
+            }
+
+            if (useDelay)
+            {
+                Utils.SyncWait(delay);
+            }
+        }
+    }
+
+    public void Reboot()
+    {
+        _rebootManager.TriggerReboot();
+    }
+
+    private void RebootManager_RebootRequired(object sender, EventArgs e)
+    {
+        RebootDevice();
+    }
+
+    private void RebootDevice()
+    {
+        bool RebootImpl()
+        {
+            LogInfo("Rebooting device");
+
+            using (_guardManager.AwaitExclusiveAccess())
+            {
+                try
+                {
+                    // tell the device to reboot its EFM8 microcontroller (literally REBOOT)
+                    var rebootPacket = new byte[REQUEST_LENGTH];
+                    byte[] rebootData = [0x52, 0x45, 0x42, 0x4F, 0x4F, 0x54];
+                    rebootData.CopyTo(rebootPacket, 2);
+                    try
+                    {
+                        _device.WriteDirect(rebootPacket);
+                    }
+                    catch
+                    {
+                        // ignore
+                        // if reboot successful, the reboot will cause this operation to "fail"
+                    }
+                    LogInfo("Sent reboot packet");
+
+                    LogInfo("Closing device");
+                    _device.Close();
+
+                    LogInfo("Waiting to reopen device");
+                    Thread.Sleep(DEVICE_POST_REBOOT_WAIT_MS);
+
+                    LogInfo("Opening device");
+                    var (opened, ex) = _device.Open();
+                    if (!opened)
+                    {
+                        LogWarning("Failed to reopen device after reboot");
+                        if (ex is not null)
+                        {
+                            LogError(ex);
+                        }
+                        return false;
+                    }
+
+                    LogInfo("Attempting to read");
+                    _ = ReadState();
+                    LogInfo("Device reboot successful");
+
+                    // after device reboots, lighting might not be in direct mode for some zones
+                    LogInfo("Enabling direct lighting");
+                    EnableDirectLighting();
+                    LogInfo("Enabled direct lighting");
+
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    LogWarning("Failed to reboot device");
+                    LogError(ex);
+
+                    return false;
+                }
+            }
+        }
+
+        void EnableDirectLighting()
+        {
+            var directLedPacket = CreateCommand(0x01, _sequenceCounter.Next(), ENABLE_DIRECT_LED_PACKET_DATA).ToArray();
+            _device.WriteDirect(directLedPacket);
+            var ledPaletteIndexPacket1 = CreateCommand(0x02, _sequenceCounter.Next(), LED_PALETTE_INDEX_PACKET_1_DATA).ToArray();
+            _device.WriteDirect(directLedPacket);
+            if (_sendLedPaletteIndex2Packet)
+            {
+                var ledPaletteIndexPacket2 = CreateCommand(0x03, _sequenceCounter.Next(), LED_PALETTE_INDEX_PACKET_2_DATA).ToArray();
+                _device.WriteDirect(directLedPacket);
+            }
+        }
+
+        var lockTaken = false;
+
+        try
+        {
+            Monitor.TryEnter(_refreshLock, 2000, ref lockTaken);
+            if (lockTaken)
+            {
+                var rebooted = RebootImpl();
+                if (!rebooted)
+                {
+                    _rebootManager.NotifyRebootFailure();
+                }
+            }
+            else
+            {
+                LogWarning("Failed to acquire refresh lock for device reboot");
+                _rebootManager.NotifyRebootFailure();
+            }
+        }
+        finally
+        {
+            if (lockTaken)
+            {
+                Monitor.Exit(_refreshLock);
+            }
+        }
     }
 
     internal static byte GenerateChecksum(ReadOnlySpan<byte> data)
@@ -410,26 +597,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
         }
         return result;
     }
-
-    private static readonly byte[] CRC8_CCITT_TABLE = new byte[256]
-    {
-        0, 7, 14, 9, 28, 27, 18, 21, 56, 63, 54, 49, 36, 35, 42, 45,
-        112, 119, 126, 121, 108, 107, 98, 101, 72, 79, 70, 65, 84, 83, 90, 93,
-        224, 231, 238, 233, 252, 251, 242, 245, 216, 223, 214, 209, 196, 195, 202, 205,
-        144, 151, 158, 153, 140, 139, 130, 133, 168, 175, 166, 161, 180, 179, 186, 189,
-        199, 192, 201, 206, 219, 220, 213, 210, 255, 248, 241, 246, 227, 228, 237, 234,
-        183, 176, 185, 190, 171, 172, 165, 162, 143, 136, 129, 134, 147, 148, 157, 154,
-        39, 32, 41, 46, 59, 60, 53, 50, 31, 24, 17, 22, 3, 4, 13, 10,
-        87, 80, 89, 94, 75, 76, 69, 66, 111, 104, 97, 102, 115, 116, 125, 122,
-        137, 142, 135, 128, 149, 146, 155, 156, 177, 182, 191, 184, 173, 170, 163, 164,
-        249, 254, 247, 240, 229, 226, 235, 236, 193, 198, 207, 200, 221, 218, 211, 212,
-        105, 110, 103, 96, 117, 114, 123, 124, 81, 86, 95, 88, 77, 74, 67, 68,
-        25, 30, 23, 16, 5, 2, 11, 12, 33, 38, 47, 40, 61, 58, 51, 52,
-        78, 73, 64, 71, 82, 85, 92, 91, 118, 113, 120, 127, 106, 109, 100, 99,
-        62, 57, 48, 55, 34, 37, 44, 43, 6, 1, 8, 15, 26, 29, 20, 19,
-        174, 169, 160, 167, 178, 181, 188, 187, 150, 145, 152, 159, 138, 141, 132, 131,
-        222, 217, 208, 215, 194, 197, 204, 203, 230, 225, 232, 239, 250, 253, 244, 243,
-    };
 
     internal sealed class State
     {
@@ -486,4 +653,456 @@ public sealed class HydroPlatinumDevice : DeviceBase
             _sequenceId = value;
         }
     }
+
+    private static readonly byte[] CRC8_CCITT_TABLE =
+    [
+        0,
+        7,
+        14,
+        9,
+        28,
+        27,
+        18,
+        21,
+        56,
+        63,
+        54,
+        49,
+        36,
+        35,
+        42,
+        45,
+        112,
+        119,
+        126,
+        121,
+        108,
+        107,
+        98,
+        101,
+        72,
+        79,
+        70,
+        65,
+        84,
+        83,
+        90,
+        93,
+        224,
+        231,
+        238,
+        233,
+        252,
+        251,
+        242,
+        245,
+        216,
+        223,
+        214,
+        209,
+        196,
+        195,
+        202,
+        205,
+        144,
+        151,
+        158,
+        153,
+        140,
+        139,
+        130,
+        133,
+        168,
+        175,
+        166,
+        161,
+        180,
+        179,
+        186,
+        189,
+        199,
+        192,
+        201,
+        206,
+        219,
+        220,
+        213,
+        210,
+        255,
+        248,
+        241,
+        246,
+        227,
+        228,
+        237,
+        234,
+        183,
+        176,
+        185,
+        190,
+        171,
+        172,
+        165,
+        162,
+        143,
+        136,
+        129,
+        134,
+        147,
+        148,
+        157,
+        154,
+        39,
+        32,
+        41,
+        46,
+        59,
+        60,
+        53,
+        50,
+        31,
+        24,
+        17,
+        22,
+        3,
+        4,
+        13,
+        10,
+        87,
+        80,
+        89,
+        94,
+        75,
+        76,
+        69,
+        66,
+        111,
+        104,
+        97,
+        102,
+        115,
+        116,
+        125,
+        122,
+        137,
+        142,
+        135,
+        128,
+        149,
+        146,
+        155,
+        156,
+        177,
+        182,
+        191,
+        184,
+        173,
+        170,
+        163,
+        164,
+        249,
+        254,
+        247,
+        240,
+        229,
+        226,
+        235,
+        236,
+        193,
+        198,
+        207,
+        200,
+        221,
+        218,
+        211,
+        212,
+        105,
+        110,
+        103,
+        96,
+        117,
+        114,
+        123,
+        124,
+        81,
+        86,
+        95,
+        88,
+        77,
+        74,
+        67,
+        68,
+        25,
+        30,
+        23,
+        16,
+        5,
+        2,
+        11,
+        12,
+        33,
+        38,
+        47,
+        40,
+        61,
+        58,
+        51,
+        52,
+        78,
+        73,
+        64,
+        71,
+        82,
+        85,
+        92,
+        91,
+        118,
+        113,
+        120,
+        127,
+        106,
+        109,
+        100,
+        99,
+        62,
+        57,
+        48,
+        55,
+        34,
+        37,
+        44,
+        43,
+        6,
+        1,
+        8,
+        15,
+        26,
+        29,
+        20,
+        19,
+        174,
+        169,
+        160,
+        167,
+        178,
+        181,
+        188,
+        187,
+        150,
+        145,
+        152,
+        159,
+        138,
+        141,
+        132,
+        131,
+        222,
+        217,
+        208,
+        215,
+        194,
+        197,
+        204,
+        203,
+        230,
+        225,
+        232,
+        239,
+        250,
+        253,
+        244,
+        243,
+    ];
+
+    private static readonly byte[] ENABLE_DIRECT_LED_PACKET_DATA = [
+        0x01, // enable = 0x01, disable = 0x00
+        0x01,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x7f,
+        0x7f,
+        0x7f,
+        0x7f,
+        0xff,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0x00,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+    ];
+
+    private static readonly byte[] LED_PALETTE_INDEX_PACKET_1_DATA = [
+        0x00,
+        0x01,
+        0x02,
+        0x03,
+        0x04,
+        0x05,
+        0x06,
+        0x07,
+        0x08,
+        0x09,
+        0x0a,
+        0x0b,
+        0x0c,
+        0x0d,
+        0x0e,
+        0x0f,
+        0x10,
+        0x11,
+        0x12,
+        0x13,
+        0x14,
+        0x15,
+        0x16,
+        0x17,
+        0x18,
+        0x19,
+        0x1a,
+        0x1b,
+        0x1c,
+        0x1d,
+        0x1e,
+        0x1f,
+        0x20,
+        0x21,
+        0x22,
+        0x23,
+        0x24,
+        0x25,
+        0x26,
+        0x27,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+    ];
+
+    private static readonly byte[] LED_PALETTE_INDEX_PACKET_2_DATA = [
+        0x28,
+        0x29,
+        0x2a,
+        0x2b,
+        0x2c,
+        0x2d,
+        0x2e,
+        0x2f,
+        0x30,
+        0x31,
+        0x32,
+        0x33,
+        0x34,
+        0x35,
+        0x36,
+        0x37,
+        0x38,
+        0x39,
+        0x3a,
+        0x3b,
+        0x3c,
+        0x3d,
+        0x3e,
+        0x3f,
+        0x40,
+        0x41,
+        0x42,
+        0x43,
+        0x44,
+        0x45,
+        0x46,
+        0x47,
+        0x48,
+        0x49,
+        0x4a,
+        0x4b,
+        0x4c,
+        0x4d,
+        0x4e,
+        0x4f,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+        0xff,
+    ];
 }

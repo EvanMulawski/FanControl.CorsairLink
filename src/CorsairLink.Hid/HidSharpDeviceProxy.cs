@@ -66,6 +66,13 @@ public sealed class HidSharpDeviceProxy : IHidDeviceProxy
         _stream?.Write(buffer, 0, buffer.Length);
     }
 
+    public void WriteDirect(byte[] buffer)
+    {
+        ThrowIfNotReady();
+
+        _stream?.Write(buffer, 0, buffer.Length);
+    }
+
     public void ClearEnqueuedReports()
     {
         ThrowIfNotReady();
