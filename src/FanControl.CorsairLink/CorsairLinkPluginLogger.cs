@@ -16,7 +16,6 @@ internal sealed class CorsairLinkPluginLogger : ILogger
     {
         _logger = new FileLogger("CorsairLink");
         DebugEnabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED");
-        DebugEnabled = true; // todo: remove
     }
 
     public void Debug(string category, string message)
