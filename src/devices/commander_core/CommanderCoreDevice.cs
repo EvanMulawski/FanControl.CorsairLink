@@ -196,7 +196,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private void InitializeSpeedChannels(EndpointResponse connectedSpeedsResponse)
     {
-        _speedChannelCount = CommanderCoreDataReader.GetSpeedSensorCount(connectedSpeedsResponse.GetData());
+        _speedChannelCount = CommanderCoreDataReader.GetSpeedSensorCount(connectedSpeedsResponse.Payload);
         _requestedChannelPower.Clear();
 
         for (int i = 0; i < _speedChannelCount; i++)
@@ -207,7 +207,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private IReadOnlyCollection<SpeedSensor> GetSpeedSensors(EndpointResponse connectedSpeedsResponse, EndpointResponse speedsResponse)
     {
-        var speedSensors = CommanderCoreDataReader.GetSpeedSensors(connectedSpeedsResponse.GetData(), speedsResponse.GetData());
+        var speedSensors = CommanderCoreDataReader.GetSpeedSensors(connectedSpeedsResponse.Payload, speedsResponse.Payload);
         var sensors = new List<SpeedSensor>(speedSensors.Count);
 
         foreach (var speedSensor in speedSensors)
@@ -229,7 +229,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
     private IReadOnlyCollection<TemperatureSensor> GetTemperatureSensors(EndpointResponse temperaturesResponse)
     {
-        var temperatureSensors = CommanderCoreDataReader.GetTemperatureSensors(temperaturesResponse.GetData());
+        var temperatureSensors = CommanderCoreDataReader.GetTemperatureSensors(temperaturesResponse.Payload);
         var sensors = new List<TemperatureSensor>(temperatureSensors.Count);
 
         foreach (var temperatureSensor in temperatureSensors)
