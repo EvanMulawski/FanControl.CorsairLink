@@ -23,12 +23,13 @@ public sealed class CorsairLinkPlugin : IPlugin
     private readonly IDeviceGuardManager _deviceGuardManager;
     private readonly ILogger _logger;
     private readonly Timer _timer;
-    private readonly object _timerLock = new();
+    private readonly SemaphoreSlim _refreshSemaphore = new(1, 1);
     private readonly ExclusiveMonitor _errorDialogDispatcher = new();
     private readonly bool _errorNotificationsDisabled;
     private readonly string _pluginVersion;
 
     private IReadOnlyCollection<IDevice> _devices = new List<IDevice>(0);
+    private CancellationTokenSource _refreshCts = new();
     private int _errorLogCount = 0;
     private int _errorLogCountFlag = 1;
     private int _refreshSkipCount = 0;
@@ -135,7 +136,7 @@ public sealed class CorsairLinkPlugin : IPlugin
                 MessageBoxFlags.MB_OK | MessageBoxFlags.MB_ICONERROR | MessageBoxFlags.MB_APPLMODAL | MessageBoxFlags.MB_SETFOREGROUND));
     }
 
-    private void OnTimerTick(object sender, ElapsedEventArgs e)
+    private async void OnTimerTick(object sender, ElapsedEventArgs e)
     {
         if (Interlocked.Increment(ref _tickCount) > ERROR_CHECK_TICK_COUNT && _errorLogCount < DIALOG_MESSAGE_ERRORS_DETECTED_COUNT)
         {
@@ -143,45 +144,69 @@ public sealed class CorsairLinkPlugin : IPlugin
             Interlocked.Exchange(ref _tickCount, 0);
         }
 
-        Refresh();
+        try
+        {
+            await RefreshAsync(_refreshCts.Token);
+        }
+        catch (ObjectDisposedException)
+        {
+            // safe to ignore
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(LOGGER_CATEGORY_PLUGIN, "Refresh error - report to developer.", ex);
+        }
     }
 
-    private void Refresh()
+    private async Task RefreshAsync(CancellationToken cancellationToken)
     {
-        bool lockTaken = false;
+        bool canRefresh;
 
         try
         {
-            Monitor.TryEnter(_timerLock, 100, ref lockTaken);
-            if (lockTaken)
+            canRefresh = await _refreshSemaphore.WaitAsync(0, cancellationToken).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException)
+        {
+            return;
+        }
+
+        if (canRefresh)
+        {
+            try
             {
                 _logger.Flush();
 
+                var tasks = new List<Task>(_devices.Count);
+
                 foreach (var device in _devices)
                 {
-                    try
+                    var task = Task.Run(() =>
                     {
-                        device.Refresh();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.Error(device.Name, $"An error occurred refreshing device '{device.Name}' ({device.UniqueId})", ex);
-                    }
+                        try
+                        {
+                            device.Refresh();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.Error(device.Name, $"An error occurred refreshing device '{device.Name}' ({device.UniqueId})", ex);
+                        }
+                    });
+
+                    tasks.Add(task);
                 }
+
+                await Task.WhenAll(tasks);
 
                 ResetRefreshSkipCounterState();
                 _logger.Flush();
             }
-        }
-        finally
-        {
-            if (lockTaken)
+            finally
             {
-                Monitor.Exit(_timerLock);
+                _refreshSemaphore.Release();
             }
         }
-
-        if (!lockTaken)
+        else
         {
             _logger.Warning(LOGGER_CATEGORY_PLUGIN, "Refresh skipped - refresh already in progress.");
             TryShowMultipleRefreshSkipsDetectedErrorDialog();
@@ -203,6 +228,8 @@ public sealed class CorsairLinkPlugin : IPlugin
             return;
         }
 
+        _refreshCts.Cancel();
+        _refreshCts.Dispose();
         _timer.Enabled = false;
 
         foreach (var device in _devices)
@@ -221,6 +248,7 @@ public sealed class CorsairLinkPlugin : IPlugin
             CloseImpl();
         }
 
+        _refreshCts = new CancellationTokenSource();
         _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion}");
 
         var initializedDevices = new List<IDevice>();
