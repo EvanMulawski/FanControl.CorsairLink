@@ -138,4 +138,33 @@ public static class Utils
 
         return sb.ToString();
     }
+
+    public static IEnumerable<T[]> Chunk<T>(this IEnumerable<T> source, int chunkSize)
+    {
+        if (chunkSize <= 0)
+        {
+            throw new ArgumentException("Chunk size must be greater than zero.", nameof(chunkSize));
+        }
+
+        T[] currentChunk = new T[chunkSize];
+        int currentIndex = 0;
+
+        foreach (T item in source)
+        {
+            currentChunk[currentIndex++] = item;
+
+            if (currentIndex == chunkSize)
+            {
+                yield return currentChunk;
+                currentChunk = new T[chunkSize];
+                currentIndex = 0;
+            }
+        }
+
+        if (currentIndex > 0)
+        {
+            Array.Resize(ref currentChunk, currentIndex);
+            yield return currentChunk;
+        }
+    }
 }

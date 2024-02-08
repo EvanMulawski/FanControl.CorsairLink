@@ -36,7 +36,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
     private readonly uint _fanCount;
-    private readonly bool _sendLedPaletteIndex2Packet;
+    private readonly bool _sendOnlyFirstLightingIndexPacket;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -47,6 +47,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private bool _rebootRequested;
     private bool _firstWrite = true;
+    private bool _resetEnableDirectLightingOnNextRefresh;
 
     public HydroPlatinumDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, HydroPlatinumDeviceOptions options, ILogger logger)
         : base(logger)
@@ -60,7 +61,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         UniqueId = deviceInfo.DevicePath;
 
         _fanCount = options.FanChannelCount;
-        _sendLedPaletteIndex2Packet = !(deviceInfo.ProductId == 0x0c22 || deviceInfo.ProductId == 0x0c2f);
+        _sendOnlyFirstLightingIndexPacket = deviceInfo.ProductId is 0x0c22 or 0x0c2f;
     }
 
     public override string UniqueId { get; }
@@ -79,6 +80,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         if (opened)
         {
             _rebootManager.RebootRequired += RebootManager_RebootRequired;
+            _rebootManager.RebootSuccessful += RebootManager_RebootSuccessful;
             Initialize();
             return true;
         }
@@ -94,6 +96,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
     public override void Disconnect()
     {
         _rebootManager.RebootRequired -= RebootManager_RebootRequired;
+        _rebootManager.RebootSuccessful -= RebootManager_RebootSuccessful;
         _device.Close();
     }
 
@@ -110,6 +113,11 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private void Initialize()
     {
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            ResetEnableDirectLighting();
+        }
+
         _requestedChannelPower.Clear();
         SetChannelPower(PUMP_CHANNEL, DEFAULT_SPEED_CHANNEL_POWER);
         _speedSensors[PUMP_CHANNEL] = new SpeedSensor("Pump", PUMP_CHANNEL, default, supportsControl: true);
@@ -129,6 +137,12 @@ public sealed class HydroPlatinumDevice : DeviceBase
             State state;
             using (_guardManager.AwaitExclusiveAccess())
             {
+                if (_resetEnableDirectLightingOnNextRefresh)
+                {
+                    ResetEnableDirectLighting();
+                    _resetEnableDirectLightingOnNextRefresh = false;
+                }
+
                 state = ReadState();
                 WriteCooling();
             }
@@ -328,7 +342,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         SendWriteOnlyCommand(command, CreateCoolingCommand(data));
     }
 
-    internal static ReadOnlySpan<byte> CreateCommand(byte command, byte sequenceNumber, ReadOnlySpan<byte> data)
+    internal static ReadOnlySpan<byte> CreateCommand(byte command, byte sequenceNumber, ReadOnlySpan<byte> data, byte fill = 0xff)
     {
         // [0] = 0x00
         // [1] = 0x3f (63, XMCPayloadLength)
@@ -337,7 +351,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         // [-1] = CRC byte
 
         var writeBuf = new byte[REQUEST_LENGTH];
-        writeBuf.AsSpan(1).Fill(0xff);
+        writeBuf.AsSpan(1).Fill(fill);
         writeBuf[1] = DEVICE_PAYLOAD_LENGTH;
 
         // sequence number does not have to change for write to succeed
@@ -483,6 +497,12 @@ public sealed class HydroPlatinumDevice : DeviceBase
         RebootDevice();
     }
 
+    private void RebootManager_RebootSuccessful(object sender, EventArgs e)
+    {
+        // after device reboots, lighting might not be in direct mode for some zones
+        _resetEnableDirectLightingOnNextRefresh = true;
+    }
+
     private void RebootDevice()
     {
         bool RebootImpl()
@@ -499,7 +519,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
                     rebootData.CopyTo(rebootPacket, 2);
                     try
                     {
-                        _device.WriteDirect(rebootPacket);
+                        WriteDirect(rebootPacket);
                     }
                     catch
                     {
@@ -512,7 +532,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
                     _device.Close();
 
                     LogInfo("Waiting to reopen device");
-                    Thread.Sleep(DEVICE_POST_REBOOT_WAIT_MS);
+                    Utils.SyncWait(DEVICE_POST_REBOOT_WAIT_MS);
 
                     LogInfo("Opening device");
                     var (opened, ex) = _device.Open();
@@ -530,11 +550,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
                     _ = ReadState();
                     LogInfo("Device reboot successful");
 
-                    // after device reboots, lighting might not be in direct mode for some zones
-                    LogInfo("Enabling direct lighting");
-                    EnableDirectLighting();
-                    LogInfo("Enabled direct lighting");
-
                     return true;
                 }
                 catch (Exception ex)
@@ -544,19 +559,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
                     return false;
                 }
-            }
-        }
-
-        void EnableDirectLighting()
-        {
-            var directLedPacket = CreateCommand(0x01, _sequenceCounter.Next(), ENABLE_DIRECT_LED_PACKET_DATA).ToArray();
-            _device.WriteDirect(directLedPacket);
-            var ledPaletteIndexPacket1 = CreateCommand(0x02, _sequenceCounter.Next(), LED_PALETTE_INDEX_PACKET_1_DATA).ToArray();
-            _device.WriteDirect(directLedPacket);
-            if (_sendLedPaletteIndex2Packet)
-            {
-                var ledPaletteIndexPacket2 = CreateCommand(0x03, _sequenceCounter.Next(), LED_PALETTE_INDEX_PACKET_2_DATA).ToArray();
-                _device.WriteDirect(directLedPacket);
             }
         }
 
@@ -572,6 +574,10 @@ public sealed class HydroPlatinumDevice : DeviceBase
                 {
                     _rebootManager.NotifyRebootFailure();
                 }
+                else
+                {
+                    _rebootManager.NotifyRebootSuccess();
+                }
             }
             else
             {
@@ -586,6 +592,85 @@ public sealed class HydroPlatinumDevice : DeviceBase
                 Monitor.Exit(_refreshLock);
             }
         }
+    }
+
+    private void ResetEnableDirectLighting()
+    {
+        LogInfo("Reset direct lighting START");
+
+        try
+        {
+            var directLedPacketData = new byte[DIRECT_LED_PACKET_DATA.Length];
+            DIRECT_LED_PACKET_DATA.CopyTo(directLedPacketData, 0);
+
+            // disable
+            var directLedPacketDisable = CreateCommand(0x01, _sequenceCounter.Next(), directLedPacketData).ToArray();
+            WriteDirect(directLedPacketDisable);
+            Utils.SyncWait(50);
+
+            // indexes
+            var indexData = CreateDefaultLightingIndexData().Chunk(40).ToList();
+            for (int i = 0; i < indexData.Count; i++)
+            {
+                var packet = CreateCommand((byte)(0x02 + i), _sequenceCounter.Next(), indexData[i], 0x00).ToArray();
+                WriteDirect(packet);
+                Utils.SyncWait(50);
+
+                if (_sendOnlyFirstLightingIndexPacket)
+                {
+                    break;
+                }
+            }
+
+            // colors
+            var colorData = CreateDefaultLightingColorData().Chunk(3 * 20).ToList();
+            for (int i = 0; i < colorData.Count; i++)
+            {
+                var packet = CreateCommand((byte)(0x04 + i), _sequenceCounter.Next(), colorData[i], 0x00).ToArray();
+                WriteDirect(packet);
+                Utils.SyncWait(50);
+            }
+
+            // enable
+            directLedPacketData[0] = 0x01;
+            directLedPacketData[50] = 0xff;
+            var directLedPacketEnable = CreateCommand(0x01, _sequenceCounter.Next(), directLedPacketData).ToArray();
+            WriteDirect(directLedPacketEnable);
+            Utils.SyncWait(50);
+
+            LogInfo("Reset direct lighting OK");
+        }
+        catch (Exception ex)
+        {
+            LogWarning("Reset direct lighting FAILED");
+            LogWarning(ex);
+        }
+    }
+
+    private void WriteDirect(byte[] packet)
+    {
+        LogDebug($"WRITE_DIRECT: {packet.ToHexString()}");
+        _device.WriteDirect(packet);
+    }
+
+    private byte[] CreateDefaultLightingIndexData()
+    {
+        var data = new byte[80];
+        for (int i = 0; i < data.Length; i++)
+        {
+            data[i] = (byte)i;
+        }
+        return data;
+    }
+
+    private byte[] CreateDefaultLightingColorData()
+    {
+        var data = new byte[80];
+        for (int i = 0; i < data.Length; i++)
+        {
+            data[i] = 0xff;
+        }
+        return data;
     }
 
     internal static byte GenerateChecksum(ReadOnlySpan<byte> data)
@@ -914,8 +999,8 @@ public sealed class HydroPlatinumDevice : DeviceBase
         243,
     ];
 
-    private static readonly byte[] ENABLE_DIRECT_LED_PACKET_DATA = [
-        0x01, // enable = 0x01, disable = 0x00
+    private static readonly byte[] DIRECT_LED_PACKET_DATA = [
+        0x00, // 0x00 = disable, 0x01 = enable
         0x01,
         0xff,
         0xff,
@@ -934,7 +1019,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         0x7f,
         0x7f,
         0x7f,
-        0xff,
+        0x7f,
         0x00,
         0xff,
         0xff,
@@ -965,134 +1050,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         0xff,
         0xff,
         0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-    ];
-
-    private static readonly byte[] LED_PALETTE_INDEX_PACKET_1_DATA = [
-        0x00,
-        0x01,
-        0x02,
-        0x03,
-        0x04,
-        0x05,
-        0x06,
-        0x07,
-        0x08,
-        0x09,
-        0x0a,
-        0x0b,
-        0x0c,
-        0x0d,
-        0x0e,
-        0x0f,
-        0x10,
-        0x11,
-        0x12,
-        0x13,
-        0x14,
-        0x15,
-        0x16,
-        0x17,
-        0x18,
-        0x19,
-        0x1a,
-        0x1b,
-        0x1c,
-        0x1d,
-        0x1e,
-        0x1f,
-        0x20,
-        0x21,
-        0x22,
-        0x23,
-        0x24,
-        0x25,
-        0x26,
-        0x27,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-    ];
-
-    private static readonly byte[] LED_PALETTE_INDEX_PACKET_2_DATA = [
-        0x28,
-        0x29,
-        0x2a,
-        0x2b,
-        0x2c,
-        0x2d,
-        0x2e,
-        0x2f,
-        0x30,
-        0x31,
-        0x32,
-        0x33,
-        0x34,
-        0x35,
-        0x36,
-        0x37,
-        0x38,
-        0x39,
-        0x3a,
-        0x3b,
-        0x3c,
-        0x3d,
-        0x3e,
-        0x3f,
-        0x40,
-        0x41,
-        0x42,
-        0x43,
-        0x44,
-        0x45,
-        0x46,
-        0x47,
-        0x48,
-        0x49,
-        0x4a,
-        0x4b,
-        0x4c,
-        0x4d,
-        0x4e,
-        0x4f,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
+        0x00, // brightness: 0x00 = off, 0xff = 100%
         0xff,
         0xff,
         0xff,

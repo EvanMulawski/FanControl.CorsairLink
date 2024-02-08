@@ -8,6 +8,7 @@ internal sealed class RebootManager
     private bool _canFire = true;
 
     public event EventHandler? RebootRequired;
+    public event EventHandler? RebootSuccessful;
 
     public RebootManager(int maxReadFailuresBeforeReboot)
     {
@@ -33,6 +34,11 @@ internal sealed class RebootManager
     public void NotifyRebootFailure()
     {
         _canFire = true;
+    }
+
+    public void NotifyRebootSuccess()
+    {
+        RebootSuccessful?.Invoke(this, EventArgs.Empty);
     }
 
     internal void TriggerReboot()
