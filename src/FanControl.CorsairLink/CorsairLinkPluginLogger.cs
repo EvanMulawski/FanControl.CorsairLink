@@ -119,7 +119,10 @@ internal sealed class CorsairLinkPluginLogger : ILogger
                         sb.Append(log);
                     }
 
-                    File.AppendAllText(_logFileName, sb.ToString(), Encoding.UTF8);
+                    if (sb.Length > 0)
+                    {
+                        File.AppendAllText(_logFileName, sb.ToString(), Encoding.UTF8);
+                    }
                 }
                 else
                 {
