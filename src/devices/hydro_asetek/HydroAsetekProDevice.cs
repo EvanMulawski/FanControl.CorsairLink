@@ -23,12 +23,12 @@ public sealed class HydroAsetekProDevice : DeviceBase
     private const byte PERCENT_MAX = 100;
     private const int PUMP_CHANNEL = -1;
     private const byte FAN_CURVE_MAX_TEMP = 60;
-    private const string SAFETY_PROFILE_OVERRIDE_FLAG = "FANCONTROL_CORSAIRLINK_HYDRO_ASETEK_PRO_SAFETY_PROFILE_OVERRIDE_ENABLED";
 
     private readonly IAsetekDeviceProxy _device;
     private readonly AsetekDeviceInfo _deviceInfo;
     private readonly IDeviceGuardManager _guardManager;
     private readonly uint _fanCount;
+    private readonly bool _canSetSafetyProfile;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -40,6 +40,7 @@ public sealed class HydroAsetekProDevice : DeviceBase
         _deviceInfo = device.GetDeviceInfo();
         _guardManager = guardManager;
         _fanCount = options.FanChannelCount;
+        _canSetSafetyProfile = options.OverrideSafetyProfile ?? HydroAsetekProDeviceOptions.OverrideSafetyProfileDefault;
 
         UniqueId = _deviceInfo.DevicePath;
         Name = $"{_deviceInfo.ProductName} ({Utils.ToMD5HexString(UniqueId)})";
@@ -112,10 +113,9 @@ public sealed class HydroAsetekProDevice : DeviceBase
     {
         LogDebug("OverrideSafetyProfile");
 
-        var canSetSafetyProfile = Utils.GetEnvironmentFlag(SAFETY_PROFILE_OVERRIDE_FLAG);
-        if (!canSetSafetyProfile)
+        if (!_canSetSafetyProfile)
         {
-            LogWarning($"Skipping safety profile override. Device may not function as expected. To override the safety profile, set the {SAFETY_PROFILE_OVERRIDE_FLAG} environment variable to 1 and restart Fan Control.");
+            LogWarning($"Skipping safety profile override. Device may not function as expected.");
             return;
         }
 
