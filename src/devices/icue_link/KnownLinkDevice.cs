@@ -20,6 +20,7 @@ public enum LinkDeviceType : byte
 {
     Fan = 0x01,
     LiquidCooler = 0x07,
+    WaterBlock = 0x09,
 }
 
 [Flags]

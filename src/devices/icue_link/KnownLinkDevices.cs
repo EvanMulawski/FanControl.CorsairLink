@@ -2,7 +2,7 @@
 
 public static class KnownLinkDevices
 {
-    private static readonly List<KnownLinkDevice> _devices = new();
+    private static readonly List<KnownLinkDevice> _devices = [];
     private static readonly Dictionary<LinkDeviceType, Dictionary<byte, KnownLinkDevice>> _deviceLookup;
 
     static KnownLinkDevices()
@@ -14,6 +14,8 @@ public static class KnownLinkDevices
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x03, "H170i", LinkDeviceFlags.All)); // black
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x04, "H100i", LinkDeviceFlags.All)); // white
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x05, "H150i", LinkDeviceFlags.All)); // white
+        _devices.Add(new KnownLinkDevice(LinkDeviceType.WaterBlock, 0x00, "XC7", LinkDeviceFlags.ReportsTemperature)); // stealth gray
+        _devices.Add(new KnownLinkDevice(LinkDeviceType.WaterBlock, 0x01, "XC7", LinkDeviceFlags.ReportsTemperature)); // white
 
         _deviceLookup = InitializeDeviceLookup();
     }
@@ -35,7 +37,7 @@ public static class KnownLinkDevices
         {
             if (!lookup.ContainsKey(device.Type))
             {
-                lookup[device.Type] = new Dictionary<byte, KnownLinkDevice>();
+                lookup[device.Type] = [];
             }
 
             lookup[device.Type][device.Model] = device;

@@ -1,4 +1,6 @@
-﻿namespace CorsairLink.Tests;
+﻿using CorsairLink.Devices.ICueLink;
+
+namespace CorsairLink.Tests;
 
 internal static class TestUtils
 {
@@ -16,5 +18,10 @@ internal static class TestUtils
         }
 
         return bytes;
+    }
+
+    public static LinkHubConnectedDevice OnChannel(this IEnumerable<LinkHubConnectedDevice> source, int channel)
+    {
+        return source.Single(x => x.Channel == channel);
     }
 }
