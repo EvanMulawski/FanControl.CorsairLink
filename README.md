@@ -107,7 +107,7 @@ This project is under active development, with frequent Beta releases that addre
    | Activate   | 58°C | 100%     |
    | Deactivate | 57°C | -        |
 
-10. As of v1.4.3, the minimum pump power is 50% (regardless of the requested power in Fan Control) to prevent a "pump failure" state and noise/resonance that may occur due to low pump RPM. Additionally, the default pump power is 100%.
+10. As of v1.4.3, the minimum pump power is 50% (regardless of the requested power in Fan Control) to prevent a "pump failure" state and noise/resonance that may occur due to low pump RPM. Additionally, the default pump power is 100%. As of v1.6.0, the default minimum pump power is 50% but users may override this by setting the `FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY` environment variable to the desired minimum pump power (a value between `0` and `100`).
 
 ### iCUE LINK Support
 
@@ -127,7 +127,7 @@ Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices ar
 
 Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/FanControl.CorsairLink/issues) and provide a USB packet capture.
 
-1. The minimum pump power is 50% (regardless of the requested power in Fan Control). As a result, Fan Control's automatic control-sensor pairing may fail for these devices and the sensor must be paired manually.
+1. The minimum pump power is 50% (regardless of the requested power in Fan Control). As a result, Fan Control's automatic control-sensor pairing may fail for these devices and the sensor must be paired manually. As of v1.6.0, the default minimum pump power is 50% but users may override this by setting the `FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY` environment variable to the desired minimum pump power (a value between `0` and `100`).
 
 ## Installation
 
