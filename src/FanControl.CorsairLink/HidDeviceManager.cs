@@ -30,7 +30,10 @@ public static class HidDeviceManager
             .Select(x => new CommanderProDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.ICueLinkHub)
-            .Select(x => new ICueLinkHubDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+            .Select(x => new ICueLinkHubDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new ICueLinkHubDeviceOptions
+            {
+                MinimumPumpPower = globalMinimumPumpPowerValue,
+            }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCore)
             .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions

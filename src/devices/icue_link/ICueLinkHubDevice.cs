@@ -36,7 +36,6 @@ public sealed class ICueLinkHubDevice : DeviceBase
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const int DEFAULT_SPEED_CHANNEL_POWER_PUMP = 100;
     private const byte PERCENT_MIN = 0;
-    private const byte PERCENT_MIN_PUMP = 50;
     private const byte PERCENT_MAX = 100;
     private const int SEND_COMMAND_WAIT_FOR_DATA_TYPE_READ_TIMEOUT_MS = 500;
     private const int PACKET_SIZE = 512;
@@ -44,12 +43,13 @@ public sealed class ICueLinkHubDevice : DeviceBase
 
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
+    private readonly byte _pumpPowerMinimum;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
     private readonly Dictionary<int, (LinkHubConnectedDevice HubDevice, KnownLinkDevice KnownDevice)> _channels = new();
 
-    public ICueLinkHubDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
+    public ICueLinkHubDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ICueLinkHubDeviceOptions options, ILogger logger)
         : base(logger)
     {
         _device = device;
@@ -58,6 +58,8 @@ public sealed class ICueLinkHubDevice : DeviceBase
         var deviceInfo = device.GetDeviceInfo();
         Name = $"{deviceInfo.ProductName} ({deviceInfo.SerialNumber})";
         UniqueId = deviceInfo.DevicePath;
+
+        _pumpPowerMinimum = (byte)Utils.Clamp(options.MinimumPumpPower ?? ICueLinkHubDeviceOptions.MinimumPumpPowerDefault, PERCENT_MIN, PERCENT_MAX);
     }
 
     public override string UniqueId { get; }
@@ -169,7 +171,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         var clampMin = PERCENT_MIN;
         if (_channels[channel].KnownDevice.Type == LinkDeviceType.LiquidCooler)
         {
-            clampMin = PERCENT_MIN_PUMP;
+            clampMin = _pumpPowerMinimum;
         }
 
         _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, clampMin, PERCENT_MAX);
