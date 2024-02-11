@@ -22,6 +22,8 @@ public static class HidDeviceManager
             .ToList();
         logger.LogDevices(supportedDevices, "supported Corsair HID device(s)");
 
+        var globalMinimumPumpPowerValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY");
+
         var collection = new List<IDevice>();
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderPro)
@@ -31,13 +33,18 @@ public static class HidDeviceManager
             .Select(x => new ICueLinkHubDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCore)
-            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions { IsFirstChannelExt = false }, logger)));
+            .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions
+            {
+                IsFirstChannelExt = false,
+                MinimumPumpPower = globalMinimumPumpPowerValue,
+            }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CommanderCoreWithDesignatedPump)
             .Select(x => new CommanderCoreDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new CommanderCoreDeviceOptions
             {
                 IsFirstChannelExt = true,
                 PacketSize = x.ProductID == HardwareIds.CorsairCommanderCoreProductId ? 96 : null,
+                MinimumPumpPower = globalMinimumPumpPowerValue,
             }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroPlatinum2Fan)

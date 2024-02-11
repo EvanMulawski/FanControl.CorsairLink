@@ -37,7 +37,6 @@ public sealed class CommanderCoreDevice : DeviceBase
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const int DEFAULT_SPEED_CHANNEL_POWER_PUMP = 100;
     private const byte PERCENT_MIN = 0;
-    private const byte PERCENT_MIN_PUMP = 50;
     private const byte PERCENT_MAX = 100;
     private const int SEND_COMMAND_WAIT_FOR_DATA_TYPE_READ_TIMEOUT_MS = 500;
     private const int PUMP_CHANNEL = 0;
@@ -47,6 +46,7 @@ public sealed class CommanderCoreDevice : DeviceBase
     private byte _speedChannelCount;
     private readonly bool _firstChannelExt;
     private readonly int _packetSize;
+    private readonly byte _pumpPowerMinimum;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -63,6 +63,7 @@ public sealed class CommanderCoreDevice : DeviceBase
 
         _firstChannelExt = options.IsFirstChannelExt ?? CommanderCoreDeviceOptions.IsFirstChannelExtDefault;
         _packetSize = options.PacketSize ?? CommanderCoreDeviceOptions.PacketSizeDefault;
+        _pumpPowerMinimum = (byte)Utils.Clamp(options.MinimumPumpPower ?? CommanderCoreDeviceOptions.MinimumPumpPowerDefault, PERCENT_MIN, PERCENT_MAX);
     }
 
     public override string UniqueId { get; }
@@ -145,7 +146,7 @@ public sealed class CommanderCoreDevice : DeviceBase
         var clampMin = PERCENT_MIN;
         if (_firstChannelExt && channel == PUMP_CHANNEL)
         {
-            clampMin = PERCENT_MIN_PUMP;
+            clampMin = _pumpPowerMinimum;
         }
 
         _requestedChannelPower[channel] = (byte)Utils.Clamp(percent, clampMin, PERCENT_MAX);

@@ -54,14 +54,26 @@ public static class Utils
         return mantissa * (float)Math.Pow(2, exponent);
     }
 
-    public static bool GetEnvironmentFlag(string flagName)
+    private static string? GetEnvironmentVariable(string name)
     {
-        var variableValue = Environment.GetEnvironmentVariable(flagName);
+        var variableValue = Environment.GetEnvironmentVariable(name);
         if (string.IsNullOrEmpty(variableValue))
         {
-            variableValue = Environment.GetEnvironmentVariable(flagName, EnvironmentVariableTarget.Machine);
+            variableValue = Environment.GetEnvironmentVariable(name, EnvironmentVariableTarget.Machine);
         }
-        return !string.IsNullOrEmpty(variableValue) && (variableValue.ToLower() == "true" || variableValue == "1");
+        return variableValue;
+    }
+
+    public static bool GetEnvironmentFlag(string name)
+    {
+        var value = GetEnvironmentVariable(name);
+        return !string.IsNullOrEmpty(value) && (value?.ToLower() == "true" || value == "1");
+    }
+
+    public static int? GetEnvironmentInt32(string name)
+    {
+        var value = GetEnvironmentVariable(name);
+        return int.TryParse(value, out int result) ? result : null;
     }
 
     public static void SyncWait(int milliseconds)
