@@ -7,7 +7,7 @@ public static class KnownLinkDevices
 
     static KnownLinkDevices()
     {
-        _devices.Add(new KnownLinkDevice(LinkDeviceType.Fan, 0x00, "QX Fan", LinkDeviceFlags.All));
+        _devices.Add(new KnownLinkDevice(LinkDeviceType.FanQxSeries, 0x00, "QX Fan", LinkDeviceFlags.All));
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x00, "H100i", LinkDeviceFlags.All)); // black
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x01, "H115i", LinkDeviceFlags.All)); // black
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x02, "H150i", LinkDeviceFlags.All)); // black
@@ -16,6 +16,7 @@ public static class KnownLinkDevices
         _devices.Add(new KnownLinkDevice(LinkDeviceType.LiquidCooler, 0x05, "H150i", LinkDeviceFlags.All)); // white
         _devices.Add(new KnownLinkDevice(LinkDeviceType.WaterBlock, 0x00, "XC7", LinkDeviceFlags.ReportsTemperature)); // stealth gray
         _devices.Add(new KnownLinkDevice(LinkDeviceType.WaterBlock, 0x01, "XC7", LinkDeviceFlags.ReportsTemperature)); // white
+        _devices.Add(new KnownLinkDevice(LinkDeviceType.FanRxSeries, 0x00, "RX Fan", LinkDeviceFlags.ControlsSpeed | LinkDeviceFlags.ReportsSpeed));
 
         _deviceLookup = InitializeDeviceLookup();
     }

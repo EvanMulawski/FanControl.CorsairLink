@@ -115,6 +115,7 @@ Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices ar
 
 | Device             | Type Code | Model Code | Status       | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
 | ------------------ | --------- | ---------- | ------------ | ----------------- | ------------------ | ---------------- |
+| RX Fan             | `13`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
 | QX Fan             | `01`      | `00`       | Full Support | ✅                | ✅                 | ✅               |
 | H100i (Black)      | `07`      | `00`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
 | H115i (Black)      | `07`      | `01`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
