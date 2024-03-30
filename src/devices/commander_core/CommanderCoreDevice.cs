@@ -7,7 +7,10 @@ public sealed class CommanderCoreDevice : DeviceBase
 {
     private static class Commands
     {
-        private const byte HANDLE_ID = 0x01;
+        // This device family supports custom communication handles.
+        // Claim use of the 0xfc (236) handle.
+        // Note to other developers reading this: choose a different handle.
+        private const byte HANDLE_ID = 0xfc;
 
         public static ReadOnlySpan<byte> EnterSoftwareMode => new byte[] { 0x01, 0x03, 0x00, 0x02 };
         public static ReadOnlySpan<byte> EnterHardwareMode => new byte[] { 0x01, 0x03, 0x00, 0x01 };
