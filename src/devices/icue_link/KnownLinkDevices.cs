@@ -17,6 +17,7 @@ public static class KnownLinkDevices
         _devices.Add(new KnownLinkDevice(LinkDeviceType.WaterBlock, 0x00, "XC7", LinkDeviceFlags.ReportsTemperature)); // stealth gray
         _devices.Add(new KnownLinkDevice(LinkDeviceType.WaterBlock, 0x01, "XC7", LinkDeviceFlags.ReportsTemperature)); // white
         _devices.Add(new KnownLinkDevice(LinkDeviceType.FanRxSeries, 0x00, "RX Fan", LinkDeviceFlags.ControlsSpeed | LinkDeviceFlags.ReportsSpeed));
+        _devices.Add(new KnownLinkDevice(LinkDeviceType.FanRxRgbSeries, 0x00, "RX RGB Fan", LinkDeviceFlags.ControlsSpeed | LinkDeviceFlags.ReportsSpeed));
 
         _deviceLookup = InitializeDeviceLookup();
     }
