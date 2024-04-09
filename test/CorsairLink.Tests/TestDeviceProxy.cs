@@ -24,6 +24,11 @@
             return new HidDeviceInfo("\\\\test", 0, 0, "Test", "1234567890");
         }
 
+        public void OnReconnect(Action? reconnectAction)
+        {
+
+        }
+
         public (bool Opened, Exception? Exception) Open()
         {
             return (true, default);

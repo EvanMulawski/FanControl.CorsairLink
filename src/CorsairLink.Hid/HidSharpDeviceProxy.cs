@@ -1,4 +1,5 @@
 ﻿using HidSharp;
+using System.ComponentModel;
 
 namespace CorsairLink.Hid;
 
@@ -9,6 +10,7 @@ public sealed class HidSharpDeviceProxy : IHidDeviceProxy
 
     private readonly HidDevice _device;
     private HidStream? _stream;
+    private Action? _reconnectAction;
 
     public HidSharpDeviceProxy(HidDevice device)
     {
@@ -51,26 +53,63 @@ public sealed class HidSharpDeviceProxy : IHidDeviceProxy
         }
     }
 
+    public void OnReconnect(Action? reconnectAction)
+    {
+        _reconnectAction = reconnectAction;
+    }
+
+    private void ExecuteWithReconnect(Action<HidStream, byte[]> streamAction, ref HidStream stream, byte[] buffer)
+    {
+        try
+        {
+            streamAction(stream, buffer);
+        }
+        catch (IOException ex) when (ex.InnerException is Win32Exception w32 && w32.ErrorCode == 0x0000048F)
+        {
+            var reopenResult = Open();
+            if (!reopenResult.Opened)
+            {
+                throw;
+            }
+
+            _reconnectAction?.Invoke();
+            streamAction(stream, buffer);
+        }
+    }
+
     public void Read(byte[] buffer)
     {
         ThrowIfNotReady();
+        ExecuteWithReconnect(ReadInternal, ref _stream!, buffer);
+    }
 
-        _stream?.Read(buffer, 0, buffer.Length);
+    private static void ReadInternal(HidStream stream, byte[] buffer)
+    {
+        stream.Read(buffer, 0, buffer.Length);
+    }
+
+    [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0060:Remove unused parameter", Justification = "Signature needed for generic execution/retry wrapper")]
+    private static void ReadAnyInternal(HidStream stream, byte[] buffer)
+    {
+        _ = stream.Read();
     }
 
     public void Write(byte[] buffer)
     {
         ThrowIfNotReady();
-
         ClearEnqueuedReports();
-        _stream?.Write(buffer, 0, buffer.Length);
+        ExecuteWithReconnect(WriteInternal, ref _stream!, buffer);
     }
 
     public void WriteDirect(byte[] buffer)
     {
         ThrowIfNotReady();
+        ExecuteWithReconnect(WriteInternal, ref _stream!, buffer);
+    }
 
-        _stream?.Write(buffer, 0, buffer.Length);
+    private static void WriteInternal(HidStream stream, byte[] buffer)
+    {
+        stream.Write(buffer, 0, buffer.Length);
     }
 
     public void ClearEnqueuedReports()
@@ -84,7 +123,7 @@ public sealed class HidSharpDeviceProxy : IHidDeviceProxy
         {
             while (true)
             {
-                _ = _stream.Read();
+                ExecuteWithReconnect(ReadAnyInternal, ref _stream!, null!);
             }
         }
         catch (TimeoutException)
