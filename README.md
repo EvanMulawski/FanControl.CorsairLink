@@ -124,8 +124,8 @@ Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices ar
 | H150i (White)      | `07`      | `05`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
 | XC7 (Stealth Gray) | `09`      | `00`       | Full Support | n/a               | n/a                | ✅               |
 | XC7 (White)        | `09`      | `01`       | Full Support | n/a               | n/a                | ✅               |
+| RX RGB Fan         | `0f`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
 | RX Fan             | `13`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
-| RX RGB Fan         | `15`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
 
 Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/FanControl.CorsairLink/issues) and provide a USB packet capture.
 
