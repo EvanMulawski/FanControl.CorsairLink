@@ -44,6 +44,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
     private readonly IHidDeviceProxy _device;
     private readonly IDeviceGuardManager _guardManager;
     private readonly byte _pumpPowerMinimum;
+    private bool _isChangingDeviceMode;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -78,6 +79,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         if (opened)
         {
             Initialize();
+            _device.OnReconnect(() => _ = TryChangeDeviceMode());
             return true;
         }
 
@@ -89,6 +91,25 @@ public sealed class ICueLinkHubDevice : DeviceBase
         return false;
     }
 
+    private bool TryChangeDeviceMode()
+    {
+        if (_isChangingDeviceMode)
+        {
+            LogWarning("Device mode change requested during device mode change.");
+            return false;
+        }
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            _isChangingDeviceMode = true;
+            LogInfo("Changing device mode to software-controlled");
+            SendCommand(Commands.EnterSoftwareMode);
+            _isChangingDeviceMode = false;
+        }
+
+        return true;
+    }
+
     private void Initialize()
     {
         if (CanLogDebug)
@@ -97,11 +118,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
             LogDebug($"FW: {fw}");
         }
 
-        using (_guardManager.AwaitExclusiveAccess())
-        {
-            SendCommand(Commands.EnterSoftwareMode);
-        }
-
+        TryChangeDeviceMode();
         RefreshImpl(initialize: true);
     }
 
@@ -375,12 +392,32 @@ public sealed class ICueLinkHubDevice : DeviceBase
             LogDebug($"WRITE: {buffer.ToHexString()}");
         }
 
-        _device.Write(buffer);
+        try
+        {
+            _device.Write(buffer);
+        }
+        catch (TimeoutException)
+        {
+            if (!TryChangeDeviceMode())
+            {
+                throw;
+            }
+        }
     }
 
     private void Read(byte[] buffer)
     {
-        _device.Read(buffer);
+        try
+        {
+            _device.Read(buffer);
+        }
+        catch (TimeoutException)
+        {
+            if (!TryChangeDeviceMode())
+            {
+                throw;
+            }
+        }
 
         if (CanLogDebug)
         {
