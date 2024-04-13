@@ -1,4 +1,6 @@
-﻿using System.Security.Cryptography;
+﻿using System.ComponentModel;
+using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace CorsairLink;
@@ -118,6 +120,18 @@ public static class Utils
         sb.AppendLine($"{GetIndent(indentLevel)}Type: {exception.GetType().FullName}");
         sb.AppendLine($"{GetIndent(indentLevel)}Message: {exception.Message}");
         sb.AppendLine($"{GetIndent(indentLevel)}Source: {exception.Source}");
+        sb.AppendLine($"{GetIndent(indentLevel)}HResult: {exception.HResult}");
+
+        if (exception is ExternalException externalException)
+        {
+            sb.AppendLine($"{GetIndent(indentLevel)}ErrorCode: {externalException.ErrorCode}");
+        }
+
+        if (exception is Win32Exception win32Exception)
+        {
+            sb.AppendLine($"{GetIndent(indentLevel)}NativeErrorCode: {win32Exception.NativeErrorCode}");
+        }
+
         sb.AppendLine($"{GetIndent(indentLevel)}Stack Trace:");
         sb.AppendLine(exception.StackTrace);
 
