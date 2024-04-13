@@ -84,12 +84,14 @@ internal sealed class CorsairLinkPluginLogger : ILogger
         private const string FILE_EXTENSION = ".log";
 
         private readonly string _logFileName;
+        private readonly string _loggerErrorsLogFileName;
         private readonly object _lock = new();
         private readonly ConcurrentQueue<string> _logs = new();
 
         public FileLogger(string logFileName)
         {
             _logFileName = logFileName + FILE_EXTENSION;
+            _loggerErrorsLogFileName = logFileName + nameof(FileLogger) + FILE_EXTENSION;
             var fileInfo = new FileInfo(_logFileName);
             var logFileNumber = 0;
             for (; fileInfo.Exists && fileInfo.Length > MAX_FILE_SIZE; fileInfo = new FileInfo(_logFileName))
@@ -100,7 +102,7 @@ internal sealed class CorsairLinkPluginLogger : ILogger
 
         public void Log(string message)
         {
-            _logs.Enqueue($"{DateTime.UtcNow:O} {message}{Environment.NewLine}");
+            _logs.Enqueue(CreateLogMessage(message));
         }
 
         public void Flush()
@@ -129,6 +131,11 @@ internal sealed class CorsairLinkPluginLogger : ILogger
                     throw new IOException("Unable to flush logs - timeout expired.");
                 }
             }
+            catch (Exception ex)
+            {
+                var errorLog = CreateLogMessage(ex.FormatForLogging());
+                File.AppendAllText(_loggerErrorsLogFileName, errorLog, Encoding.UTF8);
+            }
             finally
             {
                 if (lockTaken)
@@ -136,6 +143,11 @@ internal sealed class CorsairLinkPluginLogger : ILogger
                     Monitor.Exit(_lock);
                 }
             }
+        }
+
+        private static string CreateLogMessage(string message)
+        {
+            return $"{DateTime.UtcNow:O} {message}{Environment.NewLine}";
         }
     }
 }
