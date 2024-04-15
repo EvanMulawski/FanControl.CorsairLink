@@ -9,5 +9,6 @@ public interface IHidDeviceProxy
     void Write(byte[] buffer);
     void WriteDirect(byte[] buffer);
     void Read(byte[] buffer);
+    void GetFeature(byte[] buffer);
     void ClearEnqueuedReports();
 }

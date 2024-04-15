@@ -24,6 +24,11 @@
             return new HidDeviceInfo("\\\\test", 0, 0, "Test", "1234567890");
         }
 
+        public void GetFeature(byte[] buffer)
+        {
+
+        }
+
         public void OnReconnect(Action? reconnectAction)
         {
 

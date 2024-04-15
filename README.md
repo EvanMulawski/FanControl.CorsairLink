@@ -50,6 +50,7 @@ This project is under active development, with frequent Beta releases that addre
 | Hydro H110i GTX                | `0c07`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
 | Hydro H115i Pro                | `0c13`     | HydroAsetekPro | Full Support <sup>1,8,9</sup> | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
 | Hydro H150i Pro                | `0c12`     | HydroAsetekPro | Full Support <sup>1,8,9</sup> | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| XC7 LCD Water Block            | `0c42`     | HidCooling     | Full Support                  | n/a                               | n/a                               | ✅ <sup>5</sup>                   |
 | HX550i                         | `1c03`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX650i                         | `1c04`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX750i                         | `1c05`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |

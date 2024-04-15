@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\src\CorsairLink.Synchronization\CorsairLink.Synchronization.csproj" />
     <ProjectReference Include="..\..\src\devices\commander_core\CorsairLink.Devices.CommanderCore.csproj" />
     <ProjectReference Include="..\..\src\devices\coolit\CorsairLink.Devices.Coolit.csproj" />
+    <ProjectReference Include="..\..\src\devices\hid_cooling\CorsairLink.Devices.HidCooling.csproj" />
     <ProjectReference Include="..\..\src\devices\hydro_asetek\CorsairLink.Devices.HydroAsetek.csproj" />
     <ProjectReference Include="..\..\src\devices\hydro_platinum\CorsairLink.Devices.HydroPlatinum.csproj" />
     <ProjectReference Include="..\..\src\devices\icue_link\CorsairLink.Devices.ICueLink.csproj" />

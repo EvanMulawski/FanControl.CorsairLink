@@ -93,6 +93,30 @@ public static class Utils
         return Encoding.ASCII.GetString(data.TakeWhile(bt => bt != 0).ToArray()).Trim();
     }
 
+    public static string ParseString(ReadOnlySpan<byte> data)
+    {
+        var sb = new StringBuilder();
+
+        foreach (var b in data)
+        {
+            if (b == 0)
+            {
+                break;
+            }
+
+            if (b >= 32 && b <= 126)
+            {
+                sb.Append((char)b);
+            }
+            else
+            {
+                sb.Append('?');
+            }
+        }
+
+        return sb.ToString().Trim();
+    }
+
     public static string ToMD5HexString(string str)
     {
         var hash = MD5.Create().ComputeHash(Encoding.Default.GetBytes(str));

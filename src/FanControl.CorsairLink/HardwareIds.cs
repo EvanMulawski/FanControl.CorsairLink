@@ -35,6 +35,7 @@ public static class HardwareIds
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
     public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
     public static readonly int CorsairICueLinkHubProductId = 0x0c3f;
+    public static readonly int CorsairXc7LcdWaterBlockProductId = 0x0c42;
     public static readonly int CorsairPsuAXiDongleFamilyProductId = 0x1c00;
     public static readonly int CorsairPsuAX1500iProductId = 0x1c02;
     public static readonly int CorsairPsuHX550iProductId = 0x1c03;
@@ -164,6 +165,11 @@ public static class HardwareIds
             CorsairH100iGTv2ProductId,
             CorsairH110iGTv2ProductId,
         };
+
+        public static readonly IReadOnlyCollection<int> Xc7 = new List<int>
+        {
+            CorsairXc7LcdWaterBlockProductId,
+        };
     }
 
     public static IReadOnlyCollection<int> GetSupportedProductIds() =>
@@ -181,5 +187,6 @@ public static class HardwareIds
         .Concat(DeviceDriverGroups.HydroAsetekPro3Fan)
         .Concat(DeviceDriverGroups.HydroAsetekVersion1)
         .Concat(DeviceDriverGroups.HydroAsetekVersion2)
+        .Concat(DeviceDriverGroups.Xc7)
         .ToList();
 }

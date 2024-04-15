@@ -1,4 +1,5 @@
 ﻿using CorsairLink.Devices;
+using CorsairLink.Devices.HidCooling;
 using CorsairLink.Devices.ICueLink;
 using CorsairLink.Hid;
 using HidSharp;
@@ -61,6 +62,9 @@ public static class HidDeviceManager
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HidPowerSupplyUnits)
             .Select(x => new HidPsuDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Xc7)
+            .Select(x => new Xc7LcdWaterBlockDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         return collection;
     }

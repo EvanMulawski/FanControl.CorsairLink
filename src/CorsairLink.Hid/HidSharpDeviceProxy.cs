@@ -136,6 +136,17 @@ public sealed class HidSharpDeviceProxy : IHidDeviceProxy
         }
     }
 
+    public void GetFeature(byte[] buffer)
+    {
+        ThrowIfNotReady();
+        ExecuteWithReconnect(GetFeatureInternal, ref _stream!, buffer);
+    }
+
+    private static void GetFeatureInternal(HidStream stream, byte[] buffer)
+    {
+        stream.GetFeature(buffer, 0, buffer.Length);
+    }
+
     private void ThrowIfNotReady()
     {
         bool @throw;
