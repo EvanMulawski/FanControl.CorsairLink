@@ -170,12 +170,13 @@ This plugin implements a standard global mutex (`Global\CorsairLinkReadWriteGuar
 
 ### Compatibility
 
-| Application  | Compatibility                                                                                                                                    | Notes                                                      |
-| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------- |
-| HWiNFO       | ✅ 5.34+                                                                                                                                         |                                                            |
-| SIV          | ✅ 5.17+                                                                                                                                         |                                                            |
-| SignalRGB    | ✅ Commander PRO/CORE/CORE XT: 2.2.29+, iCUE LINK: 2.3.13+, Hydro Platinum: 2.3.45+                                                              | Commander PRO/CORE/CORE XT, Hydro Platinum, iCUE LINK only |
-| OpenRGB      | ⚠️ 1.0+ (added in [f6723975](https://gitlab.com/CalcProgrammer1/OpenRGB/-/commit/f672397563cc8e1fd6d6e4c7a44a196ae42c11c7/pipelines?ref=master)) | Commander PRO/CORE/CORE XT, Hydro Platinum only            |
-| Corsair iCUE | ❌ ([more info](https://forum.corsair.com/forums/topic/138062-corsair-link-doesnt-work-with-hwinfo64/?do=findComment&comment=824447))            |                                                            |
+| Application      | Compatibility                                                                                                                                            | Notes                                                      |
+| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| HWiNFO           | ✅ 5.34+                                                                                                                                                 |                                                            |
+| SIV              | ✅ 5.17+                                                                                                                                                 |                                                            |
+| SignalRGB        | ✅ Commander PRO/CORE/CORE XT: 2.2.29+, iCUE LINK: 2.3.13+, Hydro Platinum: 2.3.45+                                                                      | Commander PRO/CORE/CORE XT, Hydro Platinum, iCUE LINK only |
+| OpenRGB          | ⚠️ 1.0+ (added in [f6723975](https://gitlab.com/CalcProgrammer1/OpenRGB/-/commit/f672397563cc8e1fd6d6e4c7a44a196ae42c11c7/pipelines?ref=master))         | Commander PRO/CORE/CORE XT, Hydro Platinum only            |
+| Corsair iCUE     | ❌ Not compatible ([more info](https://forum.corsair.com/forums/topic/138062-corsair-link-doesnt-work-with-hwinfo64/?do=findComment&comment=824447))     |                                                            |
+| Citrix Workspace | ❌ Not compatible ([more info](https://help.corsair.com/hc/en-us/articles/14242499752589-iCUE-Device-recognition-issue-with-Citrix-Workspace-installed)) |                                                            |
 
 Note: Any third-party software that properly implements the standard mutex for your devices will likely be compatible.
