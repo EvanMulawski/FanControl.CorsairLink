@@ -433,11 +433,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     private void WriteAndRead(byte[] writeBuffer, byte[] readBuffer)
     {
-        if (CanLogDebug)
-        {
-            LogDebug($"WRITE: {writeBuffer.ToHexString()}");
-        }
-
         Write(writeBuffer);
         _device.Read(readBuffer);
 
