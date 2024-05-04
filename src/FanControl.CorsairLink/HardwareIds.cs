@@ -14,6 +14,7 @@ public static class HardwareIds
     public static readonly int CorsairCommanderProProductId = 0x0c10;
     public static readonly int CorsairHydroH150iProProductId = 0x0c12;
     public static readonly int CorsairHydroH115iProProductId = 0x0c13;
+    public static readonly int CorsairOneProductId = 0x0c14;
     public static readonly int CorsairHydroH100iProProductId = 0x0c15;
     public static readonly int CorsairHydroH80iProProductId = 0x0c16;
     public static readonly int CorsairHydroH115iPlatinumProductId = 0x0c17;
@@ -170,6 +171,11 @@ public static class HardwareIds
         {
             CorsairXc7LcdWaterBlockProductId,
         };
+
+        public static readonly IReadOnlyCollection<int> One = new List<int>
+        {
+            CorsairOneProductId,
+        };
     }
 
     public static IReadOnlyCollection<int> GetSupportedProductIds() =>
@@ -188,5 +194,6 @@ public static class HardwareIds
         .Concat(DeviceDriverGroups.HydroAsetekVersion1)
         .Concat(DeviceDriverGroups.HydroAsetekVersion2)
         .Concat(DeviceDriverGroups.Xc7)
+        .Concat(DeviceDriverGroups.One)
         .ToList();
 }

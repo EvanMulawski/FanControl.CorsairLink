@@ -1,53 +1,38 @@
 ﻿using CorsairLink.Devices.HydroPlatinum;
 using System.Buffers.Binary;
-using System.Text;
 
 namespace CorsairLink.Devices;
 
-public sealed class HydroPlatinumDevice : DeviceBase
+public class HydroPlatinumDevice : DeviceBase
 {
-    internal static class Commands
-    {
-        public static readonly byte IncomingState = 0x00;
-        public static readonly byte Cooling = 0x00;
-        public static readonly byte CoolingThreeFanPacket = 0x03; // H150iXTOutgoingFanPacket
-    }
-
-    internal enum PumpMode : byte
-    {
-        Quiet = 0x00,
-        Balanced = 0x01,
-        Performance = 0x02,
-    }
-
-    private const int REQUEST_LENGTH = 65;
-    private const int RESPONSE_LENGTH = 65;
-    private const int DEVICE_INITIAL_WRITE_DELAY_MS = 60;
-    private const int DEVICE_PAYLOAD_START_IDX = 2;
-    private const byte DEVICE_PAYLOAD_LENGTH = 63;
-    private const byte DEVICE_PAYLOAD_LENGTH_EX_CRC = DEVICE_PAYLOAD_LENGTH - 1;
-    private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
-    private const byte PERCENT_MIN = 0;
-    private const byte PERCENT_MAX = 100;
+    protected const int REQUEST_LENGTH = 65;
+    protected const int RESPONSE_LENGTH = 65;
+    protected const int DEVICE_INITIAL_WRITE_DELAY_MS = 60;
+    protected const int DEVICE_PAYLOAD_START_IDX = 2;
+    protected const byte DEVICE_PAYLOAD_LENGTH = 63;
+    protected const byte DEVICE_PAYLOAD_LENGTH_EX_CRC = DEVICE_PAYLOAD_LENGTH - 1;
+    protected const int DEFAULT_SPEED_CHANNEL_POWER = 50;
+    protected const byte PERCENT_MIN = 0;
+    protected const byte PERCENT_MAX = 100;
     private const int PUMP_CHANNEL = -1;
-    private const int MAX_READ_FAIL_BEFORE_REBOOT = 3;
-    private const int DEVICE_POST_REBOOT_WAIT_MS = 3000;
+    protected const int MAX_READ_FAIL_BEFORE_REBOOT = 3;
+    protected const int DEVICE_POST_REBOOT_WAIT_MS = 3000;
 
-    private readonly IHidDeviceProxy _device;
-    private readonly IDeviceGuardManager _guardManager;
-    private readonly uint _fanCount;
-    private readonly bool _sendOnlyFirstLightingIndexPacket;
-    private readonly ChannelTrackingStore _requestedChannelPower = new();
-    private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
-    private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
-    private readonly SequenceCounter _sequenceCounter = new();
-    private readonly RebootManager _rebootManager = new(MAX_READ_FAIL_BEFORE_REBOOT);
-    private readonly object _refreshLock = new();
-    private readonly DeviceMetrics _deviceMetrics;
+    protected readonly IHidDeviceProxy _device;
+    protected readonly IDeviceGuardManager _guardManager;
+    protected readonly uint _fanCount;
+    protected readonly bool _sendOnlyFirstLightingIndexPacket;
+    protected readonly ChannelTrackingStore _requestedChannelPower = new();
+    protected readonly Dictionary<int, SpeedSensor> _speedSensors = new();
+    protected readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
+    protected readonly SequenceCounter _sequenceCounter = new();
+    protected readonly RebootManager _rebootManager = new(MAX_READ_FAIL_BEFORE_REBOOT);
+    protected readonly object _refreshLock = new();
+    protected readonly DeviceMetrics _deviceMetrics;
 
-    private bool _rebootRequested;
-    private bool _firstWrite = true;
-    private bool _resetEnableDirectLightingOnNextRefresh;
+    protected bool _rebootRequested;
+    protected bool _firstWrite = true;
+    protected bool _resetEnableDirectLightingOnNextRefresh;
 
     public HydroPlatinumDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, HydroPlatinumDeviceOptions options, ILogger logger)
         : base(logger)
@@ -102,7 +87,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override string GetFirmwareVersion()
     {
-        State state;
+        HydroPlatinumDeviceState state;
         using (_guardManager.AwaitExclusiveAccess())
         {
             state = ReadState();
@@ -111,7 +96,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return $"{state.FirmwareVersionMajor}.{state.FirmwareVersionMinor}.{state.FirmwareVersionRevision}";
     }
 
-    private void Initialize()
+    protected virtual void Initialize()
     {
         using (_guardManager.AwaitExclusiveAccess())
         {
@@ -132,24 +117,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
     public override void Refresh()
     {
-        void RefreshImpl()
-        {
-            State state;
-            using (_guardManager.AwaitExclusiveAccess())
-            {
-                if (_resetEnableDirectLightingOnNextRefresh)
-                {
-                    ResetEnableDirectLighting();
-                    _resetEnableDirectLightingOnNextRefresh = false;
-                }
-
-                state = ReadState();
-                WriteCooling();
-            }
-
-            RefreshSensors(state);
-        }
-
         var lockTaken = false;
 
         try
@@ -173,12 +140,35 @@ public sealed class HydroPlatinumDevice : DeviceBase
         }
     }
 
+    protected virtual void RefreshImpl()
+    {
+        HydroPlatinumDeviceState state;
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            TryResetEnableDirectLighting();
+
+            state = ReadState();
+            WriteCooling();
+        }
+
+        RefreshSensors(state);
+    }
+
+    protected void TryResetEnableDirectLighting()
+    {
+        if (_resetEnableDirectLightingOnNextRefresh)
+        {
+            ResetEnableDirectLighting();
+            _resetEnableDirectLightingOnNextRefresh = false;
+        }
+    }
+
     public override void SetChannelPower(int channel, int percent)
     {
         _requestedChannelPower[channel] = Utils.ToFractionalByte(Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX));
     }
 
-    private void RefreshSensors(State state)
+    private void RefreshSensors(HydroPlatinumDeviceState state)
     {
         _temperatureSensors[PUMP_CHANNEL].TemperatureCelsius = state.LiquidTempCelsius;
         _speedSensors[PUMP_CHANNEL].Rpm = state.PumpRpm;
@@ -189,7 +179,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         }
     }
 
-    private void WriteCooling()
+    protected void WriteCooling()
     {
         _requestedChannelPower.ApplyChanges();
 
@@ -200,11 +190,11 @@ public sealed class HydroPlatinumDevice : DeviceBase
 
         SendCoolingCommand(Commands.Cooling, CreateCoolingCommandData(
             _requestedChannelPower[0],
-            _requestedChannelPower[1],
+            _fanCount >= 2 ? _requestedChannelPower[1] : null,
             _requestedChannelPower[PUMP_CHANNEL]));
     }
 
-    private State ReadState()
+    private HydroPlatinumDeviceState ReadState()
     {
         var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
         var state = ParseState(stateResponse);
@@ -212,7 +202,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return state;
     }
 
-    internal State ParseState(ReadOnlySpan<byte> stateResponse)
+    internal HydroPlatinumDeviceState ParseState(ReadOnlySpan<byte> stateResponse)
     {
         var response = stateResponse;
 
@@ -221,9 +211,10 @@ public sealed class HydroPlatinumDevice : DeviceBase
         var fwRevision = (int)response[3];
         var liquidTempRaw = (double)BinaryPrimitives.ReadInt16LittleEndian(response.Slice(7, 2));
 
-        var state = new State
+        var state = new HydroPlatinumDeviceState
         {
             SequenceNumber = response[1],
+            Status = (DeviceStatus)response[4],
             FirmwareVersionMajor = fwMajor,
             FirmwareVersionMinor = fwMinor,
             FirmwareVersionRevision = fwRevision,
@@ -234,7 +225,11 @@ public sealed class HydroPlatinumDevice : DeviceBase
         };
 
         state.FanRpm[0] = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(15, 2));
-        state.FanRpm[1] = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(22, 2));
+
+        if (_fanCount >= 2)
+        {
+            state.FanRpm[1] = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(22, 2));
+        }
 
         if (_fanCount == 3)
         {
@@ -249,7 +244,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return state;
     }
 
-    private ReadOnlySpan<byte> CreateStateRequestData()
+    protected ReadOnlySpan<byte> CreateStateRequestData()
     {
         var data = new byte[2];
         data[0] = 0xff;
@@ -310,7 +305,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
             data[16] = 0x00;
         }
 
-        return data.ToArray();
+        return data;
     }
 
     internal static ReadOnlySpan<byte> CreateCoolingCommand(ReadOnlySpan<byte> data)
@@ -383,7 +378,7 @@ public sealed class HydroPlatinumDevice : DeviceBase
         }
     }
 
-    private byte[] SendCommand(byte command, ReadOnlySpan<byte> data)
+    protected byte[] SendCommand(byte command, ReadOnlySpan<byte> data)
     {
         var readBuf = new byte[RESPONSE_LENGTH];
         var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
@@ -678,31 +673,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
         return result;
     }
 
-    internal sealed class State
-    {
-        public byte SequenceNumber { get; set; }
-        public int FirmwareVersionMajor { get; set; }
-        public int FirmwareVersionMinor { get; set; }
-        public int FirmwareVersionRevision { get; set; }
-        public int[] FanRpm { get; set; }
-        public PumpMode PumpMode { get; set; }
-        public int PumpRpm { get; set; }
-        public float LiquidTempCelsius { get; set; }
-
-        public override string ToString()
-        {
-            var sb = new StringBuilder();
-            for (var i = 0; i < FanRpm.Length; i++)
-            {
-                sb.AppendFormat("fan{0}Rpm={1}, ", i + 1, FanRpm[i]);
-            }
-            sb.AppendFormat("pumpMode={0}, ", PumpMode);
-            sb.AppendFormat("pumpRpm={0}, ", PumpRpm);
-            sb.AppendFormat("liquidTempCelsius={0}", LiquidTempCelsius);
-            return sb.ToString();
-        }
-    }
-
     internal static PumpMode GetPumpMode(byte requestedPower)
     {
         var percent = Utils.FromFractionalByte(requestedPower);
@@ -712,26 +682,6 @@ public sealed class HydroPlatinumDevice : DeviceBase
             <= 67 => PumpMode.Balanced,
             _ => PumpMode.Performance,
         };
-    }
-
-    private sealed class SequenceCounter
-    {
-        private byte _sequenceId = 0x00;
-
-        public byte Next()
-        {
-            do
-            {
-                _sequenceId += 0x08;
-            }
-            while (_sequenceId == 0x00);
-            return _sequenceId;
-        }
-
-        public void Set(byte value)
-        {
-            _sequenceId = value;
-        }
     }
 
     private static readonly byte[] CRC8_CCITT_TABLE =

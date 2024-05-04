@@ -2,7 +2,7 @@
 
 namespace CorsairLink.Devices.HydroPlatinum;
 
-internal sealed class DeviceMetrics
+public sealed class DeviceMetrics
 {
     private readonly RollingAverageCalculator _writeDelayRollingAverageCalculator;
 

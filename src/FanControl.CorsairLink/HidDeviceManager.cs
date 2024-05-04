@@ -66,6 +66,9 @@ public static class HidDeviceManager
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Xc7)
             .Select(x => new Xc7LcdWaterBlockDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.One)
+            .Select(x => new OneComputerDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+
         return collection;
     }
 

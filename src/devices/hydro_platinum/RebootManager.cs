@@ -1,6 +1,6 @@
 ﻿namespace CorsairLink.Devices.HydroPlatinum;
 
-internal sealed class RebootManager
+public sealed class RebootManager
 {
     private readonly int _maxReadFailuresBeforeReboot;
 

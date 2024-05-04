@@ -1,4 +1,5 @@
 using CorsairLink.Devices;
+using CorsairLink.Devices.HydroPlatinum;
 
 namespace CorsairLink.Tests.HydroPlatinum;
 
@@ -47,7 +48,7 @@ public class HydroPlatinumDeviceTests
         Assert.Equal(1, state.FirmwareVersionMinor);
         Assert.Equal(31, state.FirmwareVersionRevision);
         Assert.Equal(31.3, state.LiquidTempCelsius, 0.00001);
-        Assert.Equal(HydroPlatinumDevice.PumpMode.Balanced, state.PumpMode);
+        Assert.Equal(PumpMode.Balanced, state.PumpMode);
         Assert.Equal(2336, state.PumpRpm);
         Assert.Equal(0, state.FanRpm[0]);
         Assert.Equal(1231, state.FanRpm[1]);
@@ -89,12 +90,12 @@ public class HydroPlatinumDeviceTests
         var coolingCommand = HydroPlatinumDevice.CreateCoolingCommand(coolingData);
 
         // Act
-        var result = HydroPlatinumDevice.CreateCommand(HydroPlatinumDevice.Commands.Cooling, SEQUENCE_NBR, coolingCommand);
+        var result = HydroPlatinumDevice.CreateCommand(Commands.Cooling, SEQUENCE_NBR, coolingCommand);
 
         // Assert
         Assert.Equal(0x00, result[0]);
         Assert.Equal(0x3f, result[1]);
-        Assert.Equal(SEQUENCE_NBR | HydroPlatinumDevice.Commands.Cooling, result[2]);
+        Assert.Equal(SEQUENCE_NBR | Commands.Cooling, result[2]);
         Assert.Equal(0x14, result[3]);
         Assert.Equal(0x00, result[4]);
         Assert.Equal(0xff, result[5]);
@@ -116,7 +117,7 @@ public class HydroPlatinumDeviceTests
         Assert.Equal(0x00, result[21]);
         Assert.Equal(0x00, result[22]);
         Assert.Equal(FAN_1_POWER, result[23]); // fan 1 power
-        Assert.Equal((byte)HydroPlatinumDevice.PumpMode.Performance, result[24]); // pump mode
+        Assert.Equal((byte)PumpMode.Performance, result[24]); // pump mode
         Assert.Equal(0xff, result[25]);
         Assert.Equal(0xff, result[26]);
         Assert.Equal(0x00, result[27]);
@@ -160,13 +161,13 @@ public class HydroPlatinumDeviceTests
     }
 
     [Theory]
-    [InlineData(0, HydroPlatinumDevice.PumpMode.Quiet)]
-    [InlineData(33, HydroPlatinumDevice.PumpMode.Quiet)]
-    [InlineData(34, HydroPlatinumDevice.PumpMode.Balanced)]
-    [InlineData(67, HydroPlatinumDevice.PumpMode.Balanced)]
-    [InlineData(68, HydroPlatinumDevice.PumpMode.Performance)]
-    [InlineData(100, HydroPlatinumDevice.PumpMode.Performance)]
-    internal void GetPumpMode_ShouldReturnExpectedPumpMode(int requestedPowerPercent, HydroPlatinumDevice.PumpMode expectedPumpMode)
+    [InlineData(0, PumpMode.Quiet)]
+    [InlineData(33, PumpMode.Quiet)]
+    [InlineData(34, PumpMode.Balanced)]
+    [InlineData(67, PumpMode.Balanced)]
+    [InlineData(68, PumpMode.Performance)]
+    [InlineData(100, PumpMode.Performance)]
+    internal void GetPumpMode_ShouldReturnExpectedPumpMode(int requestedPowerPercent, PumpMode expectedPumpMode)
     {
         // Arrange
         var requestedPower = Utils.ToFractionalByte(requestedPowerPercent);
