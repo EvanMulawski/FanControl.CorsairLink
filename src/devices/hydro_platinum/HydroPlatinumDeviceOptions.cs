@@ -2,5 +2,5 @@
 
 public sealed class HydroPlatinumDeviceOptions
 {
-    public uint FanChannelCount { get; set; }
+    public int FanChannelCount { get; set; }
 }

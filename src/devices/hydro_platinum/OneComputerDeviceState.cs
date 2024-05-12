@@ -8,6 +8,13 @@ public class OneComputerDeviceState : HydroPlatinumDeviceState
     public int GpuPumpRpm { get; set; }
     public float GpuLiquidTempCelsius { get; set; }
 
+    public bool IsGpuUsingPump()
+    {
+        var isTempFail = Status == DeviceStatus.TempFail;
+        var isGpuPumpSpeedZero = GpuPumpRpm == 0;
+        return !isTempFail && !isGpuPumpSpeedZero;
+    }
+
     public override string ToString()
     {
         var sb = new StringBuilder();

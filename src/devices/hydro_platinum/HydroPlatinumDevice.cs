@@ -1,26 +1,20 @@
 ﻿using CorsairLink.Devices.HydroPlatinum;
-using System.Buffers.Binary;
 
 namespace CorsairLink.Devices;
 
 public class HydroPlatinumDevice : DeviceBase
 {
-    protected const int REQUEST_LENGTH = 65;
-    protected const int RESPONSE_LENGTH = 65;
     protected const int DEVICE_INITIAL_WRITE_DELAY_MS = 60;
-    protected const int DEVICE_PAYLOAD_START_IDX = 2;
-    protected const byte DEVICE_PAYLOAD_LENGTH = 63;
-    protected const byte DEVICE_PAYLOAD_LENGTH_EX_CRC = DEVICE_PAYLOAD_LENGTH - 1;
     protected const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     protected const byte PERCENT_MIN = 0;
     protected const byte PERCENT_MAX = 100;
-    private const int PUMP_CHANNEL = -1;
     protected const int MAX_READ_FAIL_BEFORE_REBOOT = 3;
     protected const int DEVICE_POST_REBOOT_WAIT_MS = 3000;
+    private const int PUMP_CHANNEL = -1;
 
     protected readonly IHidDeviceProxy _device;
     protected readonly IDeviceGuardManager _guardManager;
-    protected readonly uint _fanCount;
+    protected readonly int _fanCount;
     protected readonly bool _sendOnlyFirstLightingIndexPacket;
     protected readonly ChannelTrackingStore _requestedChannelPower = new();
     protected readonly Dictionary<int, SpeedSensor> _speedSensors = new();
@@ -29,6 +23,8 @@ public class HydroPlatinumDevice : DeviceBase
     protected readonly RebootManager _rebootManager = new(MAX_READ_FAIL_BEFORE_REBOOT);
     protected readonly object _refreshLock = new();
     protected readonly DeviceMetrics _deviceMetrics;
+    private readonly HydroPlatinumDataReader _dataReader;
+    private readonly HydroPlatinumDataWriter _dataWriter;
 
     protected bool _rebootRequested;
     protected bool _firstWrite = true;
@@ -47,6 +43,8 @@ public class HydroPlatinumDevice : DeviceBase
 
         _fanCount = options.FanChannelCount;
         _sendOnlyFirstLightingIndexPacket = deviceInfo.ProductId is 0x0c22 or 0x0c2f;
+        _dataReader = new HydroPlatinumDataReader(_fanCount);
+        _dataWriter = new HydroPlatinumDataWriter();
     }
 
     public override string UniqueId { get; }
@@ -185,188 +183,39 @@ public class HydroPlatinumDevice : DeviceBase
 
         if (_fanCount == 3)
         {
-            SendCoolingCommand(Commands.CoolingThreeFanPacket, CreateCoolingCommandData(_requestedChannelPower[2]));
+            SendCoolingCommand(Commands.CoolingThreeFanPacket, _dataWriter.CreateCoolingCommandData(_requestedChannelPower[2]));
         }
 
-        SendCoolingCommand(Commands.Cooling, CreateCoolingCommandData(
+        SendCoolingCommand(Commands.Cooling, _dataWriter.CreateCoolingCommandData(
             _requestedChannelPower[0],
             _fanCount >= 2 ? _requestedChannelPower[1] : null,
-            _requestedChannelPower[PUMP_CHANNEL]));
+            GetPumpMode(_requestedChannelPower[PUMP_CHANNEL])));
     }
 
     private HydroPlatinumDeviceState ReadState()
     {
-        var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
-        var state = ParseState(stateResponse);
-        _sequenceCounter.Set(state.SequenceNumber);
-        return state;
-    }
-
-    internal HydroPlatinumDeviceState ParseState(ReadOnlySpan<byte> stateResponse)
-    {
-        var response = stateResponse;
-
-        var fwMajor = response[2] >> 4;
-        var fwMinor = response[2] & 15;
-        var fwRevision = (int)response[3];
-        var liquidTempRaw = (double)BinaryPrimitives.ReadInt16LittleEndian(response.Slice(7, 2));
-
-        var state = new HydroPlatinumDeviceState
-        {
-            SequenceNumber = response[1],
-            Status = (DeviceStatus)response[4],
-            FirmwareVersionMajor = fwMajor,
-            FirmwareVersionMinor = fwMinor,
-            FirmwareVersionRevision = fwRevision,
-            LiquidTempCelsius = (int)(liquidTempRaw / 25.6 + 0.5) / 10f,
-            PumpMode = (PumpMode)response[24],
-            PumpRpm = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(29, 2)),
-            FanRpm = new int[_fanCount]
-        };
-
-        state.FanRpm[0] = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(15, 2));
-
-        if (_fanCount >= 2)
-        {
-            state.FanRpm[1] = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(22, 2));
-        }
-
-        if (_fanCount == 3)
-        {
-            state.FanRpm[2] = BinaryPrimitives.ReadInt16LittleEndian(response.Slice(43, 2));
-        }
+        var data = _dataWriter.CreateIncomingStateCommandData();
+        var stateResponse = SendCommand(Commands.IncomingState, data);
+        var state = _dataReader.GetState(stateResponse);
 
         if (CanLogDebug)
         {
             LogDebug($"STATE: {state}");
         }
 
+        _sequenceCounter.Set(state.SequenceNumber);
         return state;
-    }
-
-    protected ReadOnlySpan<byte> CreateStateRequestData()
-    {
-        var data = new byte[2];
-        data[0] = 0xff;
-        data[1] = 0x00;
-        return data;
-    }
-
-    internal static ReadOnlySpan<byte> CreateCoolingCommandData(
-        byte fan0ChannelPower,
-        byte? fan1ChannelPower = default,
-        byte? pumpChannelPower = default)
-    {
-        var data = new byte[DEVICE_PAYLOAD_LENGTH_EX_CRC - 12];
-        data.AsSpan().Fill(0xff);
-
-        // [0,5] = start of fan 0 data
-        // [6,11] = start of fan 1 data
-        // [12,17] = start of pump data
-        // [18,] = fan curve data
-
-        // fan data:
-        // [0] = mode (fixed percent = 0x02, fixed percent w/ fallback aka zero-rpm = 0x03)
-        // [1] = fixed speed lower byte
-        // [2] = fixed speed upper byte
-        // [3] = external temperature lower byte
-        // [4] = external temperature upper byte
-        // [5] = fixed percent
-
-        // pump data:
-        // [0] = mode (balanced = 0x01)
-        // [1] = 0xff
-        // [2] = 0xff
-        // [3] = external temperature lower byte
-        // [4] = external temperature upper byte
-        // [5] = 0xff
-
-        data[0] = 0x03;
-        data[1] = 0x00;
-        data[2] = 0x00;
-        data[3] = 0x00;
-        data[4] = 0x00;
-        data[5] = fan0ChannelPower;
-
-        if (fan1ChannelPower.HasValue)
-        {
-            data[6] = 0x03;
-            data[7] = 0x00;
-            data[8] = 0x00;
-            data[9] = 0x00;
-            data[10] = 0x00;
-            data[11] = fan1ChannelPower.Value;
-        }
-
-        if (pumpChannelPower.HasValue)
-        {
-            data[12] = (byte)GetPumpMode(pumpChannelPower.Value);
-            data[15] = 0x00;
-            data[16] = 0x00;
-        }
-
-        return data;
-    }
-
-    internal static ReadOnlySpan<byte> CreateCoolingCommand(ReadOnlySpan<byte> data)
-    {
-        // ([3])    [0] = 0x14 (20, DefaultCountdownTimer)
-        // ([4])    [1] = store in EEPROM (yes=0x55, no=0x00)
-        // ([5])    [2] = 0xff
-        // ([6])    [3] = 0x05
-        // ([7,11]) [4,8] = fan safety profile (not using)
-
-        var coolingPayload = new byte[DEVICE_PAYLOAD_LENGTH_EX_CRC - 3];
-        coolingPayload.AsSpan().Fill(0xff);
-        coolingPayload[0] = 0x14;
-        coolingPayload[1] = 0x00;
-        coolingPayload[2] = 0xff;
-        coolingPayload[3] = 0x05;
-
-        if (data.Length > 0)
-        {
-            var dataSpan = coolingPayload.AsSpan(9);
-            data.CopyTo(dataSpan);
-        }
-
-        return coolingPayload;
     }
 
     private void SendCoolingCommand(byte command, ReadOnlySpan<byte> data)
     {
-        SendWriteOnlyCommand(command, CreateCoolingCommand(data));
-    }
-
-    internal static ReadOnlySpan<byte> CreateCommand(byte command, byte sequenceNumber, ReadOnlySpan<byte> data, byte fill = 0xff)
-    {
-        // [0] = 0x00
-        // [1] = 0x3f (63, XMCPayloadLength)
-        // [2] = sequenceNumber | command
-        // [3,] = data
-        // [-1] = CRC byte
-
-        var writeBuf = new byte[REQUEST_LENGTH];
-        writeBuf.AsSpan(1).Fill(fill);
-        writeBuf[1] = DEVICE_PAYLOAD_LENGTH;
-
-        // sequence number does not have to change for write to succeed
-        writeBuf[2] = (byte)(sequenceNumber | command);
-
-        if (data.Length > 0)
-        {
-            var dataSpan = writeBuf.AsSpan(3);
-            data.CopyTo(dataSpan);
-        }
-
-        var writeCrcByte = GenerateChecksum(writeBuf.AsSpan(DEVICE_PAYLOAD_START_IDX, DEVICE_PAYLOAD_LENGTH_EX_CRC));
-        writeBuf[writeBuf.Length - 1] = writeCrcByte;
-
-        return writeBuf;
+        SendWriteOnlyCommand(command, _dataWriter.CreateCoolingCommand(data));
     }
 
     private void SendWriteOnlyCommand(byte command, ReadOnlySpan<byte> data)
     {
-        var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
+        var writeBufData = _dataWriter.CreateCommandPacket(command, _sequenceCounter.Next(), data);
+        var writeBuf = _dataWriter.CreateHidPacket(writeBufData);
 
         try
         {
@@ -380,15 +229,17 @@ public class HydroPlatinumDevice : DeviceBase
 
     protected byte[] SendCommand(byte command, ReadOnlySpan<byte> data)
     {
-        var readBuf = new byte[RESPONSE_LENGTH];
-        var writeBuf = CreateCommand(command, _sequenceCounter.Next(), data).ToArray();
+        var readBuf = _dataWriter.CreateHidPacketBuffer();
+        var readBufData = readBuf.AsSpan(1);
+        var writeBufData = _dataWriter.CreateCommandPacket(command, _sequenceCounter.Next(), data);
+        var writeBuf = _dataWriter.CreateHidPacket(writeBufData);
         byte readCrcByte, readBufCrcResult;
 
         try
         {
             WriteAndRead(writeBuf, readBuf);
-            readCrcByte = readBuf[readBuf.Length - 1];
-            readBufCrcResult = GenerateChecksum(readBuf.AsSpan(DEVICE_PAYLOAD_START_IDX, DEVICE_PAYLOAD_LENGTH_EX_CRC));
+            readCrcByte = _dataReader.GetChecksumByte(readBufData);
+            readBufCrcResult = _dataReader.CalculateChecksumByte(readBufData);
         }
         catch (Exception ex)
         {
@@ -407,7 +258,7 @@ public class HydroPlatinumDevice : DeviceBase
             _rebootManager.NotifyReadSuccess();
         }
 
-        return readBuf.AsSpan(1).ToArray();
+        return readBufData.ToArray();
     }
 
     private static CorsairLinkDeviceException CreateCommandException(string message, Exception? innerException, ReadOnlySpan<byte> writeBuffer, ReadOnlySpan<byte> readBuffer)
@@ -477,9 +328,14 @@ public class HydroPlatinumDevice : DeviceBase
         }
     }
 
-    public void Reboot()
+    private void WriteDirect(byte[] packet)
     {
-        _rebootManager.TriggerReboot();
+        if (CanLogDebug)
+        {
+            LogDebug($"WRITE_DIRECT: {packet.ToHexString()}");
+        }
+
+        _device.WriteDirect(packet);
     }
 
     private void RebootManager_RebootRequired(object sender, EventArgs e)
@@ -503,13 +359,11 @@ public class HydroPlatinumDevice : DeviceBase
             {
                 try
                 {
-                    // tell the device to reboot its EFM8 microcontroller (literally REBOOT)
-                    var rebootPacket = new byte[REQUEST_LENGTH];
-                    byte[] rebootData = [0x52, 0x45, 0x42, 0x4F, 0x4F, 0x54];
-                    rebootData.CopyTo(rebootPacket, 2);
+                    // tell the device to reboot its EFM8 microcontroller
+                    var rebootPacket = _dataWriter.CreateRebootPacket();
                     try
                     {
-                        WriteDirect(rebootPacket);
+                        WriteDirect(_dataWriter.CreateHidPacket(rebootPacket));
                     }
                     catch
                     {
@@ -590,20 +444,17 @@ public class HydroPlatinumDevice : DeviceBase
 
         try
         {
-            var directLedPacketData = new byte[DIRECT_LED_PACKET_DATA.Length];
-            DIRECT_LED_PACKET_DATA.CopyTo(directLedPacketData, 0);
-
             // disable
-            var directLedPacketDisable = CreateCommand(0x01, _sequenceCounter.Next(), directLedPacketData).ToArray();
-            WriteDirect(directLedPacketDisable);
+            var directLightingPacketDisable = _dataWriter.CreateDirectLightingConfigurationPacket(_sequenceCounter.Next(), false, 0);
+            WriteDirect(_dataWriter.CreateHidPacket(directLightingPacketDisable));
             Utils.SyncWait(50);
 
             // indexes
-            var indexData = CreateDefaultLightingIndexData().Chunk(40).ToList();
+            var indexData = _dataWriter.CreateDefaultLightingIndexData().Chunk(40).ToList();
             for (int i = 0; i < indexData.Count; i++)
             {
-                var packet = CreateCommand((byte)(0x02 + i), _sequenceCounter.Next(), indexData[i], 0x00).ToArray();
-                WriteDirect(packet);
+                var packet = _dataWriter.CreateCommandPacket((byte)(Commands.LightingIndexes + i), _sequenceCounter.Next(), indexData[i], 0x00).ToArray();
+                WriteDirect(_dataWriter.CreateHidPacket(packet));
                 Utils.SyncWait(50);
 
                 if (_sendOnlyFirstLightingIndexPacket)
@@ -613,19 +464,17 @@ public class HydroPlatinumDevice : DeviceBase
             }
 
             // colors
-            var colorData = CreateDefaultLightingColorData().Chunk(3 * 20).ToList();
+            var colorData = _dataWriter.CreateDefaultLightingColorData().Chunk(3 * 20).ToList();
             for (int i = 0; i < colorData.Count; i++)
             {
-                var packet = CreateCommand((byte)(0x04 + i), _sequenceCounter.Next(), colorData[i], 0x00).ToArray();
-                WriteDirect(packet);
+                var packet = _dataWriter.CreateCommandPacket((byte)(Commands.LightingColors + i), _sequenceCounter.Next(), colorData[i], 0x00).ToArray();
+                WriteDirect(_dataWriter.CreateHidPacket(packet));
                 Utils.SyncWait(50);
             }
 
             // enable
-            directLedPacketData[0] = 0x01;
-            directLedPacketData[50] = 0xff;
-            var directLedPacketEnable = CreateCommand(0x01, _sequenceCounter.Next(), directLedPacketData).ToArray();
-            WriteDirect(directLedPacketEnable);
+            var directLightingPacketEnable = _dataWriter.CreateDirectLightingConfigurationPacket(_sequenceCounter.Next(), true, 100);
+            WriteDirect(_dataWriter.CreateHidPacket(directLightingPacketEnable));
             Utils.SyncWait(50);
 
             LogInfo("Reset direct lighting OK");
@@ -635,42 +484,6 @@ public class HydroPlatinumDevice : DeviceBase
             LogWarning("Reset direct lighting FAILED");
             LogWarning(ex);
         }
-    }
-
-    private void WriteDirect(byte[] packet)
-    {
-        LogDebug($"WRITE_DIRECT: {packet.ToHexString()}");
-        _device.WriteDirect(packet);
-    }
-
-    private byte[] CreateDefaultLightingIndexData()
-    {
-        var data = new byte[80];
-        for (int i = 0; i < data.Length; i++)
-        {
-            data[i] = (byte)i;
-        }
-        return data;
-    }
-
-    private byte[] CreateDefaultLightingColorData()
-    {
-        var data = new byte[80];
-        for (int i = 0; i < data.Length; i++)
-        {
-            data[i] = 0xff;
-        }
-        return data;
-    }
-
-    internal static byte GenerateChecksum(ReadOnlySpan<byte> data)
-    {
-        byte result = 0;
-        for (int i = 0; i < data.Length; i++)
-        {
-            result = CRC8_CCITT_TABLE[result ^ data[i]];
-        }
-        return result;
     }
 
     internal static PumpMode GetPumpMode(byte requestedPower)
@@ -683,329 +496,4 @@ public class HydroPlatinumDevice : DeviceBase
             _ => PumpMode.Performance,
         };
     }
-
-    private static readonly byte[] CRC8_CCITT_TABLE =
-    [
-        0,
-        7,
-        14,
-        9,
-        28,
-        27,
-        18,
-        21,
-        56,
-        63,
-        54,
-        49,
-        36,
-        35,
-        42,
-        45,
-        112,
-        119,
-        126,
-        121,
-        108,
-        107,
-        98,
-        101,
-        72,
-        79,
-        70,
-        65,
-        84,
-        83,
-        90,
-        93,
-        224,
-        231,
-        238,
-        233,
-        252,
-        251,
-        242,
-        245,
-        216,
-        223,
-        214,
-        209,
-        196,
-        195,
-        202,
-        205,
-        144,
-        151,
-        158,
-        153,
-        140,
-        139,
-        130,
-        133,
-        168,
-        175,
-        166,
-        161,
-        180,
-        179,
-        186,
-        189,
-        199,
-        192,
-        201,
-        206,
-        219,
-        220,
-        213,
-        210,
-        255,
-        248,
-        241,
-        246,
-        227,
-        228,
-        237,
-        234,
-        183,
-        176,
-        185,
-        190,
-        171,
-        172,
-        165,
-        162,
-        143,
-        136,
-        129,
-        134,
-        147,
-        148,
-        157,
-        154,
-        39,
-        32,
-        41,
-        46,
-        59,
-        60,
-        53,
-        50,
-        31,
-        24,
-        17,
-        22,
-        3,
-        4,
-        13,
-        10,
-        87,
-        80,
-        89,
-        94,
-        75,
-        76,
-        69,
-        66,
-        111,
-        104,
-        97,
-        102,
-        115,
-        116,
-        125,
-        122,
-        137,
-        142,
-        135,
-        128,
-        149,
-        146,
-        155,
-        156,
-        177,
-        182,
-        191,
-        184,
-        173,
-        170,
-        163,
-        164,
-        249,
-        254,
-        247,
-        240,
-        229,
-        226,
-        235,
-        236,
-        193,
-        198,
-        207,
-        200,
-        221,
-        218,
-        211,
-        212,
-        105,
-        110,
-        103,
-        96,
-        117,
-        114,
-        123,
-        124,
-        81,
-        86,
-        95,
-        88,
-        77,
-        74,
-        67,
-        68,
-        25,
-        30,
-        23,
-        16,
-        5,
-        2,
-        11,
-        12,
-        33,
-        38,
-        47,
-        40,
-        61,
-        58,
-        51,
-        52,
-        78,
-        73,
-        64,
-        71,
-        82,
-        85,
-        92,
-        91,
-        118,
-        113,
-        120,
-        127,
-        106,
-        109,
-        100,
-        99,
-        62,
-        57,
-        48,
-        55,
-        34,
-        37,
-        44,
-        43,
-        6,
-        1,
-        8,
-        15,
-        26,
-        29,
-        20,
-        19,
-        174,
-        169,
-        160,
-        167,
-        178,
-        181,
-        188,
-        187,
-        150,
-        145,
-        152,
-        159,
-        138,
-        141,
-        132,
-        131,
-        222,
-        217,
-        208,
-        215,
-        194,
-        197,
-        204,
-        203,
-        230,
-        225,
-        232,
-        239,
-        250,
-        253,
-        244,
-        243,
-    ];
-
-    private static readonly byte[] DIRECT_LED_PACKET_DATA = [
-        0x00, // 0x00 = disable, 0x01 = enable
-        0x01,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x7f,
-        0x7f,
-        0x7f,
-        0x7f,
-        0x7f,
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0x00, // brightness: 0x00 = off, 0xff = 100%
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-        0xff,
-    ];
 }

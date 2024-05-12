@@ -1,5 +1,4 @@
 ﻿using CorsairLink.Devices.HydroPlatinum;
-using System.Buffers.Binary;
 
 namespace CorsairLink.Devices;
 
@@ -10,6 +9,9 @@ public class OneComputerDevice : HydroPlatinumDevice
     private const int FAN_CHANNEL = 0;
 
     private bool _isGpuUsingPump;
+
+    private readonly OneComputerDataReader _dataReader = new();
+    private readonly OneComputerDataWriter _dataWriter = new();
 
     public OneComputerDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
         : base(device, guardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 1 }, logger)
@@ -25,7 +27,7 @@ public class OneComputerDevice : HydroPlatinumDevice
             state = ReadState();
         }
 
-        _isGpuUsingPump = IsGpuUsingPump(state);
+        _isGpuUsingPump = state.IsGpuUsingPump();
 
         _requestedChannelPower.Clear();
         SetChannelPower(FAN_CHANNEL, DEFAULT_SPEED_CHANNEL_POWER);
@@ -71,38 +73,10 @@ public class OneComputerDevice : HydroPlatinumDevice
 
     private OneComputerDeviceState ReadState()
     {
-        var stateResponse = SendCommand(Commands.IncomingState, CreateStateRequestData());
-        var state = ParseState(stateResponse);
+        var data = _dataWriter.CreateIncomingStateCommandData();
+        var stateResponse = SendCommand(Commands.IncomingState, data);
+        var state = (OneComputerDeviceState)_dataReader.GetState(stateResponse);
         _sequenceCounter.Set(state.SequenceNumber);
         return state;
-    }
-
-    internal new OneComputerDeviceState ParseState(ReadOnlySpan<byte> stateResponse)
-    {
-        var baseState = base.ParseState(stateResponse);
-        var state = new OneComputerDeviceState
-        {
-            FanRpm = baseState.FanRpm[0],
-            FirmwareVersionMajor = baseState.FirmwareVersionMajor,
-            FirmwareVersionMinor = baseState.FirmwareVersionMinor,
-            FirmwareVersionRevision = baseState.FirmwareVersionRevision,
-            LiquidTempCelsius = baseState.LiquidTempCelsius,
-            PumpMode = baseState.PumpMode,
-            PumpRpm = baseState.PumpRpm,
-            SequenceNumber = baseState.SequenceNumber,
-        };
-
-        var gpuTempRaw = (double)BinaryPrimitives.ReadInt16LittleEndian(stateResponse.Slice(49, 2));
-        state.GpuLiquidTempCelsius = (int)(gpuTempRaw / 25.6 + 0.5) / 10f;
-        state.GpuPumpRpm = BinaryPrimitives.ReadInt16LittleEndian(stateResponse.Slice(22, 2));
-
-        return state;
-    }
-
-    private static bool IsGpuUsingPump(OneComputerDeviceState state)
-    {
-        bool isTempFail = state.Status == DeviceStatus.TempFail;
-        bool isGpuPumpSpeedZero = state.GpuPumpRpm == 0;
-        return !isTempFail && !isGpuPumpSpeedZero;
     }
 }
