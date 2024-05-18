@@ -100,20 +100,22 @@ public class HydroPlatinumDevice : DeviceBase
 
     protected virtual void Initialize()
     {
+        HydroPlatinumDeviceState state;
         using (_guardManager.AwaitExclusiveAccess())
         {
+            state = ReadState();
             ResetEnableDirectLighting();
         }
 
         _requestedChannelPower.Clear();
         SetChannelPower(PUMP_CHANNEL, DEFAULT_SPEED_CHANNEL_POWER);
-        _speedSensors[PUMP_CHANNEL] = new SpeedSensor("Pump", PUMP_CHANNEL, default, supportsControl: true);
-        _temperatureSensors[PUMP_CHANNEL] = new TemperatureSensor("Liquid Temp", PUMP_CHANNEL, default);
+        _speedSensors[PUMP_CHANNEL] = new SpeedSensor("Pump", PUMP_CHANNEL, state.PumpRpm, supportsControl: true);
+        _temperatureSensors[PUMP_CHANNEL] = new TemperatureSensor("Liquid Temp", PUMP_CHANNEL, state.LiquidTempCelsius);
 
         for (var i = 0; i < _fanCount; i++)
         {
             SetChannelPower(i, DEFAULT_SPEED_CHANNEL_POWER);
-            _speedSensors[i] = new SpeedSensor($"Fan #{i + 1}", i, default, supportsControl: true);
+            _speedSensors[i] = new SpeedSensor($"Fan #{i + 1}", i, state.FanRpm[i], supportsControl: true);
         }
     }
 
@@ -442,7 +444,7 @@ public class HydroPlatinumDevice : DeviceBase
         }
     }
 
-    private void ResetEnableDirectLighting()
+    protected void ResetEnableDirectLighting()
     {
         LogInfo("Reset direct lighting START");
 

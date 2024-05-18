@@ -25,6 +25,7 @@ public class OneComputerDevice : HydroPlatinumDevice
         using (_guardManager.AwaitExclusiveAccess())
         {
             state = ReadState();
+            ResetEnableDirectLighting();
         }
 
         _isGpuUsingPump = state.IsGpuUsingPump();
