@@ -11,68 +11,69 @@ This project is under active development, with frequent Beta releases that addre
 
 ## Device Support
 
-| Device                         | PID        | Implementation | Status                        | Read Fan/Pump RPM                 | Set Fan/Pump Power                | Read Temp Sensor                  |
-| ------------------------------ | ---------- | -------------- | ----------------------------- | --------------------------------- | --------------------------------- | --------------------------------- |
-| iCUE LINK Hub                  | `0c3f`     | ICueLink       | Full Support <sup>1</sup>     | [See devices](#icue-link-support) | [See devices](#icue-link-support) | [See devices](#icue-link-support) |
-| Commander PRO                  | `0c10`     | CommanderPro   | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅                                |
-| Commander PRO (Obsidian 1000D) | `1d00`     | CommanderPro   | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅                                |
-| Commander CORE XT              | `0c2a`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                                | ✅                                | ✅                                |
-| Commander CORE                 | `0c1c`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
-| Commander CORE (2022)          | `0c32`     | CommanderCore  | Full Support <sup>1,2</sup>   | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
-| Commander Mini                 | `0c04(3d)` | Coolit         | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅                                |
-| Hydro H60i Elite               | `0c34`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H60i Pro XT              | `0c29`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H60i Pro XT              | `0c30`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H100i Elite              | `0c35`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H100i Platinum           | `0c18`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H100i Platinum SE        | `0c19`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H100i Pro XT             | `0c20`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H100i Pro XT             | `0c2d`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H115i Elite              | `0c36`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H115i Platinum           | `0c17`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H115i Pro XT             | `0c21`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H115i Pro XT             | `0c2e`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H150i Elite              | `0c37`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H150i Pro XT             | `0c22`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H150i Pro XT             | `0c2f`     | HydroPlatinum  | Full Support <sup>1</sup>     | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H80i                     | `0c04(3b)` | Coolit         | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H100i                    | `0c04(3c)` | Coolit         | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H100i GT                 | `0c04(40)` | Coolit         | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H110i                    | `0c04(42)` | Coolit         | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H110i GT                 | `0c04(41)` | Coolit         | Full Support <sup>1</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H80i GT                  | `0c02`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H80i GT V2               | `0c08`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H80i Pro                 | `0c16`     | HydroAsetekPro | Full Support <sup>1,8,9</sup> | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H100i GT V2              | `0c09`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H100i GTX                | `0c03`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H100i Pro                | `0c15`     | HydroAsetekPro | Full Support <sup>1,8,9</sup> | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H110i GT V2              | `0c0a`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H110i GTX                | `0c07`     | HydroAsetek    | Full Support <sup>1,8</sup>   | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H115i Pro                | `0c13`     | HydroAsetekPro | Full Support <sup>1,8,9</sup> | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| Hydro H150i Pro                | `0c12`     | HydroAsetekPro | Full Support <sup>1,8,9</sup> | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
-| XC7 LCD Water Block            | `0c42`     | HidCooling     | Full Support                  | n/a                               | n/a                               | ✅ <sup>5</sup>                   |
-| HX550i                         | `1c03`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX650i                         | `1c04`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX750i                         | `1c05`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX850i                         | `1c06`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX1000i                        | `1c07`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX1200i                        | `1c08`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX1000i (2021)                 | `1c1e`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| HX1500i (2021)                 | `1c1f`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| RM550i                         | `1c09`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| RM650i                         | `1c0a`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| RM750i                         | `1c0b`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| RM850i                         | `1c0c`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| RM1000i                        | `1c0d`     | HidPsu         | Full Support <sup>7</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| AX850i                         | `1c0e`     | FlexUsbPsu     | Full Support <sup>8</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| AX1000i                        | `1c0f`     | FlexUsbPsu     | Full Support <sup>8</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| AX1300i                        | `1c10`     | FlexUsbPsu     | Full Support <sup>8</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| AX1500i                        | `1c02`     | FlexUsbPsu     | Full Support <sup>8</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| AX1600i                        | `1c11`     | FlexUsbPsu     | Full Support <sup>8</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| AX760i/AX860i/AX1200i          | `1c00`     | FlexUsbPsu     | Full Support <sup>8</sup>     | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
-| Cooling Node                   | `0c04(38)` | -              | Support Upon Request          |                                   |                                   |                                   |
-| Hydro H80                      | `0c04(37)` | -              | Support Upon Request          |                                   |                                   |                                   |
-| Hydro H100                     | `0c04(3a)` | -              | Support Upon Request          |                                   |                                   |                                   |
+| Device                         | PID        | Implementation | Status                            | Read Fan/Pump RPM                 | Set Fan/Pump Power                | Read Temp Sensor                  |
+| ------------------------------ | ---------- | -------------- | --------------------------------- | --------------------------------- | --------------------------------- | --------------------------------- |
+| iCUE LINK Hub                  | `0c3f`     | ICueLink       | Full Support <sup>1</sup>         | [See devices](#icue-link-support) | [See devices](#icue-link-support) | [See devices](#icue-link-support) |
+| Commander PRO                  | `0c10`     | CommanderPro   | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅                                |
+| Commander PRO (Obsidian 1000D) | `1d00`     | CommanderPro   | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅                                |
+| Commander CORE XT              | `0c2a`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅                                | ✅                                |
+| Commander CORE                 | `0c1c`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
+| Commander CORE (2022)          | `0c32`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
+| Commander Mini                 | `0c04(3d)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅                                |
+| Hydro H60i Elite               | `0c34`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H60i Pro XT              | `0c29`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H60i Pro XT              | `0c30`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Elite              | `0c35`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Platinum           | `0c18`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Platinum SE        | `0c19`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Pro XT             | `0c20`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Pro XT             | `0c2d`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H115i Elite              | `0c36`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H115i Platinum           | `0c17`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H115i Pro XT             | `0c21`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H115i Pro XT             | `0c2e`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H150i Elite              | `0c37`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H150i Pro XT             | `0c22`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H150i Pro XT             | `0c2f`     | HydroPlatinum  | Full Support <sup>1</sup>         | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| One                            | `0c14`     | HydroPlatinum  | Partial Support <sup>1,3,11</sup> | ✅                                | ⚠️ <sup>4,11</sup>                | ✅ <sup>5</sup>                   |
+| Hydro H80i                     | `0c04(3b)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H100i                    | `0c04(3c)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H100i GT                 | `0c04(40)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H110i                    | `0c04(42)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H110i GT                 | `0c04(41)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H80i GT                  | `0c02`     | HydroAsetek    | Full Support <sup>1,8</sup>       | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H80i GT V2               | `0c08`     | HydroAsetek    | Full Support <sup>1,8</sup>       | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H80i Pro                 | `0c16`     | HydroAsetekPro | Full Support <sup>1,8,9</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H100i GT V2              | `0c09`     | HydroAsetek    | Full Support <sup>1,8</sup>       | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H100i GTX                | `0c03`     | HydroAsetek    | Full Support <sup>1,8</sup>       | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H100i Pro                | `0c15`     | HydroAsetekPro | Full Support <sup>1,8,9</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H110i GT V2              | `0c0a`     | HydroAsetek    | Full Support <sup>1,8</sup>       | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H110i GTX                | `0c07`     | HydroAsetek    | Full Support <sup>1,8</sup>       | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H115i Pro                | `0c13`     | HydroAsetekPro | Full Support <sup>1,8,9</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| Hydro H150i Pro                | `0c12`     | HydroAsetekPro | Full Support <sup>1,8,9</sup>     | ✅                                | ✅                                | ✅ <sup>5</sup>                   |
+| XC7 LCD Water Block            | `0c42`     | HidCooling     | Full Support <sup>3</sup>         | n/a                               | n/a                               | ✅ <sup>5</sup>                   |
+| HX550i                         | `1c03`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX650i                         | `1c04`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX750i                         | `1c05`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX850i                         | `1c06`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX1000i                        | `1c07`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX1200i                        | `1c08`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX1000i (2021)                 | `1c1e`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX1500i (2021)                 | `1c1f`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| RM550i                         | `1c09`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| RM650i                         | `1c0a`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| RM750i                         | `1c0b`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| RM850i                         | `1c0c`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| RM1000i                        | `1c0d`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| AX850i                         | `1c0e`     | FlexUsbPsu     | Full Support <sup>8</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| AX1000i                        | `1c0f`     | FlexUsbPsu     | Full Support <sup>8</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| AX1300i                        | `1c10`     | FlexUsbPsu     | Full Support <sup>8</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| AX1500i                        | `1c02`     | FlexUsbPsu     | Full Support <sup>8</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| AX1600i                        | `1c11`     | FlexUsbPsu     | Full Support <sup>8</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| AX760i/AX860i/AX1200i          | `1c00`     | FlexUsbPsu     | Full Support <sup>8</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| Cooling Node                   | `0c04(38)` | -              | Support Upon Request              |                                   |                                   |                                   |
+| Hydro H80                      | `0c04(37)` | -              | Support Upon Request              |                                   |                                   |                                   |
+| Hydro H100                     | `0c04(3a)` | -              | Support Upon Request              |                                   |                                   |                                   |
 
 1. Software mode only. Device lighting will be software-based.
 
@@ -109,6 +110,8 @@ This project is under active development, with frequent Beta releases that addre
    | Deactivate | 57°C | -        |
 
 10. As of v1.4.3, the minimum pump power is 50% (regardless of the requested power in Fan Control) to prevent a "pump failure" state and noise/resonance that may occur due to low pump RPM. Additionally, the default pump power is 100%. As of v1.6.0, the default minimum pump power is 50% but users may override this by setting the `FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY` environment variable to the desired minimum pump power (a value between `0` and `100`).
+
+11. Corsair One computers using the Hydro Platinum controller are supported. For liquid-cooled GPU models, GPU pump RPM and liquid temperature sensors are available, but GPU pump speed control is not yet supported. All supported models support CPU pump speed control.
 
 ### iCUE LINK Support
 
@@ -163,6 +166,19 @@ To install the driver:
 3. Copy `SiUSBXp.dll` from the `Corsair-SiUsbXpress-Driver` directory to Fan Control's `Plugins` directory.
 4. Right-click the `CorsairSiUSBXp.inf` file in the `Corsair-SiUsbXpress-Driver` directory and select **Install**. (This is a signed driver shipped with Corsair iCUE.)
 5. Start Fan Control.
+
+## Configuration
+
+This plugin reads the following Windows environment variables:
+
+| Name                                                                     | Description                                          | Values                                      |
+| ------------------------------------------------------------------------ | ---------------------------------------------------- | ------------------------------------------- |
+| `FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED`                           | Enables debug logging to the `CorsairLink.log` file. | `1` = enabled, `0` = disabled               |
+| `FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_BRIGHTNESS` <sup>1</sup> | Sets the LED brightness on supported models.         | percent, e.g. `50`                          |
+| `FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_RGB` <sup>1</sup>        | Sets the LED color on supported models.              | RGB color in `R,G,B` format, e.g. `0,255,0` |
+| `FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED`                    | Disables critical error notifications.               | `1` = disabled, `0` = enabled               |
+
+1. Supported models: Hydro Platinum (v1.6.0-beta.8+)
 
 ## Interoperability
 
