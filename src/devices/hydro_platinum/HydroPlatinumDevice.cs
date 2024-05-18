@@ -6,8 +6,6 @@ public class HydroPlatinumDevice : DeviceBase
 {
     protected const int DEVICE_INITIAL_WRITE_DELAY_MS = 60;
     protected const int DEFAULT_SPEED_CHANNEL_POWER = 50;
-    protected const byte PERCENT_MIN = 0;
-    protected const byte PERCENT_MAX = 100;
     protected const int MAX_READ_FAIL_BEFORE_REBOOT = 3;
     protected const int DEVICE_POST_REBOOT_WAIT_MS = 3000;
     private const int PUMP_CHANNEL = -1;
@@ -16,6 +14,9 @@ public class HydroPlatinumDevice : DeviceBase
     protected readonly IDeviceGuardManager _guardManager;
     protected readonly int _fanCount;
     protected readonly bool _sendOnlyFirstLightingIndexPacket;
+    protected readonly RgbColor _directLightingDefaultColor;
+    protected readonly int _directLightingDefaultBrightness;
+    protected readonly bool _directLightingDisableAfterReset;
     protected readonly ChannelTrackingStore _requestedChannelPower = new();
     protected readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     protected readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -43,6 +44,9 @@ public class HydroPlatinumDevice : DeviceBase
 
         _fanCount = options.FanChannelCount;
         _sendOnlyFirstLightingIndexPacket = deviceInfo.ProductId is 0x0c22 or 0x0c2f;
+        _directLightingDefaultColor = options.DirectLightingDefaultColor ?? new RgbColor(255, 255, 255);
+        _directLightingDefaultBrightness = options.DirectLightingDefaultBrightness ?? 100;
+        _directLightingDisableAfterReset = options.DisableDirectLightingAfterReset ?? false;
         _dataReader = new HydroPlatinumDataReader(_fanCount);
         _dataWriter = new HydroPlatinumDataWriter();
     }
@@ -163,7 +167,7 @@ public class HydroPlatinumDevice : DeviceBase
 
     public override void SetChannelPower(int channel, int percent)
     {
-        _requestedChannelPower[channel] = Utils.ToFractionalByte(Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX));
+        _requestedChannelPower[channel] = Utils.ToFractionalByte(percent);
     }
 
     private void RefreshSensors(HydroPlatinumDeviceState state)
@@ -464,7 +468,7 @@ public class HydroPlatinumDevice : DeviceBase
             }
 
             // colors
-            var colorData = _dataWriter.CreateDefaultLightingColorData().Chunk(3 * 20).ToList();
+            var colorData = _dataWriter.CreateDefaultLightingColorData(_directLightingDefaultColor.R, _directLightingDefaultColor.G, _directLightingDefaultColor.B).Chunk(3 * 20).ToList();
             for (int i = 0; i < colorData.Count; i++)
             {
                 var packet = _dataWriter.CreateCommandPacket((byte)(Commands.LightingColors + i), _sequenceCounter.Next(), colorData[i], 0x00).ToArray();
@@ -472,8 +476,8 @@ public class HydroPlatinumDevice : DeviceBase
                 Utils.SyncWait(50);
             }
 
-            // enable
-            var directLightingPacketEnable = _dataWriter.CreateDirectLightingConfigurationPacket(_sequenceCounter.Next(), true, 100);
+            // enable or disable
+            var directLightingPacketEnable = _dataWriter.CreateDirectLightingConfigurationPacket(_sequenceCounter.Next(), !_directLightingDisableAfterReset, _directLightingDefaultBrightness);
             WriteDirect(_dataWriter.CreateHidPacket(directLightingPacketEnable));
             Utils.SyncWait(50);
 

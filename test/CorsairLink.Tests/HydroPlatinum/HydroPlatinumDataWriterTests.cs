@@ -41,5 +41,34 @@ namespace CorsairLink.Tests.HydroPlatinum
             Assert.Equal(data[2], result[HydroPlatinumDataWriter.PAYLOAD_DATA_START_IDX + 2]);
             Assert.Equal(checksumByte, result[HydroPlatinumDataWriter.PACKET_SIZE - 1]);
         }
+
+        [Fact]
+        public void CreateDefaultLightingColorData_ShouldReturnExpectedColorData()
+        {
+            // Arrange
+            byte colorR = 64, colorG = 65, colorB = 66;
+            var sut = new HydroPlatinumDataWriter();
+
+            // Act
+            var result = sut.CreateDefaultLightingColorData(colorR, colorG, colorB);
+
+            // Assert
+            for (int i = 0; i < result.Length; i++)
+            {
+                var c = i % 3;
+                switch (c)
+                {
+                    case 0:
+                        Assert.Equal(colorB, result[c]);
+                        break;
+                    case 1:
+                        Assert.Equal(colorG, result[c]);
+                        break;
+                    case 2:
+                        Assert.Equal(colorR, result[c]);
+                        break;
+                }
+            }
+        }
     }
 }

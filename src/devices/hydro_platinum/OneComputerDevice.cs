@@ -13,8 +13,8 @@ public class OneComputerDevice : HydroPlatinumDevice
     private readonly OneComputerDataReader _dataReader = new();
     private readonly OneComputerDataWriter _dataWriter = new();
 
-    public OneComputerDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
-        : base(device, guardManager, new HydroPlatinumDeviceOptions { FanChannelCount = 1 }, logger)
+    public OneComputerDevice(IHidDeviceProxy device, IDeviceGuardManager guardManager, OneComputerDeviceOptions options, ILogger logger)
+        : base(device, guardManager, options, logger)
     {
 
     }

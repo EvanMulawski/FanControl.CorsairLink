@@ -21,9 +21,9 @@ public static class Utils
         return value;
     }
 
-    public static byte ToFractionalByte(int value) => (byte)((value * byte.MaxValue + 50) / 100);
+    public static byte ToFractionalByte(int value) => (byte)((Clamp(value, 0, 100) * byte.MaxValue + 50) / 100);
 
-    public static int FromFractionalByte(byte value) => (100 * value + byte.MaxValue / 2) / byte.MaxValue;
+    public static int FromFractionalByte(byte value) => (100 * Clamp(value, 0, 255) + byte.MaxValue / 2) / byte.MaxValue;
 
     private static readonly char[] HEX_CHARS = "0123456789ABCDEF".ToCharArray();
 
@@ -76,6 +76,11 @@ public static class Utils
     {
         var value = GetEnvironmentVariable(name);
         return int.TryParse(value, out int result) ? result : null;
+    }
+
+    public static string? GetEnvironmentString(string name)
+    {
+        return GetEnvironmentVariable(name);
     }
 
     public static void SyncWait(int milliseconds)

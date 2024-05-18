@@ -225,12 +225,14 @@ public class HydroPlatinumDataWriter
         return data;
     }
 
-    public virtual byte[] CreateDefaultLightingColorData()
+    public virtual byte[] CreateDefaultLightingColorData(byte r, byte g, byte b)
     {
         var data = new byte[80];
-        for (int i = 0; i < data.Length; i++)
+        for (int i = 0; i < data.Length - 3; i += 3)
         {
-            data[i] = 0xff;
+            data[i] = b;
+            data[i + 1] = g;
+            data[i + 2] = r;
         }
         return data;
     }

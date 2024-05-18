@@ -24,6 +24,10 @@ public static class HidDeviceManager
         logger.LogDevices(supportedDevices, "supported Corsair HID device(s)");
 
         var globalMinimumPumpPowerValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY");
+        var directLightingDefaultColorValue = Utils.GetEnvironmentString("FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_RGB");
+        _ = RgbColor.TryParse(directLightingDefaultColorValue, out var directLightingDefaultColor);
+        var directLightingDefaultBrightnessValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_BRIGHTNESS");
+        var directLightingDisableAfterReset = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DISABLE_AFTER_RESET");
 
         var collection = new List<IDevice>();
 
@@ -54,13 +58,27 @@ public static class HidDeviceManager
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroPlatinum2Fan)
             .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions
             {
-                FanChannelCount = 2
+                FanChannelCount = 2,
+                DirectLightingDefaultBrightness = directLightingDefaultBrightnessValue,
+                DirectLightingDefaultColor = directLightingDefaultColor,
+                DisableDirectLightingAfterReset = directLightingDisableAfterReset,
             }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroPlatinum3Fan)
             .Select(x => new HydroPlatinumDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HydroPlatinumDeviceOptions
             {
-                FanChannelCount = 3
+                FanChannelCount = 3,
+                DirectLightingDefaultBrightness = directLightingDefaultBrightnessValue,
+                DirectLightingDefaultColor = directLightingDefaultColor,
+                DisableDirectLightingAfterReset = directLightingDisableAfterReset,
+            }, logger)));
+
+        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.One)
+            .Select(x => new OneComputerDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new OneComputerDeviceOptions
+            {
+                DirectLightingDefaultBrightness = directLightingDefaultBrightnessValue,
+                DirectLightingDefaultColor = directLightingDefaultColor,
+                DisableDirectLightingAfterReset = directLightingDisableAfterReset,
             }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.CoolitFamily)
@@ -71,9 +89,6 @@ public static class HidDeviceManager
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Xc7)
             .Select(x => new Xc7LcdWaterBlockDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
-
-        collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.One)
-            .Select(x => new OneComputerDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         return collection;
     }

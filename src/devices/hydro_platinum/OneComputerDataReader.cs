@@ -4,8 +4,10 @@ namespace CorsairLink.Devices.HydroPlatinum;
 
 public class OneComputerDataReader : HydroPlatinumDataReader
 {
+    public static readonly int FanChannelCount = 1;
+
     public OneComputerDataReader()
-        : base(fanCount: 1)
+        : base(fanCount: FanChannelCount)
     {
 
     }
