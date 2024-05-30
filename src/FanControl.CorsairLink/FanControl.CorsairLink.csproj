@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net48</TargetFramework>
+    <TargetFrameworks>net48;net8.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <LangVersion>Latest</LangVersion>
@@ -33,37 +33,7 @@
     <Reference Include="FanControl.Plugins">
       <HintPath>..\..\ref\FanControl.Plugins.dll</HintPath>
     </Reference>
-    <PackageReference Include="ILRepack.MSBuild.Task" Version="2.0.13" PrivateAssets="All" />
+    <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.33" />
   </ItemGroup>
-
-  <Target Name="ILRepack" AfterTargets="Build" Condition="'$(Configuration)' == 'Release'">
-    <PropertyGroup>
-      <WorkingDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\$(TargetFramework)</WorkingDirectory>
-    </PropertyGroup>
-    <ItemGroup>
-      <InputAssemblies Include="CorsairLink.Abstractions.dll" />
-      <InputAssemblies Include="CorsairLink.Asetek.dll" />
-      <InputAssemblies Include="CorsairLink.FlexUsb.dll" />
-      <InputAssemblies Include="CorsairLink.Hid.dll" />
-      <InputAssemblies Include="CorsairLink.SiUsbXpress.dll" />
-      <InputAssemblies Include="CorsairLink.SiUsbXpress.Driver.dll" />
-      <InputAssemblies Include="CorsairLink.Synchronization.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.CommanderCore.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.CommanderPro.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.Coolit.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.FlexUsbPsu.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.HidCooling.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.HidPsu.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.HydroAsetek.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.HydroPlatinum.dll" />
-      <InputAssemblies Include="CorsairLink.Devices.ICueLink.dll" />
-    </ItemGroup>
-    <ItemGroup>
-      <InternalizeExcludeAssemblies Include="FanControl.Plugins.dll" />
-      <InternalizeExcludeAssemblies Include="HidSharp.dll" />
-    </ItemGroup>
-    <Message Text="MERGING: @(InputAssemblies->'%(Filename)') into $(OutputAssembly)" Importance="High" />
-    <ILRepack OutputType="$(OutputType)" MainAssembly="$(AssemblyName).dll" OutputAssembly="$(AssemblyName).dll" InputAssemblies="@(InputAssemblies)" InternalizeExcludeAssemblies="@(InternalizeExcludeAssemblies)" WorkingDirectory="$(WorkingDirectory)" />
-  </Target>
 
 </Project>

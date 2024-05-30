@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <PropertyGroup>
+    <FanControlCorsairLinkAssemblyFullFileName>$(AssemblyName).dll</FanControlCorsairLinkAssemblyFullFileName>
+    <FanControlCorsairLinkMergedAssemblyFullFileName>$(AssemblyName).merged.dll</FanControlCorsairLinkMergedAssemblyFullFileName>
+  </PropertyGroup>
+  
+  <Target Name="ILRepacker" AfterTargets="Build" Condition=" '$(Configuration)' == 'Release' and '$(TargetFramework)' != '' ">
+    <ItemGroup>
+      <InputAssemblies Include="$(OutputPath)$(FanControlCorsairLinkAssemblyFullFileName)" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Abstractions.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Asetek.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.FlexUsb.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Hid.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.SiUsbXpress.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.SiUsbXpress.Driver.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Synchronization.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.CommanderCore.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.CommanderPro.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.Coolit.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.FlexUsbPsu.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.HidCooling.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.HidPsu.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.HydroAsetek.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.HydroPlatinum.dll" />
+      <InputAssemblies Include="$(OutputPath)CorsairLink.Devices.ICueLink.dll" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <DoNotInternalizeAssemblies Include="FanControl.Plugins.dll" />
+      <DoNotInternalizeAssemblies Include="HidSharp.dll" />
+    </ItemGroup>
+
+    <ILRepack
+        Parallel="false"
+        Internalize="true"
+        InternalizeExclude="@(DoNotInternalizeAssemblies)"
+        InputAssemblies="@(InputAssemblies)"
+        TargetKind="Dll"
+        OutputFile="$(OutputPath)$(FanControlCorsairLinkMergedAssemblyFullFileName)"
+        AttributeFile="$(OutputPath)$(FanControlCorsairLinkAssemblyFullFileName)"
+        />
+  </Target>
+  
+</Project>

@@ -4,7 +4,6 @@ using FanControl.Plugins;
 using global::CorsairLink;
 using global::CorsairLink.Synchronization;
 using System.Reflection;
-using System.Runtime.InteropServices;
 using System.Timers;
 
 public sealed class CorsairLinkPlugin : IPlugin
@@ -12,7 +11,6 @@ public sealed class CorsairLinkPlugin : IPlugin
     private const string LOGGER_CATEGORY_PLUGIN = "Plugin";
     private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
-    private const string LOGGER_MESSAGE_UNSUPPORTED_RUNTIME = "The CorsairLink plugin requires the .NET Framework version of Fan Control.";
     private const string DIALOG_MESSAGE_SUFFIX = "\n\nReview the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.\n\nTo disable this message, set the FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED environment variable to 1 and restart Fan Control.";
     private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected." + DIALOG_MESSAGE_SUFFIX;
     private const string DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED = "Consecutive attempts to refresh devices have failed. A device may be unresponsive." + DIALOG_MESSAGE_SUFFIX;
@@ -50,11 +48,6 @@ public sealed class CorsairLinkPlugin : IPlugin
             Enabled = false,
         };
         _timer.Elapsed += new ElapsedEventHandler(OnTimerTick);
-        if (!IsRuntimeSupported())
-        {
-            _logger.Error(LOGGER_CATEGORY_PLUGIN, LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
-            ShowErrorDialog(LOGGER_MESSAGE_UNSUPPORTED_RUNTIME);
-        }
     }
 
     public bool IsInitialized { get; private set; }
@@ -296,20 +289,6 @@ public sealed class CorsairLinkPlugin : IPlugin
 
         var devices = hidDevices.Concat(siUsbXpressDevices);
         return devices;
-    }
-
-    private bool IsRuntimeSupported()
-    {
-        var runtime = RuntimeInformation.FrameworkDescription;
-        _logger.Debug(LOGGER_CATEGORY_PLUGIN, $"Runtime: {runtime}");
-
-        var supported = runtime.IndexOf(".NET Framework") > -1;
-        if (!supported)
-        {
-            _logger.Error(LOGGER_CATEGORY_PLUGIN, $"Unsupported Runtime: {runtime}");
-        }
-
-        return supported;
     }
 
     void IPlugin.Load(IPluginSensorsContainer container)
