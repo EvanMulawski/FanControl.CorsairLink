@@ -140,7 +140,7 @@ Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/Fa
 > This plugin will not function correctly if Corsair iCUE and the "Corsair Service" service is running. These programs should be stopped before running Fan Control. Running [incompatible programs](#compatibility) that attempt to communicate with these devices while Fan Control is running is not a supported scenario.
 
 > [!WARNING]
-> All versions of this plugin prior to v1.7.0 require the .NET Framework build of Fan Control. Install Fan Control using the `FanControl_net_4_8.zip` release files or the `FanControl_191_net_4_8_Installer.exe` installer only.
+> All versions of this plugin prior to v1.7.0 require the .NET Framework build of Fan Control. Install Fan Control using the `FanControl_*_net_4_8.zip` release files or the `FanControl_*_net_4_8_Installer.exe` installer only.
 
 > [!NOTE]
 > Support for the .NET 8 build of Fan Control was added in v1.7.0-beta.1. As of this version, plugin builds are located within their respective directories. In step 4 below, the `FanControl.CorsairLink.dll` file will be located within the `net48` or `net8.0` directory. Choose the build that matches your Fan Control installation.
