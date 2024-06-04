@@ -5,9 +5,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 [![Support](https://img.shields.io/badge/Support-Venmo-blue?style=for-the-badge&logo=venmo&color=3D95CE)](https://www.venmo.com/u/EvanMulawski)
 [![Support](https://img.shields.io/badge/Support-Buy_Me_A_Coffee-yellow?style=for-the-badge&logo=buy%20me%20a%20coffee&color=FFDD00)](https://www.buymeacoffee.com/evanmulawski)
 
-## Important
-
-This project is under active development, with frequent Beta releases that address issues and incorporate user feedback. These releases may include device-specific fixes and enhancements. Review the [release notes for each version](https://github.com/EvanMulawski/FanControl.CorsairLink/releases) before selecting one to use and regularly check back for updates.
+> [!IMPORTANT]
+> This project is under active development, with frequent Beta releases that address issues and incorporate user feedback. These releases may include device-specific fixes and enhancements. Review the [release notes for each version](https://github.com/EvanMulawski/FanControl.CorsairLink/releases) before selecting one to use and regularly check back for updates.
 
 ## Device Support
 
@@ -137,9 +136,14 @@ Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/Fa
 
 ## Installation
 
-⚠ This plugin will not function correctly if Corsair iCUE and the "Corsair Service" service is running. These programs should be stopped before running Fan Control. Running [incompatible programs](#compatibility) that attempt to communicate with these devices while Fan Control is running is not a supported scenario.
+> [!WARNING]
+> This plugin will not function correctly if Corsair iCUE and the "Corsair Service" service is running. These programs should be stopped before running Fan Control. Running [incompatible programs](#compatibility) that attempt to communicate with these devices while Fan Control is running is not a supported scenario.
 
-⚠ This plugin requires the .NET Framework build of Fan Control. Install Fan Control using the `FanControl_net_4_8.zip` release files.
+> [!WARNING]
+> All versions of this plugin prior to v1.7.0 require the .NET Framework build of Fan Control. Install Fan Control using the `FanControl_net_4_8.zip` release files or the `FanControl_191_net_4_8_Installer.exe` installer only.
+
+> [!NOTE]
+> Support for the .NET 8 build of Fan Control was added in v1.7.0-beta.1. As of this version, plugin builds are located within their respective directories. In step 4 below, the `FanControl.CorsairLink.dll` file will be located within the `net48` or `net8.0` directory. Choose the build that matches your Fan Control installation.
 
 1. Download a [release](https://github.com/EvanMulawski/FanControl.CorsairLink/releases).
 2. Unblock the downloaded ZIP file. (Right-click, Properties, check Unblock, OK)
@@ -149,15 +153,17 @@ Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/Fa
 
 ### SiUsbXpress Driver
 
-The SiUsbXpress driver is only necessary if:
+> [!TIP]
+> The SiUsbXpress driver is only necessary if:
+>
+> - the Status of your device in the [Device Support](#device-support) matrix has the **8** footnote superscript, e.g. Full Support <sup>8</sup>
+> - the driver has not been installed previously (by Corsair iCUE or manually)
 
-- the Status of your device in the [Device Support](#device-support) matrix has the **8** footnote superscript, e.g. Full Support <sup>8</sup>
-- the driver has not been installed previously (by Corsair iCUE or manually)
-
-The driver is only supported on:
-
-- Windows 10 64-bit
-- Windows 11 64-bit
+> [!NOTE]
+> The driver is only supported on:
+>
+> - Windows 10 64-bit
+> - Windows 11 64-bit
 
 To install the driver:
 
@@ -182,6 +188,12 @@ This plugin reads the following Windows environment variables:
 
 1. Supported models: Hydro Platinum (v1.6.0+)
 2. Supported models: iCUE LINK, Commander CORE (v1.6.0+)
+
+> [!TIP]
+> To set these values, start Run or Command Prompt and run `rundll32 sysdm.cpl,EditEnvironmentVariables`. Alternatively, use the `setx` command.
+
+> [!TIP]
+> Fan Control must be restarted for changes to these environment variables to take effect.
 
 ## Interoperability
 
