@@ -71,7 +71,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
 
     public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    public override bool Connect()
+    public override bool Connect(CancellationToken cancellationToken = default)
     {
         Disconnect();
 
@@ -139,7 +139,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         return LinkHubDataReader.GetFirmwareVersion(response);
     }
 
-    public override void Refresh() => RefreshImpl(initialize: false);
+    public override void Refresh(CancellationToken cancellationToken = default) => RefreshImpl(initialize: false);
 
     private void RefreshImpl(bool initialize = false)
     {

@@ -54,7 +54,7 @@ public sealed class HydroAsetekProDevice : DeviceBase
 
     public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    public override bool Connect()
+    public override bool Connect(CancellationToken cancellationToken = default)
     {
         LogDebug("Connect");
 
@@ -97,7 +97,7 @@ public sealed class HydroAsetekProDevice : DeviceBase
         Refresh();
     }
 
-    public override void Refresh()
+    public override void Refresh(CancellationToken cancellationToken = default)
     {
         WriteRequestedSpeeds();
         RefreshTemperatures();

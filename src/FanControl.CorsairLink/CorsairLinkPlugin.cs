@@ -3,6 +3,7 @@
 using FanControl.Plugins;
 using global::CorsairLink;
 using global::CorsairLink.Synchronization;
+using Microsoft.Win32;
 using System.Reflection;
 using System.Timers;
 
@@ -33,14 +34,24 @@ public sealed class CorsairLinkPlugin : IPlugin
     private int _refreshSkipCount = 0;
     private int _refreshSkipCountFlag = 1;
     private int _tickCount = 0;
+    private bool _isSystemSuspending;
 
-    string IPlugin.Name => "CorsairLink";
+    public string Name => "CorsairLink";
 
     public CorsairLinkPlugin()
+        : this(new CorsairLinkPluginLogger())
     {
+        if (_logger is CorsairLinkPluginLogger corsairLinkPluginLogger)
+        {
+            corsairLinkPluginLogger.ErrorLogged += new EventHandler<EventArgs>(OnErrorLogged);
+        }
+    }
+
+    public CorsairLinkPlugin(ILogger logger)
+    {
+        _logger = logger;
         _pluginVersion = GetVersion();
         _errorNotificationsDisabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED");
-        _logger = CreateLogger();
         _errorDialogDispatcher.TaskCompleted += OnErrorDialogAcknowledged;
         _deviceGuardManager = new CorsairDevicesGuardManager();
         _timer = new Timer(1000)
@@ -54,13 +65,6 @@ public sealed class CorsairLinkPlugin : IPlugin
 
     private static string GetVersion() =>
         typeof(CorsairLinkPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "UNKNOWN";
-
-    private ILogger CreateLogger()
-    {
-        var logger = new CorsairLinkPluginLogger();
-        logger.ErrorLogged += new EventHandler<EventArgs>(OnErrorLogged);
-        return logger;
-    }
 
     private void OnErrorDialogAcknowledged(object sender, EventArgs e)
     {
@@ -122,7 +126,7 @@ public sealed class CorsairLinkPlugin : IPlugin
     private void ShowErrorDialog(string message)
     {
         _errorDialogDispatcher.WaitNonBlocking(
-            () => NativeMethods.MessageBox(
+            () => _ = NativeMethods.MessageBox(
                 IntPtr.Zero,
                 message,
                 "Fan Control - CorsairLink Error",
@@ -153,6 +157,13 @@ public sealed class CorsairLinkPlugin : IPlugin
 
     private async Task RefreshAsync(CancellationToken cancellationToken)
     {
+        if (_isSystemSuspending)
+        {
+            _logger.Warning(LOGGER_CATEGORY_PLUGIN, "Refresh skipped - system about to be suspended.");
+            _logger.Flush();
+            return;
+        }
+
         bool canRefresh;
 
         try
@@ -174,17 +185,27 @@ public sealed class CorsairLinkPlugin : IPlugin
 
                 foreach (var device in _devices)
                 {
+                    if (cancellationToken.IsCancellationRequested)
+                    {
+                        break;
+                    }
+
                     var task = Task.Run(() =>
                     {
                         try
                         {
-                            device.Refresh();
+                            device.Refresh(cancellationToken);
                         }
                         catch (Exception ex)
                         {
+                            if (cancellationToken.IsCancellationRequested)
+                            {
+                                return;
+                            }
+
                             _logger.Error(device.Name, $"An error occurred refreshing device '{device.Name}' ({device.UniqueId})", ex);
                         }
-                    });
+                    }, cancellationToken);
 
                     tasks.Add(task);
                 }
@@ -207,7 +228,7 @@ public sealed class CorsairLinkPlugin : IPlugin
         }
     }
 
-    void IPlugin.Close()
+    public void Close()
     {
         CloseImpl();
     }
@@ -220,6 +241,8 @@ public sealed class CorsairLinkPlugin : IPlugin
         {
             return;
         }
+
+        SystemEvents.PowerModeChanged -= SystemEvents_PowerModeChanged;
 
         _refreshCts.Cancel();
         _refreshCts.Dispose();
@@ -234,7 +257,7 @@ public sealed class CorsairLinkPlugin : IPlugin
         _logger.Flush();
     }
 
-    void IPlugin.Initialize()
+    public void Initialize()
     {
         if (IsInitialized)
         {
@@ -242,6 +265,8 @@ public sealed class CorsairLinkPlugin : IPlugin
         }
 
         _refreshCts = new CancellationTokenSource();
+        SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
+
         _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion}");
 
         var initializedDevices = new List<IDevice>();
@@ -251,7 +276,7 @@ public sealed class CorsairLinkPlugin : IPlugin
         {
             try
             {
-                if (!device.Connect())
+                if (!device.Connect(_refreshCts.Token))
                 {
                     _logger.Error(LOGGER_CATEGORY_DEVICE_INIT, $"Device '{device.Name}' ({device.UniqueId}) failed to connect! This device will not be available.");
                     continue;
@@ -270,6 +295,24 @@ public sealed class CorsairLinkPlugin : IPlugin
         _devices = initializedDevices;
         _timer.Enabled = true;
         IsInitialized = true;
+    }
+
+    private void SystemEvents_PowerModeChanged(object sender, PowerModeChangedEventArgs e)
+    {
+        HandlePowerModeChange(e.Mode);
+    }
+
+    private void HandlePowerModeChange(PowerModes powerMode)
+    {
+        if (powerMode == PowerModes.Suspend)
+        {
+            _isSystemSuspending = true;
+            _refreshCts.Cancel();
+        }
+        else if (powerMode == PowerModes.Resume)
+        {
+            _isSystemSuspending = false;
+        }
     }
 
     private IEnumerable<IDevice> GetSupportedDevices()
@@ -291,7 +334,7 @@ public sealed class CorsairLinkPlugin : IPlugin
         return devices;
     }
 
-    void IPlugin.Load(IPluginSensorsContainer container)
+    public void Load(IPluginSensorsContainer container)
     {
         if (!IsInitialized)
         {

@@ -30,7 +30,7 @@ public abstract class DeviceBase : IDevice
 
     protected bool CanLogDebug => _logger.DebugEnabled;
 
-    public virtual bool Connect()
+    public virtual bool Connect(CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }
@@ -45,7 +45,7 @@ public abstract class DeviceBase : IDevice
         throw new NotImplementedException();
     }
 
-    public virtual void Refresh()
+    public virtual void Refresh(CancellationToken cancellationToken = default)
     {
         throw new NotImplementedException();
     }

@@ -59,7 +59,7 @@ public class HydroPlatinumDevice : DeviceBase
 
     public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    public override bool Connect()
+    public override bool Connect(CancellationToken cancellationToken = default)
     {
         Disconnect();
 
@@ -119,7 +119,7 @@ public class HydroPlatinumDevice : DeviceBase
         }
     }
 
-    public override void Refresh()
+    public override void Refresh(CancellationToken cancellationToken = default)
     {
         var lockTaken = false;
 

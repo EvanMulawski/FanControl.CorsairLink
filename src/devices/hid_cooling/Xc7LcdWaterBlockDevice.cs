@@ -39,7 +39,7 @@ public sealed class Xc7LcdWaterBlockDevice : DeviceBase
         return buffer;
     }
 
-    public override bool Connect()
+    public override bool Connect(CancellationToken cancellationToken = default)
     {
         LogDebug("Connect");
 
@@ -81,7 +81,7 @@ public sealed class Xc7LcdWaterBlockDevice : DeviceBase
         return Xc7LcdWaterBlockDataReader.GetFirmwareVersion(buffer);
     }
 
-    public override void Refresh()
+    public override void Refresh(CancellationToken cancellationToken = default)
     {
         LogDebug("Refresh");
 

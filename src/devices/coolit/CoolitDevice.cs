@@ -96,7 +96,7 @@ public sealed class CoolitDevice : DeviceBase
 
     public override IReadOnlyCollection<TemperatureSensor> TemperatureSensors => _temperatureSensors.Values;
 
-    public override bool Connect()
+    public override bool Connect(CancellationToken cancellationToken = default)
     {
         Disconnect();
 
@@ -163,7 +163,7 @@ public sealed class CoolitDevice : DeviceBase
 
     public override string GetFirmwareVersion() => _firmwareVersion ?? "?";
 
-    public override void Refresh() => RefreshImpl();
+    public override void Refresh(CancellationToken cancellationToken = default) => RefreshImpl();
 
     private void RefreshImpl(bool initialize = false)
     {

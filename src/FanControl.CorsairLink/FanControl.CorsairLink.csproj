@@ -34,6 +34,7 @@
       <HintPath>..\..\ref\FanControl.Plugins.dll</HintPath>
     </Reference>
     <PackageReference Include="ILRepack.Lib.MSBuild.Task" Version="2.0.33" />
+    <PackageReference Include="Microsoft.Win32.SystemEvents" Version="8.0.0" />
   </ItemGroup>
 
 </Project>
