@@ -186,7 +186,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
     public override void SetChannelPower(int channel, int percent)
     {
         var clampMin = PERCENT_MIN;
-        if (_channels[channel].KnownDevice.Type == LinkDeviceType.LiquidCooler)
+        if (_channels[channel].KnownDevice.IsPump)
         {
             clampMin = _pumpPowerMinimum;
         }
@@ -197,7 +197,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
     public override void ResetChannel(int channel)
     {
         var value = DEFAULT_SPEED_CHANNEL_POWER;
-        if (_channels[channel].KnownDevice.Type == LinkDeviceType.LiquidCooler)
+        if (_channels[channel].KnownDevice.IsPump)
         {
             value = DEFAULT_SPEED_CHANNEL_POWER_PUMP;
         }
