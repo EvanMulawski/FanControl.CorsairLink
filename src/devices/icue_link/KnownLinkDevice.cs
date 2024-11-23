@@ -21,6 +21,7 @@ public sealed class KnownLinkDevice
 public enum LinkDeviceType : byte
 {
     FanQxSeries = 0x01,
+    FanLxSeries = 0x02,
     LiquidCooler = 0x07,
     WaterBlock = 0x09,
     Pump = 0x0c,
