@@ -41,6 +41,8 @@ public static class Utils
 
     public static string ToHexString(this byte[] bytes) => ToHexString(bytes.AsSpan());
 
+    public static string ToHexString(this byte b) => b.ToString("X2");
+
     public static float FromLinear11(ReadOnlySpan<byte> bytes)
     {
         int value = bytes[1] << 8 | bytes[0];

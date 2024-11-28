@@ -313,9 +313,11 @@ public sealed class ICueLinkHubDevice : DeviceBase
         Write(writeBuf);
         Read(readBuf);
 
-        if (IsResponseError(readBuf))
+        var (isError, errorCode) = GetResponseError(readBuf);
+
+        if (isError)
         {
-            throw CreateCommandException("Command error: An error code was returned after sending the command.", command, data, waitForDataType);
+            throw CreateCommandException("Command error: An error code was returned after sending the command.", command, data, waitForDataType, errorCode, writeBuf, readBuf);
         }
 
         if (waitForDataType.Length == 2)
@@ -336,19 +338,41 @@ public sealed class ICueLinkHubDevice : DeviceBase
         return readBuf.AsSpan(1).ToArray();
     }
 
-    private static CorsairLinkDeviceException CreateCommandException(string message, ReadOnlySpan<byte> command, ReadOnlySpan<byte> data, ReadOnlySpan<byte> waitForDataType)
+    private static CorsairLinkDeviceException CreateCommandException(
+        string message,
+        ReadOnlySpan<byte> command,
+        ReadOnlySpan<byte> data,
+        ReadOnlySpan<byte> waitForDataType = default,
+        byte errorCode = default,
+        ReadOnlySpan<byte> writeBuffer = default,
+        ReadOnlySpan<byte> readBuffer = default)
     {
         var exception = new CorsairLinkDeviceException(message);
         exception.Data[nameof(command)] = command.ToHexString();
         exception.Data[nameof(data)] = data.ToHexString();
-        exception.Data[nameof(waitForDataType)] = waitForDataType.ToHexString();
+        if (!waitForDataType.IsEmpty)
+        {
+            exception.Data[nameof(waitForDataType)] = waitForDataType.ToHexString();
+        }
+        if (errorCode > 0)
+        {
+            exception.Data[nameof(errorCode)] = errorCode.ToHexString();
+        }
+        if (!writeBuffer.IsEmpty)
+        {
+            exception.Data[nameof(writeBuffer)] = writeBuffer.ToHexString();
+        }
+        if (!readBuffer.IsEmpty)
+        {
+            exception.Data[nameof(readBuffer)] = readBuffer.ToHexString();
+        }
         return exception;
     }
 
-    private bool IsResponseError(ReadOnlySpan<byte> responseBuffer)
+    private (bool IsError, byte ErrorCode) GetResponseError(ReadOnlySpan<byte> responseBuffer)
     {
         var errorByte = responseBuffer[4];
-        return errorByte != 0x00;
+        return (errorByte != 0x00, errorByte);
     }
 
     private bool DoesResponseDataTypeMatchExpected(ReadOnlySpan<byte> responseBuffer, ReadOnlySpan<byte> expectedDataType)
