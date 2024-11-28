@@ -15,17 +15,18 @@ public sealed class KnownLinkDevice
     public string Name { get; }
     public LinkDeviceFlags Flags { get; }
 
-    public bool IsPump => Type == LinkDeviceType.LiquidCooler || Type == LinkDeviceType.Pump;
+    public bool IsPump => Type == LinkDeviceType.LiquidCoolerHSeries || Type == LinkDeviceType.LiquidCoolerTitanSeries || Type == LinkDeviceType.Pump;
 }
 
 public enum LinkDeviceType : byte
 {
     FanQxSeries = 0x01,
     FanLxSeries = 0x02,
-    LiquidCooler = 0x07,
+    LiquidCoolerHSeries = 0x07,
     WaterBlock = 0x09,
     Pump = 0x0c,
     FanRxRgbSeries = 0x0f,
+    LiquidCoolerTitanSeries = 0x11,
     FanRxSeries = 0x13,
 }
 
