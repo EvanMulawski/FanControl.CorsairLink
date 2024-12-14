@@ -22,7 +22,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         public static ReadOnlySpan<byte> GetSpeeds => new byte[] { 0x17 };
         public static ReadOnlySpan<byte> GetTemperatures => new byte[] { 0x21 };
         public static ReadOnlySpan<byte> SoftwareSpeedFixedPercent => new byte[] { 0x18 };
-        public static ReadOnlySpan<byte> GetSubDevices => new byte[] { 0x36 };
+        public static ReadOnlySpan<byte> GetSubDevices => new byte[] { 0x00 };
     }
 
     private static class DataTypes
@@ -31,6 +31,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         public static ReadOnlySpan<byte> Temperatures => new byte[] { 0x10, 0x00 };
         public static ReadOnlySpan<byte> SoftwareSpeedFixedPercent => new byte[] { 0x07, 0x00 };
         public static ReadOnlySpan<byte> SubDevices => new byte[] { 0x21, 0x00 };
+        public static ReadOnlySpan<byte> SubDevicesContinuation => new byte[] { 0x37, 0x31 };
     }
 
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
@@ -45,6 +46,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
     private readonly IDeviceGuardManager _guardManager;
     private readonly byte _pumpPowerMinimum;
     private bool _isChangingDeviceMode;
+    private bool _supportsAdditionalSubDevices;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -112,10 +114,20 @@ public sealed class ICueLinkHubDevice : DeviceBase
 
     private void Initialize()
     {
+        var fw = GetFirmwareVersion();
+
         if (CanLogDebug)
         {
-            var fw = GetFirmwareVersion();
             LogDebug($"FW: {fw}");
+        }
+
+        // firmware v2.5 or above should have proper support for 24 devices using two endpoint reads instead of one
+        var fwParts = fw.Split('.').Select(x => Convert.ToInt32(x)).ToArray();
+        _supportsAdditionalSubDevices = fwParts[0] >= 2 && fwParts[1] >= 5;
+
+        if (CanLogDebug)
+        {
+            LogDebug($"FW supports additional subdevices: {_supportsAdditionalSubDevices}");
         }
 
         TryChangeDeviceMode();
@@ -145,8 +157,8 @@ public sealed class ICueLinkHubDevice : DeviceBase
     {
         if (initialize)
         {
-            var subDevicesResponse = ReadFromEndpoint(Endpoints.GetSubDevices, DataTypes.SubDevices);
-            InitializeChannels(subDevicesResponse);
+            var subDevicesResponses = GetSubDevicesResponses();
+            InitializeChannels(subDevicesResponses[0]!, subDevicesResponses[1]);
             InitializeSpeedChannels();
         }
 
@@ -164,11 +176,38 @@ public sealed class ICueLinkHubDevice : DeviceBase
         }
     }
 
-    private void InitializeChannels(EndpointResponse subDevicesResponse)
+    private EndpointResponse?[] GetSubDevicesResponses()
+    {
+        if (!_supportsAdditionalSubDevices)
+        {
+            return [
+                ReadFromEndpoint(Endpoints.GetSubDevices, DataTypes.SubDevices),
+                null,
+            ];
+        }
+
+        byte[] res1, res2;
+
+        using (_guardManager.AwaitExclusiveAccess())
+        {
+            SendCommand(Commands.CloseEndpoint, Endpoints.GetSubDevices);
+            SendCommand(Commands.OpenEndpoint, Endpoints.GetSubDevices);
+            res1 = SendCommand(Commands.Read, waitForDataType: DataTypes.SubDevices);
+            res2 = SendCommand(Commands.Read, waitForDataType: DataTypes.SubDevicesContinuation);
+            SendCommand(Commands.CloseEndpoint, Endpoints.GetSubDevices);
+        }
+
+        return [
+            new EndpointResponse(res1, DataTypes.SubDevices),
+            new EndpointResponse(res2, DataTypes.SubDevicesContinuation),
+        ];
+    }
+
+    private void InitializeChannels(EndpointResponse subDevicesResponse, EndpointResponse? subDevicesContinuationResponse)
     {
         _channels.Clear();
 
-        var subDevices = LinkHubDataReader.GetDevices(subDevicesResponse.Payload);
+        var subDevices = LinkHubDataReader.GetDevices(subDevicesResponse.Payload, subDevicesContinuationResponse?.Payload ?? []);
 
         foreach (var subDevice in subDevices)
         {

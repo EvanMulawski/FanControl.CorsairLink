@@ -5,50 +5,73 @@ namespace CorsairLink.Devices.ICueLink;
 
 public static class LinkHubDataReader
 {
-    public static IReadOnlyCollection<LinkHubConnectedDevice> GetDevices(ReadOnlySpan<byte> packet)
+    public static IReadOnlyCollection<LinkHubConnectedDevice> GetDevices(ReadOnlySpan<byte> subDevicesPacket, ReadOnlySpan<byte> subDevicesContinuationPacket = default)
     {
-        // payload format:
-        // [6] = last channel index
-        // [7,] = devices
+        var continuationChannel = subDevicesPacket[6];
 
-        // device format:
-        // [2] = device type
-        // [3] = device model
-        // [7] = device id length
-        // (if zeroed, channel is empty)
-        // [8] first byte of device id (device id consists of ASCII character codes)
-        // next channel starts in (device id length)+8 bytes
-
-        // channels start at 0x01 (not 0x00)
-
-        var devices = new List<LinkHubConnectedDevice>();
-        var lastChannel = packet[6];
-        var d = packet.Slice(7);
-        var i = 0;
-
-        for (int ch = 1; ch <= lastChannel; ch++)
+        IReadOnlyCollection<LinkHubConnectedDevice> ParsePacket(ReadOnlySpan<byte> packet, int startingChannel)
         {
-            var deviceIdLength = d[i + 7];
-            if (deviceIdLength == 0)
+            // payload format:
+            // [6] = last channel index
+            // [7,] = devices
+
+            // device format:
+            // [2] = device type
+            // [3] = device model
+            // [7] = device id length
+            // (if zeroed, channel is empty)
+            // [8] first byte of device id (device id consists of ASCII character codes)
+            // next channel starts in (device id length)+8 bytes
+
+            // channels start at 0x01 (not 0x00)
+
+            var devices = new List<LinkHubConnectedDevice>();
+
+            if (packet.Length == 0)
             {
-                i += 8;
-                continue;
+                return devices;
             }
 
-            var deviceInfo = d.Slice(i, 8);
-            var deviceId = d.Slice(i + 8, deviceIdLength);
+            var lastChannel = packet[6];
+            var d = packet.Slice(7);
+            var i = 0;
 
-            var device = new LinkHubConnectedDevice(
-                channel: ch,
-                id: Encoding.ASCII.GetString(deviceId.ToArray()),
-                type: deviceInfo[2],
-                model: deviceInfo[3]);
+            for (int ch = startingChannel; ch <= lastChannel; ch++)
+            {
+                var deviceIdLength = d[i + 7];
+                if (deviceIdLength == 0)
+                {
+                    i += 8;
+                    continue;
+                }
 
-            devices.Add(device);
-            i += (8 + deviceIdLength);
+                var deviceInfo = d.Slice(i, 8);
+                var isPacketEnd = i + 8 + deviceIdLength > d.Length;
+                var deviceId = isPacketEnd ? d.Slice(i + 8) : d.Slice(i + 8, deviceIdLength);
+
+                var device = new LinkHubConnectedDevice(
+                    channel: ch,
+                    id: Encoding.ASCII.GetString(deviceId.ToArray()),
+                    type: deviceInfo[2],
+                    model: deviceInfo[3]);
+
+                devices.Add(device);
+
+                if (isPacketEnd)
+                {
+                    break;
+                }
+
+                i += (8 + deviceIdLength);
+            }
+
+            return devices;
         }
 
-        return devices;
+        var devices1 = ParsePacket(subDevicesPacket, startingChannel: 1);
+        var devices2 = ParsePacket(subDevicesContinuationPacket, startingChannel: continuationChannel);
+
+        return devices1.Union(devices2).ToList();
     }
 
     public static string GetFirmwareVersion(ReadOnlySpan<byte> packet)
