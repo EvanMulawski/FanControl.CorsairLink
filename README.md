@@ -116,23 +116,24 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices are supported:
 
-| Device             | Type Code | Model Code | Status       | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
-| ------------------ | --------- | ---------- | ------------ | ----------------- | ------------------ | ---------------- |
-| QX Fan             | `01`      | `00`       | Full Support | ✅                | ✅                 | ✅               |
-| LX Fan             | `02`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
-| H100i (Black)      | `07`      | `00`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| H115i (Black)      | `07`      | `01`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| H150i (Black)      | `07`      | `02`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| H170i (Black)      | `07`      | `03`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| H100i (White)      | `07`      | `04`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| H150i (White)      | `07`      | `05`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| XC7 (Stealth Gray) | `09`      | `00`       | Full Support | n/a               | n/a                | ✅               |
-| XC7 (White)        | `09`      | `01`       | Full Support | n/a               | n/a                | ✅               |
-| XD5 (Stealth Gray) | `0c`      | `00`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| XD5 (White)        | `0c`      | `01`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
-| RX RGB Fan         | `0f`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
-| TITAN AIO          | `11`      | `00`-`05`  | Full Support | ✅                | ✅                 | ✅               |
-| RX Fan             | `13`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
+| Device                   | Type Code | Model Code | Status       | Read Fan/Pump RPM | Set Fan/Pump Power | Read Temp Sensor |
+| ------------------------ | --------- | ---------- | ------------ | ----------------- | ------------------ | ---------------- |
+| QX Fan                   | `01`      | `00`       | Full Support | ✅                | ✅                 | ✅               |
+| LX Fan                   | `02`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
+| H100i (Black)            | `07`      | `00`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| H115i (Black)            | `07`      | `01`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| H150i (Black)            | `07`      | `02`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| H170i (Black)            | `07`      | `03`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| H100i (White)            | `07`      | `04`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| H150i (White)            | `07`      | `05`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| XC7 (Stealth Gray)       | `09`      | `00`       | Full Support | n/a               | n/a                | ✅               |
+| XC7 (White)              | `09`      | `01`       | Full Support | n/a               | n/a                | ✅               |
+| XD5 (Stealth Gray)       | `0c`      | `00`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| XD5 (White)              | `0c`      | `01`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| RX RGB Fan               | `0f`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
+| CapSwap Module - VRM Fan | `10`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
+| TITAN AIO                | `11`      | `00`-`05`  | Full Support | ✅                | ✅                 | ✅               |
+| RX Fan                   | `13`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
 
 Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/FanControl.CorsairLink/issues) and provide a USB packet capture.
 

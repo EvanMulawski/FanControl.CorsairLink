@@ -26,6 +26,7 @@ public enum LinkDeviceType : byte
     WaterBlock = 0x09,
     Pump = 0x0c,
     FanRxRgbSeries = 0x0f,
+    CapSwapModuleVrmFan = 0x10,
     LiquidCoolerTitanSeries = 0x11,
     FanRxSeries = 0x13,
 }
