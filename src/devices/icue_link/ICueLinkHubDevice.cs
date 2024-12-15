@@ -22,7 +22,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         public static ReadOnlySpan<byte> GetSpeeds => new byte[] { 0x17 };
         public static ReadOnlySpan<byte> GetTemperatures => new byte[] { 0x21 };
         public static ReadOnlySpan<byte> SoftwareSpeedFixedPercent => new byte[] { 0x18 };
-        public static ReadOnlySpan<byte> GetSubDevices => new byte[] { 0x00 };
+        public static ReadOnlySpan<byte> GetSubDevices => new byte[] { 0x36 };
     }
 
     private static class DataTypes
