@@ -31,7 +31,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
         public static ReadOnlySpan<byte> Temperatures => new byte[] { 0x10, 0x00 };
         public static ReadOnlySpan<byte> SoftwareSpeedFixedPercent => new byte[] { 0x07, 0x00 };
         public static ReadOnlySpan<byte> SubDevices => new byte[] { 0x21, 0x00 };
-        public static ReadOnlySpan<byte> SubDevicesContinuation => new byte[] { 0x37, 0x31 };
+        public static ReadOnlySpan<byte> Continuation => new byte[] { };
     }
 
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
@@ -193,13 +193,13 @@ public sealed class ICueLinkHubDevice : DeviceBase
             SendCommand(Commands.CloseEndpoint, Endpoints.GetSubDevices);
             SendCommand(Commands.OpenEndpoint, Endpoints.GetSubDevices);
             res1 = SendCommand(Commands.Read, waitForDataType: DataTypes.SubDevices);
-            res2 = SendCommand(Commands.Read, waitForDataType: DataTypes.SubDevicesContinuation);
+            res2 = SendCommand(Commands.Read);
             SendCommand(Commands.CloseEndpoint, Endpoints.GetSubDevices);
         }
 
         return [
             new EndpointResponse(res1, DataTypes.SubDevices),
-            new EndpointResponse(res2, DataTypes.SubDevicesContinuation),
+            new EndpointResponse(res2, DataTypes.Continuation),
         ];
     }
 
@@ -521,6 +521,6 @@ public sealed class ICueLinkHubDevice : DeviceBase
         public byte[] Payload { get; }
         public byte[] DataType { get; }
 
-        public ReadOnlySpan<byte> GetData() => Payload.AsSpan().Slice(6);
+        public ReadOnlySpan<byte> GetData() => Payload.AsSpan().Slice(4 + DataType.Length);
     }
 }

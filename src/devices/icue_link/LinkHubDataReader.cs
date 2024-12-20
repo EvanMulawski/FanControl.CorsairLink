@@ -7,13 +7,11 @@ public static class LinkHubDataReader
 {
     public static IReadOnlyCollection<LinkHubConnectedDevice> GetDevices(ReadOnlySpan<byte> subDevicesPacket, ReadOnlySpan<byte> subDevicesContinuationPacket = default)
     {
-        var continuationChannel = subDevicesPacket[6];
-
-        IReadOnlyCollection<LinkHubConnectedDevice> ParsePacket(ReadOnlySpan<byte> packet, int startingChannel)
+        static IReadOnlyCollection<LinkHubConnectedDevice> ParsePacket(ReadOnlySpan<byte> packetData)
         {
             // payload format:
-            // [6] = last channel index
-            // [7,] = devices
+            // [0] = last channel index
+            // [1,] = devices
 
             // device format:
             // [2] = device type
@@ -27,16 +25,16 @@ public static class LinkHubDataReader
 
             var devices = new List<LinkHubConnectedDevice>();
 
-            if (packet.Length == 0)
+            if (packetData.Length == 0)
             {
                 return devices;
             }
 
-            var lastChannel = packet[6];
-            var d = packet.Slice(7);
+            var lastChannel = packetData[0];
+            var d = packetData.Slice(1);
             var i = 0;
 
-            for (int ch = startingChannel; ch <= lastChannel; ch++)
+            for (int ch = 1; ch <= lastChannel; ch++)
             {
                 var deviceIdLength = d[i + 7];
                 if (deviceIdLength == 0)
@@ -68,10 +66,16 @@ public static class LinkHubDataReader
             return devices;
         }
 
-        var devices1 = ParsePacket(subDevicesPacket, startingChannel: 1);
-        var devices2 = ParsePacket(subDevicesContinuationPacket, startingChannel: continuationChannel);
+        var subDevicesPacketData1 = subDevicesPacket.Slice(6);
+        var subDevicesPacketData2 = subDevicesContinuationPacket.Length > 4 ? subDevicesContinuationPacket.Slice(4) : [];
 
-        return devices1.Union(devices2).ToList();
+        var subDevicesFullPacketData = new byte[subDevicesPacketData1.Length + subDevicesPacketData2.Length];
+        subDevicesPacketData1.CopyTo(subDevicesFullPacketData);
+        subDevicesPacketData2.CopyTo(subDevicesFullPacketData.AsSpan(subDevicesPacketData1.Length));
+
+        var devices = ParsePacket(subDevicesFullPacketData);
+
+        return devices;
     }
 
     public static string GetFirmwareVersion(ReadOnlySpan<byte> packet)
