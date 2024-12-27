@@ -56,6 +56,7 @@ public static class HardwareIds
     public static readonly int CorsairPsuAX1000iProductId = 0x1c0f;
     public static readonly int CorsairPsuAX1300iProductId = 0x1c10;
     public static readonly int CorsairPsuAX1600iProductId = 0x1c11;
+    public static readonly int CorsairPsuHX1200i2023ProductId = 0x1c23;
     public static readonly int CorsairObsidian1000DCommanderProProductId = 0x1d00;
 
     public static class DeviceDriverGroups
@@ -118,6 +119,7 @@ public static class HardwareIds
             CorsairPsuHX850iProductId,
             CorsairPsuHX1000iProductId,
             CorsairPsuHX1200iProductId,
+            CorsairPsuHX1200i2023ProductId,
             CorsairPsuHX1000i2021ProductId,
             CorsairPsuHX1500i2021ProductId,
             CorsairPsuRM550iProductId,

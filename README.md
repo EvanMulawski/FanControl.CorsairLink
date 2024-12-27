@@ -57,6 +57,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | HX850i                         | `1c06`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1000i                        | `1c07`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1200i                        | `1c08`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX1200i (2023)                 | `1c23`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1000i (2021)                 | `1c1e`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1500i (2021)                 | `1c1f`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | RM550i                         | `1c09`     | HidPsu         | Full Support <sup>7</sup>       | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
