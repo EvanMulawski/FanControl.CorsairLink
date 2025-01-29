@@ -33,6 +33,7 @@ public static class HardwareIds
     public static readonly int CorsairCommanderCore2022ProductId = 0x0c32;
     public static readonly int CorsairHydroH60iEliteProductId = 0x0c34;
     public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
+    public static readonly int CorsairHydroH100iEliteWhiteProductId = 0x0c40;
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
     public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
     public static readonly int CorsairICueLinkHubProductId = 0x0c3f;
@@ -90,6 +91,7 @@ public static class HardwareIds
             CorsairHydroH100iPlatinumSEProductId,
             CorsairHydroH100iProXTProductId,
             CorsairHydroH100iEliteProductId,
+            CorsairHydroH100iEliteWhiteProductId,
             CorsairHydroH115iProXTProductId,
             CorsairHydroH115iPlatinumProductId,
             CorsairHydroH100iProXT2ProductId,
