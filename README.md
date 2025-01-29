@@ -22,7 +22,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Hydro H60i Elite               | `0c34`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H60i Pro XT              | `0c29`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H60i Pro XT              | `0c30`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H100i Elite              | `0c35`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Elite (Black)      | `0c35`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H100i Elite (White)      | `0c40`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H100i Platinum           | `0c18`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H100i Platinum SE        | `0c19`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H100i Pro XT             | `0c20`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
@@ -31,7 +32,8 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Hydro H115i Platinum           | `0c17`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H115i Pro XT             | `0c21`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H115i Pro XT             | `0c2e`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
-| Hydro H150i Elite              | `0c37`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H150i Elite (Black)      | `0c37`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
+| Hydro H150i Elite (White)      | `0c41`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H150i Pro XT             | `0c22`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H150i Pro XT             | `0c2f`     | HydroPlatinum  | Full Support <sup>1</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | One                            | `0c14`     | HydroPlatinum  | Partial Support <sup>1,11</sup> | ✅                                | ⚠️ <sup>4,11</sup>                | ✅ <sup>5</sup>                   |

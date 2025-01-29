@@ -32,10 +32,12 @@ public static class HardwareIds
     public static readonly int CorsairHydroH60iProXT2ProductId = 0x0c30;
     public static readonly int CorsairCommanderCore2022ProductId = 0x0c32;
     public static readonly int CorsairHydroH60iEliteProductId = 0x0c34;
-    public static readonly int CorsairHydroH100iEliteProductId = 0x0c35;
+    public static readonly int CorsairHydroH100iEliteBlackProductId = 0x0c35;
     public static readonly int CorsairHydroH115iEliteProductId = 0x0c36;
-    public static readonly int CorsairHydroH150iEliteProductId = 0x0c37;
+    public static readonly int CorsairHydroH150iEliteBlackProductId = 0x0c37;
     public static readonly int CorsairICueLinkHubProductId = 0x0c3f;
+    public static readonly int CorsairHydroH100iEliteWhiteProductId = 0x0c40;
+    public static readonly int CorsairHydroH150iEliteWhiteProductId = 0x0c41;
     public static readonly int CorsairXc7LcdWaterBlockProductId = 0x0c42;
     public static readonly int CorsairPsuAXiDongleFamilyProductId = 0x1c00;
     public static readonly int CorsairPsuAX1500iProductId = 0x1c02;
@@ -89,7 +91,8 @@ public static class HardwareIds
             CorsairHydroH100iPlatinumProductId,
             CorsairHydroH100iPlatinumSEProductId,
             CorsairHydroH100iProXTProductId,
-            CorsairHydroH100iEliteProductId,
+            CorsairHydroH100iEliteBlackProductId,
+            CorsairHydroH100iEliteWhiteProductId,
             CorsairHydroH115iProXTProductId,
             CorsairHydroH115iPlatinumProductId,
             CorsairHydroH100iProXT2ProductId,
@@ -101,7 +104,8 @@ public static class HardwareIds
 
         public static readonly IReadOnlyCollection<int> HydroPlatinum3Fan = new List<int>
         {
-            CorsairHydroH150iEliteProductId,
+            CorsairHydroH150iEliteBlackProductId,
+            CorsairHydroH150iEliteWhiteProductId,
             CorsairHydroH150iProXTProductId,
             CorsairHydroH150iProXT2ProductId,
         };
