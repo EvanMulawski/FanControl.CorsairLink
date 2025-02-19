@@ -156,7 +156,7 @@ Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/Fa
 1. Download a [release](https://github.com/EvanMulawski/FanControl.CorsairLink/releases).
 2. Unblock the downloaded ZIP file. (Right-click, Properties, check Unblock, OK)
 3. Exit Fan Control.
-4. Copy `FanControl.CorsairLink.dll` to Fan Control's `Plugins` directory.
+4. Copy `FanControl.CorsairLink.dll` from the ZIP file to Fan Control's `Plugins` directory. Since v1.7.0-beta.1, the `FanControl.CorsairLink.dll` file will be located within the `net48` or `net8.0` directory. Choose the build that matches your Fan Control installation. If the `Plugins` directory does not exist where the Fan Control program is located, create it.
 5. Start Fan Control.
 
 ### SiUsbXpress Driver
