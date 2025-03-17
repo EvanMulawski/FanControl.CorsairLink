@@ -9,6 +9,14 @@ using System.Timers;
 
 public sealed class CorsairLinkPlugin : IPlugin
 {
+#if NETFRAMEWORK
+    private const string PLUGIN_NET_TARGET_FRAMEWORK = "NETFX";
+#elif NET8_0_OR_GREATER
+    private const string PLUGIN_NET_TARGET_FRAMEWORK = "NET";
+#else
+    private const string PLUGIN_NET_TARGET_FRAMEWORK = "UNKNOWN";
+#endif
+
     private const string LOGGER_CATEGORY_PLUGIN = "Plugin";
     private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
@@ -267,7 +275,7 @@ public sealed class CorsairLinkPlugin : IPlugin
         _refreshCts = new CancellationTokenSource();
         SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
 
-        _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion}");
+        _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion} ({PLUGIN_NET_TARGET_FRAMEWORK})");
 
         var initializedDevices = new List<IDevice>();
         var devices = GetSupportedDevices();
