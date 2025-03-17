@@ -34,6 +34,12 @@ public sealed class ICueLinkHubDevice : DeviceBase
         public static ReadOnlySpan<byte> Continuation => new byte[] { };
     }
 
+    private static class ResponseStatuses
+    {
+        public const byte Ok = 0x00;
+        public const byte IncorrectModeError = 0x03;
+    }
+
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const int DEFAULT_SPEED_CHANNEL_POWER_PUMP = 100;
     private const byte PERCENT_MIN = 0;
@@ -47,6 +53,8 @@ public sealed class ICueLinkHubDevice : DeviceBase
     private readonly byte _pumpPowerMinimum;
     private bool _isChangingDeviceMode;
     private bool _supportsAdditionalSubDevices;
+    private bool _needsDeviceModeChange;
+
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
@@ -105,8 +113,9 @@ public sealed class ICueLinkHubDevice : DeviceBase
         {
             _isChangingDeviceMode = true;
             LogInfo("Changing device mode to software-controlled");
-            SendCommand(Commands.EnterSoftwareMode);
+            _ = SendCommand(Commands.EnterSoftwareMode);
             _isChangingDeviceMode = false;
+            _needsDeviceModeChange = false;
         }
 
         return true;
@@ -160,6 +169,11 @@ public sealed class ICueLinkHubDevice : DeviceBase
             var subDevicesResponses = GetSubDevicesResponses();
             InitializeChannels(subDevicesResponses[0]!, subDevicesResponses[1]);
             InitializeSpeedChannels();
+        }
+
+        if (_needsDeviceModeChange)
+        {
+            TryChangeDeviceMode();
         }
 
         WriteRequestedSpeeds();
@@ -356,6 +370,11 @@ public sealed class ICueLinkHubDevice : DeviceBase
 
         if (isError)
         {
+            if (errorCode == ResponseStatuses.IncorrectModeError)
+            {
+                _needsDeviceModeChange = true;
+            }
+
             throw CreateCommandException("Command error: An error code was returned after sending the command.", command, data, waitForDataType, errorCode, writeBuf, readBuf);
         }
 
@@ -411,7 +430,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
     private (bool IsError, byte ErrorCode) GetResponseError(ReadOnlySpan<byte> responseBuffer)
     {
         var errorByte = responseBuffer[4];
-        return (errorByte != 0x00, errorByte);
+        return (errorByte != ResponseStatuses.Ok, errorByte);
     }
 
     private bool DoesResponseDataTypeMatchExpected(ReadOnlySpan<byte> responseBuffer, ReadOnlySpan<byte> expectedDataType)
