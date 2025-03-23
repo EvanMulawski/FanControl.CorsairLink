@@ -22,6 +22,8 @@ public enum LinkDeviceType : byte
 {
     FanQxSeries = 0x01,
     FanLxSeries = 0x02,
+    FanRxMaxRgbSeries = 0x03,
+    FanRxMaxSeries = 0x04,
     LiquidCoolerHSeries = 0x07,
     WaterBlockXc7Series = 0x09,
     WaterBlockXg3Series = 0x0a,
