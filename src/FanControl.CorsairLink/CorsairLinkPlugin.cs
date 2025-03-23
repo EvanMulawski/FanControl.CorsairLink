@@ -5,6 +5,7 @@ using global::CorsairLink;
 using global::CorsairLink.Synchronization;
 using Microsoft.Win32;
 using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Timers;
 
 public sealed class CorsairLinkPlugin : IPlugin
@@ -17,12 +18,15 @@ public sealed class CorsairLinkPlugin : IPlugin
     private const string PLUGIN_NET_TARGET_FRAMEWORK = "UNKNOWN";
 #endif
 
+    private static readonly string RuntimeFramework = RuntimeInformation.FrameworkDescription.StartsWith(".NET Framework") ? "NETFX" : "NET";
+
     private const string LOGGER_CATEGORY_PLUGIN = "Plugin";
     private const string LOGGER_CATEGORY_DEVICE_ENUM = "Device Enumeration";
     private const string LOGGER_CATEGORY_DEVICE_INIT = "Device Initialization";
     private const string DIALOG_MESSAGE_SUFFIX = "\n\nReview the \"CorsairLink.log\" and \"log.txt\" log files located in the Fan Control directory.\n\nTo disable this message, set the FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED environment variable to 1 and restart Fan Control.";
     private const string DIALOG_MESSAGE_ERRORS_DETECTED = "Multiple errors detected." + DIALOG_MESSAGE_SUFFIX;
     private const string DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED = "Consecutive attempts to refresh devices have failed. A device may be unresponsive." + DIALOG_MESSAGE_SUFFIX;
+    private const string DIALOG_MESSAGE_FRAMEWORK_MISMATCH = "The CorsairLink plugin build does not match the Fan Control build. Refer to the installation instructions for this plugin.\n\nThe plugin will not be initialized.";
     private const int DIALOG_MESSAGE_ERRORS_DETECTED_COUNT = 10;
     private const int DIALOG_MESSAGE_REFRESH_SKIPS_DETECTED_COUNT = 10;
     private const int ERROR_CHECK_TICK_COUNT = 30;
@@ -70,6 +74,9 @@ public sealed class CorsairLinkPlugin : IPlugin
     }
 
     public bool IsInitialized { get; private set; }
+
+    private static bool DoesRuntimeFrameworkMatchPluginTargetFramework()
+        => RuntimeFramework == PLUGIN_NET_TARGET_FRAMEWORK;
 
     private static string GetVersion() =>
         typeof(CorsairLinkPlugin).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion ?? "UNKNOWN";
@@ -272,10 +279,18 @@ public sealed class CorsairLinkPlugin : IPlugin
             CloseImpl();
         }
 
+        _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion} ({PLUGIN_NET_TARGET_FRAMEWORK})");
+
+        if (!DoesRuntimeFrameworkMatchPluginTargetFramework())
+        {
+            _logger.Error(LOGGER_CATEGORY_PLUGIN, $"Framework mismatch - plugin will not be initialized! (plugin={PLUGIN_NET_TARGET_FRAMEWORK},runtime={RuntimeFramework})");
+            _logger.Flush();
+            ShowErrorDialog(DIALOG_MESSAGE_FRAMEWORK_MISMATCH);
+            return;
+        }
+
         _refreshCts = new CancellationTokenSource();
         SystemEvents.PowerModeChanged += SystemEvents_PowerModeChanged;
-
-        _logger.Info(LOGGER_CATEGORY_PLUGIN, $"Version: {_pluginVersion} ({PLUGIN_NET_TARGET_FRAMEWORK})");
 
         var initializedDevices = new List<IDevice>();
         var devices = GetSupportedDevices();
