@@ -16,7 +16,7 @@ public static class LinkHubDataReader
             // device format:
             // [2] = device type
             // [3] = device model
-            // [7] = device id length
+            // [7] = device id length (possible fw bug: continuation packet missing first byte?)
             // (if zeroed, channel is empty)
             // [8] first byte of device id (device id consists of ASCII character codes)
             // next channel starts in (device id length)+8 bytes
@@ -36,7 +36,7 @@ public static class LinkHubDataReader
 
             for (int ch = 1; ch <= lastChannel; ch++)
             {
-                var deviceIdLength = d[i + 7];
+                int deviceIdLength = d[i + 7];
                 if (deviceIdLength == 0)
                 {
                     i += 8;
@@ -44,12 +44,19 @@ public static class LinkHubDataReader
                 }
 
                 var deviceInfo = d.Slice(i, 8);
-                var isPacketEnd = i + 8 + deviceIdLength > d.Length;
-                var deviceId = isPacketEnd ? d.Slice(i + 8) : d.Slice(i + 8, deviceIdLength);
+                var deviceIdStartIdx = i + 8;
+                var isPacketEnd = deviceIdStartIdx + deviceIdLength > d.Length;
+
+                var deviceIdSpan = d.Slice(deviceIdStartIdx, deviceIdLength);
+                var zeroIndex = deviceIdSpan.IndexOf((byte)0);
+                var deviceIdBytes = (zeroIndex >= 0 ? deviceIdSpan.Slice(0, zeroIndex) : deviceIdSpan).ToArray();
+
+                var deviceId = ParseDeviceId(deviceIdBytes);
+                deviceIdLength = deviceId.Length;
 
                 var device = new LinkHubConnectedDevice(
                     channel: ch,
-                    id: Encoding.ASCII.GetString(deviceId.ToArray()),
+                    id: deviceId,
                     type: deviceInfo[2],
                     model: deviceInfo[3]);
 
@@ -66,6 +73,11 @@ public static class LinkHubDataReader
             return devices;
         }
 
+        static string ParseDeviceId(byte[] bytes)
+        {
+            return Encoding.ASCII.GetString(bytes.TakeWhile(b => b > 0).ToArray());
+        }
+
         var subDevicesPacketData1 = subDevicesPacket.Slice(6);
         var subDevicesPacketData2 = subDevicesContinuationPacket.Length > 4 ? subDevicesContinuationPacket.Slice(4) : [];
 
@@ -74,7 +86,6 @@ public static class LinkHubDataReader
         subDevicesPacketData2.CopyTo(subDevicesFullPacketData.AsSpan(subDevicesPacketData1.Length));
 
         var devices = ParsePacket(subDevicesFullPacketData);
-
         return devices;
     }
 
