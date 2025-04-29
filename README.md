@@ -123,6 +123,8 @@ Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices ar
 | ------------------------ | --------- | ---------- | ------------ | ----------------- | ------------------ | ---------------- |
 | QX Fan                   | `01`      | `00`       | Full Support | ✅                | ✅                 | ✅               |
 | LX Fan                   | `02`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
+| RX MAX RGB Fan           | `03`      | `00`       | Full Support | ✅                | ✅                 | n/a              |
+| RX MAX Fan               | `04`      | `00`       | Full Support | ✅                | ✅                 | ✅              |
 | H100i (Black)            | `07`      | `00`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
 | H115i (Black)            | `07`      | `01`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
 | H150i (Black)            | `07`      | `02`       | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
