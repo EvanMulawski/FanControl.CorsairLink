@@ -57,8 +57,8 @@ public static class LinkHubDataReader
                 var device = new LinkHubConnectedDevice(
                     channel: ch,
                     id: deviceId,
-                    type: deviceInfo[2],
-                    model: deviceInfo[3]);
+                    model: deviceInfo[2],
+                    variant: deviceInfo[3]);
 
                 devices.Add(device);
 

@@ -15,8 +15,8 @@ public class LinkHubDataReaderTests
 
         // Assert
         Assert.Equal(6, devices.Count);
-        Assert.Equal(0x07, devices.OnChannel(10).Type);
-        Assert.Equal(0x00, devices.OnChannel(10).Model);
+        Assert.Equal(0x07, devices.OnChannel(10).Model);
+        Assert.Equal(0x00, devices.OnChannel(10).Variant);
     }
 
     [Fact]
@@ -30,8 +30,8 @@ public class LinkHubDataReaderTests
 
         // Assert
         Assert.Equal(8, devices.Count);
-        Assert.Equal(0x07, devices.OnChannel(10).Type);
-        Assert.Equal(0x05, devices.OnChannel(10).Model);
+        Assert.Equal(0x07, devices.OnChannel(10).Model);
+        Assert.Equal(0x05, devices.OnChannel(10).Variant);
     }
 
     [Fact]
@@ -45,8 +45,8 @@ public class LinkHubDataReaderTests
 
         // Assert
         Assert.Equal(4, devices.Count);
-        Assert.Equal(0x09, devices.OnChannel(8).Type);
-        Assert.Equal(0x00, devices.OnChannel(8).Model);
+        Assert.Equal(0x09, devices.OnChannel(8).Model);
+        Assert.Equal(0x00, devices.OnChannel(8).Variant);
     }
 
     [Fact]
@@ -60,12 +60,12 @@ public class LinkHubDataReaderTests
 
         // Assert
         Assert.Equal(3, devices.Count);
-        Assert.Equal(0x0c, devices.OnChannel(1).Type);
-        Assert.Equal(0x00, devices.OnChannel(1).Model);
-        Assert.Equal(0x0e, devices.OnChannel(2).Type);
-        Assert.Equal(0x00, devices.OnChannel(2).Model);
-        Assert.Equal(0x09, devices.OnChannel(13).Type);
-        Assert.Equal(0x00, devices.OnChannel(13).Model);
+        Assert.Equal(0x0c, devices.OnChannel(1).Model);
+        Assert.Equal(0x00, devices.OnChannel(1).Variant);
+        Assert.Equal(0x0e, devices.OnChannel(2).Model);
+        Assert.Equal(0x00, devices.OnChannel(2).Variant);
+        Assert.Equal(0x09, devices.OnChannel(13).Model);
+        Assert.Equal(0x00, devices.OnChannel(13).Variant);
     }
 
     [Fact]
@@ -82,12 +82,12 @@ public class LinkHubDataReaderTests
         // Assert
         Assert.Equal(15, devices.Count);
         Assert.Equal(devices.Count, deviceUniqueChannelCount);
-        Assert.Equal(0x02, devices.OnChannel(1).Type);
-        Assert.Equal(0x00, devices.OnChannel(1).Model);
-        Assert.Equal(0x02, devices.OnChannel(14).Type);
-        Assert.Equal(0x00, devices.OnChannel(14).Model);
-        Assert.Equal(0x02, devices.OnChannel(15).Type);
-        Assert.Equal(0x00, devices.OnChannel(15).Model);
+        Assert.Equal(0x02, devices.OnChannel(1).Model);
+        Assert.Equal(0x00, devices.OnChannel(1).Variant);
+        Assert.Equal(0x02, devices.OnChannel(14).Model);
+        Assert.Equal(0x00, devices.OnChannel(14).Variant);
+        Assert.Equal(0x02, devices.OnChannel(15).Model);
+        Assert.Equal(0x00, devices.OnChannel(15).Variant);
     }
 
     [Fact]
@@ -104,10 +104,10 @@ public class LinkHubDataReaderTests
         // Assert
         Assert.Equal(18, devices.Count);
         Assert.Equal(devices.Count, deviceUniqueChannelCount);
-        Assert.Equal(0x04, devices.OnChannel(1).Type);
-        Assert.Equal(0x00, devices.OnChannel(1).Model);
-        Assert.Equal(0x13, devices.OnChannel(6).Type);
-        Assert.Equal(0x00, devices.OnChannel(6).Model);
+        Assert.Equal(0x04, devices.OnChannel(1).Model);
+        Assert.Equal(0x00, devices.OnChannel(1).Variant);
+        Assert.Equal(0x13, devices.OnChannel(6).Model);
+        Assert.Equal(0x00, devices.OnChannel(6).Variant);
     }
 
     [Fact]

@@ -2,23 +2,23 @@
 
 public sealed class KnownLinkDevice
 {
-    public KnownLinkDevice(LinkDeviceType type, byte model, string name, LinkDeviceFlags flags = LinkDeviceFlags.None)
+    public KnownLinkDevice(LinkDeviceModel model, byte variant, string name, LinkDeviceFlags flags = LinkDeviceFlags.None)
     {
-        Type = type;
         Model = model;
+        Variant = variant;
         Name = name;
         Flags = flags;
     }
 
-    public LinkDeviceType Type { get; }
-    public byte Model { get; }
+    public LinkDeviceModel Model { get; }
+    public byte Variant { get; }
     public string Name { get; }
     public LinkDeviceFlags Flags { get; }
 
-    public bool IsPump => Type == LinkDeviceType.LiquidCoolerHSeries || Type == LinkDeviceType.LiquidCoolerTitanSeries || Type == LinkDeviceType.PumpXd5Series;
+    public bool IsPump => Model == LinkDeviceModel.LiquidCoolerHSeries || Model == LinkDeviceModel.LiquidCoolerTitanSeries || Model == LinkDeviceModel.PumpXd5Series;
 }
 
-public enum LinkDeviceType : byte
+public enum LinkDeviceModel : byte
 {
     FanQxSeries = 0x01,
     FanLxSeries = 0x02,

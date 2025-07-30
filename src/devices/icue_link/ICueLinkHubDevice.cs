@@ -225,10 +225,10 @@ public sealed class ICueLinkHubDevice : DeviceBase
 
         foreach (var subDevice in subDevices)
         {
-            var knownDevice = KnownLinkDevices.Find((LinkDeviceType)subDevice.Type, subDevice.Model);
+            var knownDevice = KnownLinkDevices.Find((LinkDeviceModel)subDevice.Model, subDevice.Variant);
             if (knownDevice is null)
             {
-                LogWarning($"Unsupported iCUE LINK device (type={subDevice.Type}, model={subDevice.Model}, channel={subDevice.Channel}, id={subDevice.Id})");
+                LogWarning($"Unsupported iCUE LINK device (model={subDevice.Model}, variant={subDevice.Variant}, channel={subDevice.Channel}, id={subDevice.Id})");
                 continue;
             }
 

@@ -2,16 +2,16 @@
 
 public class LinkHubConnectedDevice
 {
-    public LinkHubConnectedDevice(int channel, string id, byte type, byte model)
+    public LinkHubConnectedDevice(int channel, string id, byte model, byte variant)
     {
         Channel = channel;
         Id = id;
-        Type = type;
         Model = model;
+        Variant = variant;
     }
 
     public int Channel { get; }
     public string Id { get; }
-    public byte Type { get; }
     public byte Model { get; }
+    public byte Variant { get; }
 }
