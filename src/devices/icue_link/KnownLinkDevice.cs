@@ -15,7 +15,11 @@ public sealed class KnownLinkDevice
     public string Name { get; }
     public LinkDeviceFlags Flags { get; }
 
-    public bool IsPump => Model == LinkDeviceModel.LiquidCoolerHSeries || Model == LinkDeviceModel.LiquidCoolerTitanSeries || Model == LinkDeviceModel.PumpXd5Series;
+    public bool IsPump =>
+        Model == LinkDeviceModel.LiquidCoolerHSeries ||
+        Model == LinkDeviceModel.LiquidCoolerTitanSeries ||
+        Model == LinkDeviceModel.PumpXd5Series ||
+        Model == LinkDeviceModel.PumpXd6Series;
 }
 
 public enum LinkDeviceModel : byte
