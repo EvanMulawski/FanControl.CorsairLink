@@ -140,6 +140,8 @@ Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices ar
 | CapSwap Module - VRM Fan | `10`       | `00`         | Full Support | ✅                | ✅                 | n/a              |
 | TITAN AIO                | `11`       | `00`-`05`    | Full Support | ✅                | ✅                 | ✅               |
 | RX Fan                   | `13`       | `00`         | Full Support | ✅                | ✅                 | n/a              |
+| XD6 (Stealth Gray)       | `19`       | `00`         | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| XD6 (White)              | `19`       | `01`         | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
 
 Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/FanControl.CorsairLink/issues) and provide a USB packet capture.
 

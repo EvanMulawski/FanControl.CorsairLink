@@ -31,6 +31,8 @@ public static class KnownLinkDevices
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.LiquidCoolerTitanSeries, 0x04, "TITAN AIO", LinkDeviceFlags.All)); // model/color tbd
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.LiquidCoolerTitanSeries, 0x05, "TITAN 360 RX RGB AIO", LinkDeviceFlags.All)); // white
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.CapSwapModuleVrmFan, 0x00, "VRM Fan CapSwap Module", LinkDeviceFlags.ControlsSpeed | LinkDeviceFlags.ReportsSpeed));
+        _devices.Add(new KnownLinkDevice(LinkDeviceModel.PumpXd6Series, 0x00, "XD6", LinkDeviceFlags.All)); // stealth gray
+        _devices.Add(new KnownLinkDevice(LinkDeviceModel.PumpXd6Series, 0x01, "XD6", LinkDeviceFlags.All)); // white
 
         _deviceLookup = InitializeDeviceLookup();
     }

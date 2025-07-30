@@ -32,6 +32,7 @@ public enum LinkDeviceModel : byte
     CapSwapModuleVrmFan = 0x10,
     LiquidCoolerTitanSeries = 0x11,
     FanRxSeries = 0x13,
+    PumpXd6Series = 0x19,
 }
 
 [Flags]
