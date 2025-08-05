@@ -132,7 +132,7 @@ public sealed class ICueLinkHubDevice : DeviceBase
 
         // firmware v2.5 or above should have proper support for 24 devices using two endpoint reads instead of one
         var fwParts = fw.Split('.').Select(x => Convert.ToInt32(x)).ToArray();
-        _supportsAdditionalSubDevices = fwParts[0] >= 2 && fwParts[1] >= 5;
+        _supportsAdditionalSubDevices = (fwParts[0] == 2 && fwParts[1] >= 5) || fwParts[0] >= 3;
 
         if (CanLogDebug)
         {
