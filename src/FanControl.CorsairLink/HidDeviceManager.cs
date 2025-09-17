@@ -24,6 +24,7 @@ public static class HidDeviceManager
         logger.LogDevices(supportedDevices, "supported Corsair HID device(s)");
 
         var globalMinimumPumpPowerValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY");
+        var psuZeroRpmDutyThresholdValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_PSU_ZERO_RPM_DUTY");
         var directLightingDefaultColorValue = Utils.GetEnvironmentString("FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_RGB");
         _ = RgbColor.TryParse(directLightingDefaultColorValue, out var directLightingDefaultColor);
         var directLightingDefaultBrightnessValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_BRIGHTNESS");
@@ -85,7 +86,10 @@ public static class HidDeviceManager
             .Select(x => new CoolitDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HidPowerSupplyUnits)
-            .Select(x => new HidPsuDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
+            .Select(x => new HidPsuDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HidPsuDeviceOptions
+            {
+
+            }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Xc7)
             .Select(x => new Xc7LcdWaterBlockDevice(new HidSharpDeviceProxy(x), deviceGuardManager, logger)));
