@@ -23,15 +23,22 @@ public static class SiUsbXpressDeviceManager
             .ToList();
         logger.LogDevices(supportedDevices, "supported Corsair SiUsbXpress device(s)");
 
+        var psuZeroRpmDutyThresholdValue = Utils.GetEnvironmentInt32("FANCONTROL_CORSAIRLINK_PSU_ZERO_RPM_DUTY");
         var hydroAsetekProOverrideSafetyProfileFlag = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_HYDRO_ASETEK_PRO_SAFETY_PROFILE_OVERRIDE_ENABLED");
 
         var collection = new List<IDevice>();
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.FlexDongleUsbPowerSupplyUnits)
-            .Select(x => new FlexUsbPsuDevice(new FlexDongleUsbPsuProtocol(new FlexSiUsbXpressDevice(x)), deviceGuardManager, logger)));
+            .Select(x => new FlexUsbPsuDevice(new FlexDongleUsbPsuProtocol(new FlexSiUsbXpressDevice(x)), deviceGuardManager, new FlexUsbPsuDeviceOptions
+            {
+                ZeroRpmDutyThreshold = psuZeroRpmDutyThresholdValue,
+            }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.FlexModernUsbPowerSupplyUnits)
-            .Select(x => new FlexUsbPsuDevice(new ModernPsuProtocol(new FlexSiUsbXpressDevice(x)), deviceGuardManager, logger)));
+            .Select(x => new FlexUsbPsuDevice(new ModernPsuProtocol(new FlexSiUsbXpressDevice(x)), deviceGuardManager, new FlexUsbPsuDeviceOptions
+            {
+                ZeroRpmDutyThreshold = psuZeroRpmDutyThresholdValue,
+            }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HydroAsetekPro2Fan)
             .Select(x => new HydroAsetekProDevice(new AsetekCoolerProtocol(new AsetekSiUsbXpressDevice(x)), deviceGuardManager, new HydroAsetekProDeviceOptions

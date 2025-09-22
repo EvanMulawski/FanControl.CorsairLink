@@ -14,23 +14,26 @@ public sealed class FlexUsbPsuDevice : DeviceBase
     private const int TEMP_CHANNEL_COUNT = 3;
     private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const int SPEED_CHANNEL = 0;
-    private const byte PERCENT_MIN = 0x0f; // 15% is a safe minimum for the NR140P fan in this product
-    private const byte PERCENT_MAX = 0x64;
+    private const int PERCENT_MIN = 0;
+    private const int PERCENT_MAX = 100;
+    private const int DEFAULT_ZERO_RPM_DUTY_THRESHOLD = 15; // 15% is a safe minimum for the NR140P fan in this product
 
     private readonly IFlexUsbDeviceProxy _device;
     private readonly FlexUsbDeviceInfo _deviceInfo;
     private readonly IDeviceGuardManager _guardManager;
+    private readonly int _zeroRpmDutyThreshold;
     private readonly ChannelTrackingStore _requestedChannelPower = new();
     private readonly ChannelTrackingStore _fanControlModeStore = new();
     private readonly Dictionary<int, SpeedSensor> _speedSensors = new();
     private readonly Dictionary<int, TemperatureSensor> _temperatureSensors = new();
 
-    public FlexUsbPsuDevice(IFlexUsbDeviceProxy device, IDeviceGuardManager guardManager, ILogger logger)
+    public FlexUsbPsuDevice(IFlexUsbDeviceProxy device, IDeviceGuardManager guardManager, FlexUsbPsuDeviceOptions options, ILogger logger)
         : base(logger)
     {
         _device = device;
         _deviceInfo = device.GetDeviceInfo();
         _guardManager = guardManager;
+        _zeroRpmDutyThreshold = GetZeroRpmDutyThreshold(options.ZeroRpmDutyThreshold);
 
         UniqueId = _deviceInfo.DevicePath;
         Name = $"{_deviceInfo.ProductName} ({Utils.ToMD5HexString(UniqueId)})";
@@ -110,14 +113,15 @@ public sealed class FlexUsbPsuDevice : DeviceBase
 
     public override void SetChannelPower(int channel, int percent)
     {
-        LogDebug($"SetChannelPower {channel} {percent}%");
+        var zeroRpmRequested = percent < _zeroRpmDutyThreshold;
+        LogDebug($"SetChannelPower {channel} {percent}% (isZeroRpm={zeroRpmRequested})");
+
         _requestedChannelPower[SPEED_CHANNEL] = (byte)Utils.Clamp(percent, PERCENT_MIN, PERCENT_MAX);
 
-        // When the user sets the power to 0%, set the fan control mode to Normal. This allows the device
-        // to control the fan speed and allows for zero-RPM operation.
-        // Set the fan control mode to Manual if the user sets the power to 1% or higher.
-        // Note: From 1-15%, the device will set the fan speed to 15% (the minimum duty).
-        _fanControlModeStore[SPEED_CHANNEL] = percent == 0 ? FanControlModes.Normal : FanControlModes.Manual;
+        // When the user sets the power to a value below the zero-RPM duty threshold, set the fan control mode to Normal.
+        // This mode allows the device to control the fan speed and allows for zero-RPM operation.
+        // Set the fan control mode to Manual if the user sets the power at or above the threshold.
+        _fanControlModeStore[SPEED_CHANNEL] = zeroRpmRequested ? FanControlModes.Normal : FanControlModes.Manual;
     }
 
     private void InitializeSpeedChannelStores()
@@ -278,5 +282,15 @@ public sealed class FlexUsbPsuDevice : DeviceBase
         }
 
         return sb.ToString();
+    }
+
+    private static int GetZeroRpmDutyThreshold(int? userProvidedZeroRpmDutyThreshold)
+    {
+        if (userProvidedZeroRpmDutyThreshold.HasValue)
+        {
+            return Utils.Clamp(userProvidedZeroRpmDutyThreshold.Value, 1, 99);
+        }
+
+        return DEFAULT_ZERO_RPM_DUTY_THRESHOLD;
     }
 }
