@@ -101,7 +101,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
    | HXi/RMi   | 30%       |
    | AXi       | 15%       |
 
-   For v1.8.0 and above, the minimum duty is replaced with a user-customizable zero-RPM duty threshold. When the fan power drops below the threshold, control of the fan will be returned to the PSU allowing zero-ROM operation. When the fan power is at or above the threshold, control of the fan will be returned to Fan Control. The default threshold duties are unchanged from the minimum duties used in previous versions (see table above). The threshold may instead be customized by setting the `FANCONTROL_CORSAIRLINK_PSU_ZERO_RPM_DUTY` [environment variable](#configuration) to the desired threshold percentage and restarting Fan Control.
+   For v1.8.0 and above, the minimum duty is replaced with a user-customizable zero-RPM duty threshold. When the fan power drops below the threshold, control of the fan will be returned to the PSU allowing zero-RPM operation. When the fan power is at or above the threshold, control of the fan will be returned to Fan Control. The default threshold duties are unchanged from the minimum duties used in previous versions (see table above). The threshold may instead be customized by setting the `FANCONTROL_CORSAIRLINK_PSU_ZERO_RPM_DUTY` [environment variable](#configuration) to the desired threshold percentage and restarting Fan Control.
 
 7. The LibreHardwareMonitor "PSU (Corsair)" sensor source must be disabled in Fan Control's Sensor Settings.
 
