@@ -60,6 +60,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | HX1000i                        | `1c07`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1200i                        | `1c08`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1200i (2023)                 | `1c23`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
+| HX1200i (2025)                 | `1c27`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1000i (2021)                 | `1c1e`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | HX1500i (2021)                 | `1c1f`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
 | RM550i                         | `1c09`     | HidPsu         | Full Support <sup>7</sup>         | ✅                                | ✅ <sup>6</sup>                   | ✅                                |
@@ -93,12 +94,14 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 
 5. Reads the liquid temperature.
 
-6. When the fan power is set to 0%, control of the fan will be returned to the PSU allowing zero-RPM operation. When the fan power is set to 1% or higher, control of the fan will be returned to Fan Control. The minimum duty depends on the model:
+6. For versions prior to v1.8.0, when the fan power is set to 0%, control of the fan will be returned to the PSU allowing zero-RPM operation. When the fan power is set to 1% or higher, control of the fan will be returned to Fan Control. The minimum duty depends on the model:
 
    | PSU Model | Min. Duty |
    | --------- | --------- |
    | HXi/RMi   | 30%       |
    | AXi       | 15%       |
+
+   For v1.8.0 and above, the minimum duty is replaced with a user-customizable zero-RPM duty threshold. When the fan power drops below the threshold, control of the fan will be returned to the PSU allowing zero-ROM operation. When the fan power is at or above the threshold, control of the fan will be returned to Fan Control. The default threshold duties are unchanged from the minimum duties used in previous versions (see table above). The threshold may instead be customized by setting the `FANCONTROL_CORSAIRLINK_PSU_ZERO_RPM_DUTY` [environment variable](#configuration) to the desired threshold percentage and restarting Fan Control.
 
 7. The LibreHardwareMonitor "PSU (Corsair)" sensor source must be disabled in Fan Control's Sensor Settings.
 
@@ -198,9 +201,11 @@ This plugin reads the following Windows environment variables:
 | `FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED`                     | Disables critical error notifications.                         | `1` = disabled, `0` = enabled               |
 | `FANCONTROL_CORSAIRLINK_HYDRO_ASETEK_PRO_SAFETY_PROFILE_OVERRIDE_ENABLED` | Overrides the pump safety profile on Hydro Asetek Pro devices. | `1` = override, `0` = do not override       |
 | `FANCONTROL_CORSAIRLINK_MIN_PUMP_DUTY` <sup>2</sup>                       | Sets the minimum pump power on supported models.               | percent, e.g. `50`                          |
+| `FANCONTROL_CORSAIRLINK_PSU_ZERO_RPM_DUTY` <sup>3</sup>                   | Sets the zero-RPM duty threshold for the PSU fan.              | percent, e.g. `20`                          |
 
 1. Supported models: Hydro Platinum (v1.6.0+)
 2. Supported models: iCUE LINK, Commander CORE (v1.6.0+)
+3. Requires v1.8.0+
 
 > [!TIP]
 > To set these values, start Run or Command Prompt and run `rundll32 sysdm.cpl,EditEnvironmentVariables`. Alternatively, use the `setx` command.
