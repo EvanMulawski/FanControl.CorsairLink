@@ -88,7 +88,7 @@ public static class HidDeviceManager
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.HidPowerSupplyUnits)
             .Select(x => new HidPsuDevice(new HidSharpDeviceProxy(x), deviceGuardManager, new HidPsuDeviceOptions
             {
-
+                ZeroRpmDutyThreshold = psuZeroRpmDutyThresholdValue,
             }, logger)));
 
         collection.AddRange(supportedDevices.InDeviceDriverGroup(HardwareIds.DeviceDriverGroups.Xc7)
