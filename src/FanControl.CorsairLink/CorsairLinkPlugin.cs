@@ -369,31 +369,27 @@ public sealed class CorsairLinkPlugin : IPlugin
             _logger.Info(LOGGER_CATEGORY_DEVICE_INIT, device.UniqueId);
             _logger.Info(device.Name, $"Firmware Version: {device.GetFirmwareVersion()}");
 
-            AddDeviceSpeedSensors(container, device);
+            AddDeviceFans(container, device);
             AddDeviceTemperatureSensors(container, device);
-            AddDeviceSpeedControllers(container, device);
         }
 
         _logger.Flush();
     }
 
-    private void AddDeviceSpeedSensors(IPluginSensorsContainer container, IDevice device)
+    private void AddDeviceFans(IPluginSensorsContainer container, IDevice device)
     {
         foreach (var sensor in device.SpeedSensors)
         {
             var pluginSensor = new CorsairLinkSpeedSensor(device, sensor);
             container.FanSensors.Add(pluginSensor);
-            _logger.Info(device.Name, $"Sensor: {pluginSensor.Id}");
-        }
-    }
+            _logger.Info(device.Name, $"Speed Sensor: {pluginSensor.Id}");
 
-    private void AddDeviceSpeedControllers(IPluginSensorsContainer container, IDevice device)
-    {
-        foreach (var sensor in device.SpeedSensors.Where(ss => ss.SupportsControl))
-        {
-            var pluginController = new CorsairLinkSpeedController(device, sensor);
-            container.ControlSensors.Add(pluginController);
-            _logger.Info(device.Name, $"Controller: {pluginController.Id}");
+            if (sensor.SupportsControl)
+            {
+                var pluginController = new CorsairLinkSpeedController(device, sensor, pluginSensor.Id);
+                container.ControlSensors.Add(pluginController);
+                _logger.Info(device.Name, $"Speed Controller: {pluginController.Id} (Paired: {pluginSensor.Id})");
+            }
         }
     }
 
@@ -403,7 +399,7 @@ public sealed class CorsairLinkPlugin : IPlugin
         {
             var pluginSensor = new CorsairLinkTemperatureSensor(device, sensor);
             container.TempSensors.Add(pluginSensor);
-            _logger.Info(device.Name, $"Sensor: {pluginSensor.Id}");
+            _logger.Info(device.Name, $"Temperature Sensor: {pluginSensor.Id}");
         }
     }
 }

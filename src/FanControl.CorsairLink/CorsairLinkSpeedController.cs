@@ -3,19 +3,20 @@ using FanControl.Plugins;
 
 namespace FanControl.CorsairLink;
 
-public sealed class CorsairLinkSpeedController : IPluginControlSensor
+public sealed class CorsairLinkSpeedController : IPluginControlSensor2
 {
     private readonly IDevice _device;
     private readonly SpeedSensor _sensor;
     private int? _value;
 
-    public CorsairLinkSpeedController(IDevice device, SpeedSensor sensor)
+    public CorsairLinkSpeedController(IDevice device, SpeedSensor sensor, string pluginSensorId)
     {
         _device = device;
         _sensor = sensor;
+
         Id = $"CorsairLink/{device.UniqueId}/SpeedController/{sensor.Channel}";
         Name = $"{device.Name} {sensor.Name}";
-        _sensor = sensor;
+        PairedFanSensorId = pluginSensorId;
     }
 
     public string Id { get; }
@@ -23,6 +24,8 @@ public sealed class CorsairLinkSpeedController : IPluginControlSensor
     public string Name { get; }
 
     public float? Value { get; private set; }
+
+    public string PairedFanSensorId { get; }
 
     public void Reset()
     {
