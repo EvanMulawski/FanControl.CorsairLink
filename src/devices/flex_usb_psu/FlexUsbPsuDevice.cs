@@ -12,7 +12,6 @@ public sealed class FlexUsbPsuDevice : DeviceBase
     }
 
     private const int TEMP_CHANNEL_COUNT = 3;
-    private const int DEFAULT_SPEED_CHANNEL_POWER = 50;
     private const int SPEED_CHANNEL = 0;
     private const int PERCENT_MIN = 0;
     private const int PERCENT_MAX = 100;
@@ -74,7 +73,7 @@ public sealed class FlexUsbPsuDevice : DeviceBase
 
         try
         {
-            SetFanControlMode(FanControlModes.Normal);
+            ResetChannel(SPEED_CHANNEL);
         }
         catch
         {
@@ -124,11 +123,17 @@ public sealed class FlexUsbPsuDevice : DeviceBase
         _fanControlModeStore[SPEED_CHANNEL] = zeroRpmRequested ? FanControlModes.Normal : FanControlModes.Manual;
     }
 
+    public override void ResetChannel(int channel)
+    {
+        LogDebug($"ResetChannel {channel}");
+        SetChannelPower(channel, PERCENT_MIN);
+        WriteRequestedSpeeds();
+    }
+
     private void InitializeSpeedChannelStores()
     {
         LogDebug("InitializeSpeedChannelStores");
-        _requestedChannelPower[SPEED_CHANNEL] = DEFAULT_SPEED_CHANNEL_POWER;
-        _fanControlModeStore[SPEED_CHANNEL] = FanControlModes.Manual;
+        SetChannelPower(SPEED_CHANNEL, PERCENT_MIN);
     }
 
     private void RefreshTemperatures()
@@ -193,20 +198,17 @@ public sealed class FlexUsbPsuDevice : DeviceBase
     {
         LogDebug("WriteRequestedSpeeds");
 
+        var forceUpdateMode = false;
+
         if (_requestedChannelPower.ApplyChanges())
         {
+            forceUpdateMode = true;
             SetFanPower(_requestedChannelPower[SPEED_CHANNEL]);
         }
 
-        if (_fanControlModeStore.ApplyChanges())
+        if (_fanControlModeStore.ApplyChanges() || forceUpdateMode)
         {
             var mode = _fanControlModeStore[SPEED_CHANNEL];
-
-            if (CanLogDebug)
-            {
-                LogDebug($"Changing fan control mode ({mode:X2})");
-            }
-
             SetFanControlMode(mode);
         }
     }
