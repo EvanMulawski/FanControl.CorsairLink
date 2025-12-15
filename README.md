@@ -145,6 +145,7 @@ Support for the iCUE LINK Hub was added in v1.5.0. The following LINK devices ar
 | RX Fan                   | `13`       | `00`         | Full Support | ✅                | ✅                 | n/a              |
 | XD6 (Stealth Gray)       | `19`       | `00`         | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
 | XD6 (White)              | `19`       | `01`         | Full Support | ✅                | ✅ <sup>1</sup>    | ✅               |
+| COMMANDER DUO            | `1b`       | `00`         | Full Support | ✅                | ✅                 | ✅               |
 
 Don't see your device listed? Open an [issue](https://github.com/EvanMulawski/FanControl.CorsairLink/issues) and provide a USB packet capture.
 

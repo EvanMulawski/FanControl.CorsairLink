@@ -33,6 +33,7 @@ public static class KnownLinkDevices
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.CapSwapModuleVrmFan, 0x00, "VRM Fan CapSwap Module", LinkDeviceFlags.ControlsSpeed | LinkDeviceFlags.ReportsSpeed));
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.PumpXd6Series, 0x00, "XD6", LinkDeviceFlags.All)); // stealth gray
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.PumpXd6Series, 0x01, "XD6", LinkDeviceFlags.All)); // white
+        _devices.Add(new KnownLinkDevice(LinkDeviceModel.CommanderDuoSeries, 0x00, "COMMANDER DUO", LinkDeviceFlags.All));
 
         _deviceLookup = InitializeDeviceLookup();
     }
