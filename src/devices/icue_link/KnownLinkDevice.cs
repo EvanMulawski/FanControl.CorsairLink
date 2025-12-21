@@ -31,6 +31,7 @@ public enum LinkDeviceModel : byte
     LiquidCoolerHSeries = 0x07,
     WaterBlockXc7Series = 0x09,
     WaterBlockXg3Series = 0x0a,
+    PsuHxiShiftSeries = 0x0b,
     PumpXd5Series = 0x0c,
     FanRxRgbSeries = 0x0f,
     CapSwapModuleVrmFan = 0x10,

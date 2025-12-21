@@ -34,6 +34,9 @@ public static class KnownLinkDevices
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.PumpXd6Series, 0x00, "XD6", LinkDeviceFlags.All)); // stealth gray
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.PumpXd6Series, 0x01, "XD6", LinkDeviceFlags.All)); // white
         _devices.Add(new KnownLinkDevice(LinkDeviceModel.CommanderDuoSeries, 0x00, "COMMANDER DUO", LinkDeviceFlags.All));
+        _devices.Add(new KnownLinkDevice(LinkDeviceModel.PsuHxiShiftSeries, 0x00, "HXi SHIFT PSU", LinkDeviceFlags.All)); // 1000
+        _devices.Add(new KnownLinkDevice(LinkDeviceModel.PsuHxiShiftSeries, 0x01, "HXi SHIFT PSU", LinkDeviceFlags.All)); // 1200 ?
+        _devices.Add(new KnownLinkDevice(LinkDeviceModel.PsuHxiShiftSeries, 0x02, "HXi SHIFT PSU", LinkDeviceFlags.All)); // 1500 ?
 
         _deviceLookup = InitializeDeviceLookup();
     }
