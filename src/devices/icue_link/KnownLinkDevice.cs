@@ -37,6 +37,7 @@ public enum LinkDeviceModel : byte
     LiquidCoolerTitanSeries = 0x11,
     FanRxSeries = 0x13,
     PumpXd6Series = 0x19,
+    CommanderDuoSeries = 0x1b,
 }
 
 [Flags]
