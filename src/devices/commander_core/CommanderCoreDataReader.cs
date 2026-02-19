@@ -29,9 +29,11 @@ public static class CommanderCoreDataReader
         {
             var currentSensor = sensorData.Slice(s, 2);
             var status = (CommanderCoreSpeedSensorStatus)connectedData[i];
-            int? rpm = status == CommanderCoreSpeedSensorStatus.Available
-                ? BinaryPrimitives.ReadInt16LittleEndian(currentSensor)
-                : null;
+            int? rpm =
+                status == CommanderCoreSpeedSensorStatus.Available ||
+                status == CommanderCoreSpeedSensorStatus.AvailableCommanderDuo
+                    ? BinaryPrimitives.ReadInt16LittleEndian(currentSensor)
+                    : null;
 
             sensors.Add(new CommanderCoreSpeedSensor(i, status, rpm));
         }

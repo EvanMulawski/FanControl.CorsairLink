@@ -17,5 +17,6 @@ public sealed class CommanderCoreSpeedSensor
 public enum CommanderCoreSpeedSensorStatus : byte
 {
     Available = 0x07,
+    AvailableCommanderDuo = 0x03,
     Unavailable = 0x01,
 }
