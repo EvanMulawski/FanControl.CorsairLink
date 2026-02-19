@@ -39,6 +39,7 @@ public static class HardwareIds
     public static readonly int CorsairHydroH100iEliteWhiteProductId = 0x0c40;
     public static readonly int CorsairHydroH150iEliteWhiteProductId = 0x0c41;
     public static readonly int CorsairXc7LcdWaterBlockProductId = 0x0c42;
+    public static readonly int CorsairCommanderDuoArgbModeProductId = 0x0c56;
     public static readonly int CorsairPsuAXiDongleFamilyProductId = 0x1c00;
     public static readonly int CorsairPsuAX1500iProductId = 0x1c02;
     public static readonly int CorsairPsuHX550iProductId = 0x1c03;
@@ -78,6 +79,7 @@ public static class HardwareIds
         public static readonly IReadOnlyCollection<int> CommanderCore = new List<int>
         {
             CorsairCommanderCoreXTProductId,
+            CorsairCommanderDuoArgbModeProductId,
         };
 
         public static readonly IReadOnlyCollection<int> CommanderCoreWithDesignatedPump = new List<int>

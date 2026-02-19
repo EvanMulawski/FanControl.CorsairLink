@@ -29,7 +29,7 @@ public static class CommanderCoreDataReader
         {
             var currentSensor = sensorData.Slice(s, 2);
             var status = (CommanderCoreSpeedSensorStatus)connectedData[i];
-            int? rpm = status == CommanderCoreSpeedSensorStatus.Available
+            int? rpm = status.IsConnected()
                 ? BinaryPrimitives.ReadInt16LittleEndian(currentSensor)
                 : null;
 
@@ -49,7 +49,7 @@ public static class CommanderCoreDataReader
         {
             var currentSensor = sensorData.Slice(s, 3);
             var status = (CommanderCoreTemperatureSensorStatus)currentSensor[0];
-            float? tempCelsius = status == CommanderCoreTemperatureSensorStatus.Available
+            float? tempCelsius = status.IsConnected()
                 ? BinaryPrimitives.ReadInt16LittleEndian(currentSensor.Slice(1, 2)) / 10f
                 : null;
 

@@ -18,6 +18,7 @@ The unofficial CorsairLink plugin for [Fan Control](https://github.com/Rem0o/Fan
 | Commander CORE XT              | `0c2a`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅                                | ✅                                |
 | Commander CORE                 | `0c1c`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
 | Commander CORE (2022)          | `0c32`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
+| Commander DUO (ARGB Mode)      | `0c56`     | CommanderCore  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>10</sup>                  | ✅                                |
 | Commander Mini                 | `0c04(3d)` | Coolit         | Full Support <sup>1</sup>         | ✅                                | ✅                                | ✅                                |
 | Hydro H60i Elite               | `0c34`     | HydroPlatinum  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
 | Hydro H60i Pro XT              | `0c29`     | HydroPlatinum  | Full Support <sup>1,2</sup>       | ✅                                | ✅ <sup>4</sup>                   | ✅ <sup>5</sup>                   |
