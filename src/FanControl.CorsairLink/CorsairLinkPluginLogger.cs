@@ -6,16 +6,19 @@ namespace FanControl.CorsairLink;
 
 internal sealed class CorsairLinkPluginLogger : ILogger
 {
-    private readonly FileLogger _logger;
+    private readonly FileLogger? _logger;
 
     public event EventHandler<EventArgs>? ErrorLogged;
 
     public bool DebugEnabled { get; }
 
+    public bool LogFileEnabled { get; }
+
     public CorsairLinkPluginLogger()
     {
-        _logger = new FileLogger("CorsairLink");
         DebugEnabled = Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED");
+        LogFileEnabled = !Utils.GetEnvironmentFlag("FANCONTROL_CORSAIRLINK_LOG_FILE_DISABLED");
+        _logger = LogFileEnabled ? new FileLogger("CorsairLink") : null;
     }
 
     public void Debug(string category, string message)
@@ -66,9 +69,9 @@ internal sealed class CorsairLinkPluginLogger : ILogger
 
     public void Info(string category, string message) => Log($"[INF] {category}: {message}");
 
-    public void Flush() => _logger.Flush();
+    public void Flush() => _logger?.Flush();
 
-    private void Log(string message) => _logger.Log(message);
+    private void Log(string message) => _logger?.Log(message);
 
     private string FormatMessageWithException(string message, Exception exception)
         => string.Concat(message, Environment.NewLine, exception.FormatForLogging());
