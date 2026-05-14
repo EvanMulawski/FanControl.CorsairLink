@@ -199,6 +199,7 @@ This plugin reads the following Windows environment variables:
 | Name                                                                      | Description                                                    | Values                                      |
 | ------------------------------------------------------------------------- | -------------------------------------------------------------- | ------------------------------------------- |
 | `FANCONTROL_CORSAIRLINK_DEBUG_LOGGING_ENABLED`                            | Enables debug logging to the `CorsairLink.log` file.           | `1` = enabled, `0` = disabled               |
+| `FANCONTROL_CORSAIRLINK_LOG_FILE_DISABLED`                                | Disables all logging to the `CorsairLink.log` file.            | `1` = disabled, `0` = enabled               |
 | `FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_BRIGHTNESS` <sup>1</sup>  | Sets the LED brightness on supported models.                   | percent, e.g. `50`                          |
 | `FANCONTROL_CORSAIRLINK_DIRECT_LIGHTING_DEFAULT_RGB` <sup>1</sup>         | Sets the LED color on supported models.                        | RGB color in `R,G,B` format, e.g. `0,255,0` |
 | `FANCONTROL_CORSAIRLINK_ERROR_NOTIFICATIONS_DISABLED`                     | Disables critical error notifications.                         | `1` = disabled, `0` = enabled               |
