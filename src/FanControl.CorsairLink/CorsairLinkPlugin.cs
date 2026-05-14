@@ -237,7 +237,6 @@ public sealed class CorsairLinkPlugin : IPlugin
         }
         else
         {
-            _logger.Warning(LOGGER_CATEGORY_PLUGIN, "Refresh skipped - refresh already in progress.");
             TryShowMultipleRefreshSkipsDetectedErrorDialog();
             _logger.Flush();
         }
